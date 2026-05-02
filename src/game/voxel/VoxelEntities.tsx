@@ -1,0 +1,140 @@
+import { useRef, useMemo } from 'react'
+import { useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
+import type { MapTile } from '@/types/game'
+import { TILE_SIZE, TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS, seededRand } from './constants'
+
+interface RangerPosition {
+  x: number
+  y: number
+  sprite: string
+}
+
+interface Props {
+  map: MapTile[][]
+  playerX: number
+  playerY: number
+  rangers?: RangerPosition[]
+}
+
+const _dummy = new THREE.Object3D()
+const _color = new THREE.Color()
+
+// Creature markers — glowing orbs on tiles that have creatures
+function CreatureMarkers({ map, playerX, playerY }: Omit<Props, 'rangers'>) {
+  const meshRef = useRef<THREE.InstancedMesh>(null)
+
+  const creatureTiles = useMemo(() => {
+    const tiles: MapTile[] = []
+    const minX = Math.max(0, playerX - VIEW_RADIUS)
+    const maxX = Math.min((map[0]?.length ?? 60) - 1, playerX + VIEW_RADIUS)
+    const minY = Math.max(0, playerY - VIEW_RADIUS)
+    const maxY = Math.min(map.length - 1, playerY + VIEW_RADIUS)
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        const tile = map[y]?.[x]
+        if (!tile?.hasCreature) continue
+        if (tile.x === playerX && tile.y === playerY) continue
+        const dx = x - playerX
+        const dy = y - playerY
+        if (dx * dx + dy * dy > VIEW_RADIUS * VIEW_RADIUS) continue
+        tiles.push(tile)
+      }
+    }
+    return tiles
+  }, [map, playerX, playerY])
+
+  useFrame((state) => {
+    const mesh = meshRef.current
+    if (!mesh) return
+    const t = state.clock.elapsedTime
+    creatureTiles.forEach((tile, i) => {
+      const elevation = tile.elevation ?? 0
+      const groundY = TILE_BASE_HEIGHT + elevation * ELEVATION_SCALE
+      const bob = Math.sin(t * 2 + seededRand(tile.x, tile.y) * 6.28) * 0.08
+      _dummy.position.set(tile.x * TILE_SIZE, groundY + 0.3 + bob, -tile.y * TILE_SIZE)
+      _dummy.scale.setScalar(0.12 + Math.sin(t * 3 + i) * 0.02)
+      _dummy.updateMatrix()
+      mesh.setMatrixAt(i, _dummy.matrix)
+      // Green-yellow glow
+      const hue = 0.25 + seededRand(tile.x, tile.y, 1) * 0.15
+      _color.setHSL(hue, 0.8, 0.6)
+      mesh.setColorAt(i, _color)
+    })
+    mesh.count = creatureTiles.length
+    mesh.instanceMatrix.needsUpdate = true
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true
+  })
+
+  return (
+    <instancedMesh ref={meshRef} args={[undefined, undefined, 200]}>
+      <sphereGeometry args={[1, 6, 6]} />
+      <meshStandardMaterial
+        color="#ffffff"
+        emissive="#44ff44"
+        emissiveIntensity={0.5}
+        transparent
+        opacity={0.85}
+        toneMapped={false}
+      />
+    </instancedMesh>
+  )
+}
+
+// Rangers as blocky voxel characters
+function Rangers({ rangers = [], map }: { rangers: RangerPosition[]; map: MapTile[][] }) {
+  return (
+    <>
+      {rangers.map((ranger, i) => {
+        const tile = map[ranger.y]?.[ranger.x]
+        const elevation = tile?.elevation ?? 0
+        const groundY = TILE_BASE_HEIGHT + elevation * ELEVATION_SCALE
+        const s = 0.1
+        return (
+          <group
+            key={i}
+            position={[ranger.x * TILE_SIZE, groundY, -ranger.y * TILE_SIZE]}
+          >
+            {/* Body */}
+            <mesh position={[0, s * 3.5, 0]}>
+              <boxGeometry args={[s * 3.5, s * 4, s * 2.5]} />
+              <meshStandardMaterial color="#2d5016" flatShading />
+            </mesh>
+            {/* Head */}
+            <mesh position={[0, s * 7, 0]}>
+              <boxGeometry args={[s * 3, s * 3, s * 3]} />
+              <meshStandardMaterial color="#deb887" flatShading />
+            </mesh>
+            {/* Ranger hat */}
+            <mesh position={[0, s * 9, 0]}>
+              <boxGeometry args={[s * 4, s * 1, s * 4]} />
+              <meshStandardMaterial color="#8b4513" flatShading />
+            </mesh>
+            <mesh position={[0, s * 9.8, 0]}>
+              <boxGeometry args={[s * 2.5, s * 1.2, s * 2.5]} />
+              <meshStandardMaterial color="#8b4513" flatShading />
+            </mesh>
+            {/* Legs */}
+            <mesh position={[-s * 0.8, s * 0.5, 0]}>
+              <boxGeometry args={[s * 1.3, s * 2.5, s * 1.5]} />
+              <meshStandardMaterial color="#4a3728" flatShading />
+            </mesh>
+            <mesh position={[s * 0.8, s * 0.5, 0]}>
+              <boxGeometry args={[s * 1.3, s * 2.5, s * 1.5]} />
+              <meshStandardMaterial color="#4a3728" flatShading />
+            </mesh>
+          </group>
+        )
+      })}
+    </>
+  )
+}
+
+export default function VoxelEntities(props: Props) {
+  return (
+    <>
+      <CreatureMarkers map={props.map} playerX={props.playerX} playerY={props.playerY} />
+      <Rangers rangers={props.rangers ?? []} map={props.map} />
+    </>
+  )
+}
