@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { DailyChallenge, DailyState } from './dailyChallenges'
-import { getTodaysChallenges } from './dailyChallenges'
+import type { DailyChallenge, DailyState } from './dailyChallengesData'
+import { getTodaysChallenges } from './dailyChallengesData'
 
 interface Props {
   dailyState: DailyState
