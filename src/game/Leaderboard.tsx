@@ -119,11 +119,14 @@ function generateNPCEntries(playerLevel: number, speciesCaught: number): Leaderb
 
 type SortKey = 'score' | 'species' | 'level'
 
+type BkpStatus = 'idle' | 'no-name' | 'posted'
+
 export default function Leaderboard({ playerName, playerLevel, speciesCaught, totalSpecies, stats, onClose, onRename }: Props) {
   const [sortBy, setSortBy] = useState<SortKey>('score')
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [editingName, setEditingName] = useState(false)
   const [nameDraft, setNameDraft] = useState(playerName)
+  const [bkpStatus, setBkpStatus] = useState<BkpStatus>('idle')
   const nameRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { setNameDraft(playerName) }, [playerName])
@@ -177,13 +180,20 @@ export default function Leaderboard({ playerName, playerLevel, speciesCaught, to
       // Parallel daily submission for cross-game BKP standings. Daily mode
       // uses YYYY-MM-DD as the seed so it matches the BKP `ranked_modes`
       // lookup in website-biokea migration 0003.
-      void submitDailyIfBetter({
-        handle: sanitizeHandle(playerName),
-        score: playerScore,
-        level: playerLevel,
-        species: speciesCaught,
-        battlesWon,
-      })
+      const handleForDaily = sanitizeHandle(playerName)
+      if (!handleForDaily || handleForDaily === 'anon') {
+        if (!cancelled) setBkpStatus('no-name')
+      } else {
+        void submitDailyIfBetter({
+          handle: handleForDaily,
+          score: playerScore,
+          level: playerLevel,
+          species: speciesCaught,
+          battlesWon,
+        }).then(() => {
+          if (!cancelled) setBkpStatus('posted')
+        })
+      }
 
       const top = await leaderboard.getTopScores({ gameId: GAME_ID, mode: MODE, limit: 25 })
       if (cancelled || top.length === 0) return
@@ -291,6 +301,63 @@ export default function Leaderboard({ playerName, playerLevel, speciesCaught, to
             <div className="text-center">
               <p className="text-cyan-400 text-sm font-bold">{sorted.find(e => e.isPlayer)?.score ?? 0}</p>
               <p className="text-white/25 text-[7px] uppercase">Score</p>
+            </div>
+          </div>
+        </div>
+
+        {/* BKP / cross-game leaderboard status */}
+        <div
+          className="rounded-lg p-2.5"
+          style={{
+            background: bkpStatus === 'no-name'
+              ? 'rgba(239,68,68,0.08)'
+              : 'rgba(34,197,94,0.06)',
+            border: bkpStatus === 'no-name'
+              ? '1px solid rgba(239,68,68,0.25)'
+              : '1px solid rgba(34,197,94,0.20)',
+          }}
+        >
+          <div className="flex items-start gap-2">
+            <span className="text-base leading-none mt-0.5">
+              {bkpStatus === 'no-name' ? '⚠️' : '✓'}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[9px] font-semibold tracking-[0.18em] uppercase text-amber-400/80">
+                BioKEA Leaderboard
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ color: '#e6e8eb' }}>
+                {bkpStatus === 'no-name' ? (
+                  <>
+                    No name set —{' '}
+                    {onRename ? (
+                      <button
+                        onClick={() => setEditingName(true)}
+                        className="underline font-semibold text-amber-300"
+                      >
+                        click your name above
+                      </button>
+                    ) : (
+                      <>set a name above</>
+                    )}{' '}
+                    to start posting BKP.
+                  </>
+                ) : (
+                  <>
+                    Posted as{' '}
+                    <span className="font-bold text-amber-300">
+                      {sanitizeHandle(playerName)}
+                    </span>
+                    {' — earning BKP across all six BioKEA games. '}
+                    <a
+                      href="https://biokea.ai/mission/games/leaderboard"
+                      target="_top"
+                      className="underline font-semibold text-amber-300"
+                    >
+                      View ↗
+                    </a>
+                  </>
+                )}
+              </p>
             </div>
           </div>
         </div>
