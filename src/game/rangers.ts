@@ -157,7 +157,7 @@ export const RANGERS: Ranger[] = [
       {
         id: 'diablo-endangered-watch',
         title: 'Endangered Watch',
-        description: 'Beyond the condor, several species are on the brink. Document 2 endangered creatures — Western Monarch populations crashed 99%, and the Southern Sea Otter barely survives.',
+        description: 'Beyond the condor, several species are on the brink. Document 2 endangered creatures — the Mission Blue Butterfly survives on just a handful of Bay Area hilltops, and the Southern Sea Otter barely hangs on.',
         rangerId: 'ranger-diablo',
         objective: { type: 'catch_conservation', status: 'EN', count: 2 },
         reward: {
@@ -334,7 +334,7 @@ export const RANGERS: Ranger[] = [
     ],
     battleTeam: [
       { creatureId: 'raccoon', level: 6 },
-      { creatureId: 'monarch-butterfly', level: 7 },
+      { creatureId: 'mission-blue-butterfly', level: 7 },
     ],
     battleQuote: 'Golden Gate Park is tougher than it looks. Let\'s go!',
     defeatQuote: 'Not bad! The park creatures would be proud to run with your team.',

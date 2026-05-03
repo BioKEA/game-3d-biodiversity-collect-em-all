@@ -75,7 +75,7 @@ export const ROAMING_TRAINERS: RoamingTrainer[] = [
     teamLevel: 6,
     team: [
       { creatureId: 'raccoon', level: 6 },
-      { creatureId: 'monarch-butterfly', level: 5 },
+      { creatureId: 'mission-blue-butterfly', level: 5 },
     ],
     rewardXp: 70,
   },

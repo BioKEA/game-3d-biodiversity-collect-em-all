@@ -83,10 +83,10 @@ export const EVOLUTIONS: Evolution[] = [
 
   // Extended chains — give every creature an evolution path
   {
-    fromId: 'monarch-butterfly',
+    fromId: 'mission-blue-butterfly',
     toId: 'painted-lady-swarm',
     level: 14,
-    description: 'The butterfly\'s migration call drew thousands of painted ladies into a coordinated swarm!',
+    description: 'The butterfly\'s hillside call drew thousands of painted ladies into a coordinated swarm!',
   },
   {
     fromId: 'black-tailed-deer',

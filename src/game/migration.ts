@@ -73,9 +73,9 @@ export const MIGRATION_HERDS: MigrationHerd[] = [
   },
   {
     id: 'butterfly-cloud',
-    creatureId: 'monarch-butterfly',
+    creatureId: 'mission-blue-butterfly',
     sprite: '🦋',
-    name: 'Monarch Cloud',
+    name: 'Mission Blue Cloud',
     count: 8,
     startX: 53, startY: 251,  // UC Santa Cruz
     endX: 52, endY: 253,      // To Steamer Lane coast

@@ -117,21 +117,21 @@ const EVENT_POOL: Omit<WorldEvent, 'id' | 'startedAt'>[] = [
 ]
 
 // Seasonal events — gated on gameDay (360-day year)
-// Fall/Winter monarch migration: Sep-Feb (days 240-330 + 0-60)
+// Spring Mission Blue flight season: Apr-Jun (days 90-180)
 const SEASONAL_EVENT_POOL: (Omit<WorldEvent, 'id' | 'startedAt'> & {
   isActive: (gameDay: number) => boolean
 })[] = [
   {
     type: 'swarm',
-    title: 'Monarch Migration',
-    description: 'Thousands of monarch butterflies are clustering in the eucalyptus groves at',
+    title: 'Mission Blue Emergence',
+    description: 'Mission Blue Butterflies are fluttering across the lupine-covered hills at',
     icon: '🦋',
     location: 'Natural Bridges',
     subregion: 'Santa Cruz Beach Boardwalk',
     durationMinutes: 45,
     creatureHint: '🦋',
-    // Active Sep-Feb (fall-winter migration window matching monarch-butterfly)
-    isActive: (gameDay: number) => gameDay >= 240 || gameDay < 60,
+    // Active Apr-Jun (spring flight season matching mission-blue-butterfly)
+    isActive: (gameDay: number) => gameDay >= 90 && gameDay < 180,
   },
 ]
 

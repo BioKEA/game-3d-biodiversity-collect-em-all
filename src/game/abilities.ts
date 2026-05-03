@@ -28,6 +28,11 @@ const ABILITY_MAP: Record<string, Ability> = {
     description: 'Immune to poison status effects',
     trigger: 'always', effect: { type: 'status_immune' },
   },
+  'mission-blue-butterfly': {
+    id: 'lupine-bond', name: 'Lupine Bond',
+    description: '+3 speed from hillside agility',
+    trigger: 'battle_start', effect: { type: 'stat_boost', stat: 'speed', amount: 3 },
+  },
   'monarch-butterfly': {
     id: 'migration-speed', name: 'Migration Speed',
     description: '+3 speed from migratory instincts',
