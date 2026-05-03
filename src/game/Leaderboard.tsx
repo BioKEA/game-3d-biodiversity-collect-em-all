@@ -25,9 +25,64 @@ interface LeaderboardEntry {
 }
 
 const MODE = 'endless'
+const DAILY_MODE = 'daily'
+const DAILY_SUBMIT_KEY = 'wildcal:daily-submitted-v1'
 
 function sanitizeHandle(input: string): string {
   return input.replace(/[^a-zA-Z0-9_\- ]/g, '').trim().slice(0, 16) || 'anon'
+}
+
+function todayKey(now: Date = new Date()): string {
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const d = String(now.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+// Submit today's snapshot to the cross-game BKP leaderboard. Idempotent
+// per (day, score) — short-circuits when the score hasn't risen since
+// the last submit, so this can fire on every state change without
+// hammering Supabase. Returns silently on any failure.
+async function submitDailyIfBetter(args: {
+  handle: string
+  score: number
+  level: number
+  species: number
+  battlesWon: number
+}): Promise<void> {
+  if (!args.handle || args.handle === 'anon') return
+  if (args.score <= 0) return
+  const day = todayKey()
+  let prevScore = 0
+  let prevDay = ''
+  try {
+    const raw = localStorage.getItem(DAILY_SUBMIT_KEY)
+    if (raw) {
+      const prev = JSON.parse(raw) as { day?: string; score?: number }
+      if (prev.day === day && typeof prev.score === 'number') prevScore = prev.score
+      prevDay = prev.day ?? ''
+    }
+  } catch { /* ignore */ }
+  if (prevDay === day && args.score <= prevScore) return
+
+  const result = await leaderboard.submitScore({
+    gameId: GAME_ID,
+    mode: DAILY_MODE,
+    seed: day,
+    score: args.score,
+    playerHandle: args.handle,
+    metadata: {
+      level: args.level,
+      species: args.species,
+      battlesWon: args.battlesWon,
+    },
+  }).catch(() => null)
+
+  if (result?.ok) {
+    try {
+      localStorage.setItem(DAILY_SUBMIT_KEY, JSON.stringify({ day, score: args.score }))
+    } catch { /* ignore */ }
+  }
 }
 
 function computeScore(level: number, species: number, battlesWon: number): number {
@@ -102,7 +157,7 @@ export default function Leaderboard({ playerName, playerLevel, speciesCaught, to
     async function syncRemote() {
       if (!leaderboard.configured) return
 
-      // Best-effort submission; ignore failures (rate limits, network, unconfigured).
+      // Best-effort submission to the in-game endless leaderboard.
       void leaderboard.submitScore({
         gameId: GAME_ID,
         mode: MODE,
@@ -117,6 +172,17 @@ export default function Leaderboard({ playerName, playerLevel, speciesCaught, to
           stepsWalked: stats.totalStepsWalked ?? 0,
           title: 'Explorer',
         },
+      })
+
+      // Parallel daily submission for cross-game BKP standings. Daily mode
+      // uses YYYY-MM-DD as the seed so it matches the BKP `ranked_modes`
+      // lookup in website-biokea migration 0003.
+      void submitDailyIfBetter({
+        handle: sanitizeHandle(playerName),
+        score: playerScore,
+        level: playerLevel,
+        species: speciesCaught,
+        battlesWon,
       })
 
       const top = await leaderboard.getTopScores({ gameId: GAME_ID, mode: MODE, limit: 25 })
