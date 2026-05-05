@@ -229,7 +229,7 @@ export default function Leaderboard({ playerName, playerLevel, speciesCaught, to
           </div>
         </div>
 
-        {/* This long-form game doesn't post to the daily BKP leaderboard. */}
+        {/* This long-form game doesn't post to the daily leaderboard. */}
         <div
           className="rounded-lg p-2.5"
           style={{
