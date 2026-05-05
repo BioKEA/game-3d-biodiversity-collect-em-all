@@ -2,7 +2,30 @@
 // Uses oscillators and noise to synthesize retro game sounds
 
 let audioCtx: AudioContext | null = null
-let sfxVolume = 1.0 // 0-1 multiplier
+
+// Default music + SFX OFF on first visit. Persisted choices in
+// localStorage are honored. The HUD sliders persist when moved.
+const SFX_KEY = 'wildcal:sfx-vol'
+const MUSIC_KEY = 'wildcal:music-vol'
+function loadVol(key: string): number {
+  try {
+    const v = localStorage.getItem(key)
+    if (v === null) return 0
+    const n = parseFloat(v)
+    return isFinite(n) ? Math.max(0, Math.min(1, n)) : 0
+  } catch {
+    return 0
+  }
+}
+function saveVol(key: string, v: number) {
+  try {
+    localStorage.setItem(key, String(v))
+  } catch {
+    // ignore
+  }
+}
+
+let sfxVolume = loadVol(SFX_KEY) // 0-1 multiplier
 
 function getCtx(): AudioContext {
   if (!audioCtx) {
@@ -464,7 +487,9 @@ const musicState: MusicState = {
   mode: 'explore',
   biome: 'forest',
   playing: false,
-  volume: 0.04,
+  // Stored as the actual gain (slider value × 0.04). loadVol returns
+  // the slider value in 0–1; multiply by 0.04 here to match setVolume.
+  volume: loadVol(MUSIC_KEY) * 0.04,
   nodes: null,
   intervalId: null,
 }
@@ -1008,6 +1033,18 @@ export const Music = {
     // Don't restart if already playing same mode/biome
     if (musicState.playing && musicState.mode === mode && musicState.biome === biome) return
 
+    // Skip if volume is zero — startExploreMusic / startBattleMusic
+    // call exponentialRampToValueAtTime(musicState.volume, ...) which
+    // throws when target is 0. Stay silent until the player turns on
+    // music via the HUD slider.
+    if (musicState.volume <= 0.0001) {
+      stopMusic()
+      musicState.mode = mode
+      musicState.biome = biome
+      musicState.playing = false
+      return
+    }
+
     // Crossfade: start new music before fully stopping old
     stopMusic()
     musicState.mode = mode
@@ -1029,7 +1066,9 @@ export const Music = {
 
   /** Set volume (0-1) */
   setVolume(v: number) {
-    musicState.volume = Math.max(0, Math.min(1, v)) * 0.04
+    const clamped = Math.max(0, Math.min(1, v))
+    saveVol(MUSIC_KEY, clamped)
+    musicState.volume = clamped * 0.04
     if (musicState.nodes) {
       const ctx = getCtx()
       musicState.nodes.masterGain.gain.exponentialRampToValueAtTime(
@@ -1074,10 +1113,14 @@ export const Music = {
   /** Set SFX volume (0-1) */
   setSfxVolume(v: number) {
     sfxVolume = Math.max(0, Math.min(1, v))
+    saveVol(SFX_KEY, sfxVolume)
   },
 
   /** Start/switch ambient biome sounds (separate from music) */
   playAmbient(biome: string, timeOfDay: string, weather: string) {
+    // Skip if music volume is off — ambient is gated off the same
+    // slider for the same exponentialRampToValueAtTime reason.
+    if (musicState.volume <= 0.0001) return
     if (ambientState.playing && ambientState.biome === biome && ambientState.timeOfDay === timeOfDay && ambientState.weather === weather) return
     stopAmbient()
     ambientState.biome = biome
