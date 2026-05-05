@@ -20,6 +20,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
   return target.isContentEditable
 }
 import { createInitialState, saveGame, loadGame, clearSave, saveStats, loadStats, saveExplored, loadExplored, loadPlayerName, savePlayerName, loadBayDexAck, saveBayDexAck } from './gameState'
+import { BiokeaLeaderboardPrompt } from '@/components/BiokeaLeaderboardPrompt'
 import type { SaveSlotIndex } from './gameState'
 import { generateMap, getBoatDockAt, getSignpostAt, type BoatDock } from './bayAreaMap'
 import { getRandomEncounter, ALL_CREATURES, isFullMoon, isNewMoon, getLunarBoss, getShadowBoss, LUNAR_BOSSES, SHADOW_BOSSES } from './creatures'
@@ -147,6 +148,13 @@ export default function Game() {
     savePlayerName(name)
     setPlayerName(name)
   }, [])
+
+  // BiokeaLeaderboardPrompt at game-start when the player still has the
+  // default 'Explorer' handle. Captures handle (required) + optional
+  // email subscription, same as the arcade games' game-end prompt.
+  const [biokeaPromptOpen, setBiokeaPromptOpen] = useState<boolean>(
+    () => loadPlayerName() === 'Explorer',
+  )
 
   const [map] = useState<MapTile[][]>(() => generateMap())
   const [exploredTiles, setExploredTiles] = useState<Set<string>>(() => new Set<string>())
@@ -3276,6 +3284,18 @@ export default function Game() {
           conservationDismissals.current += 1
           try { localStorage.setItem('bioquest-conservation-dismissed', String(conservationDismissals.current)) } catch {}
         }} />
+      )}
+      {biokeaPromptOpen && (
+        <BiokeaLeaderboardPrompt
+          trigger="game-start"
+          gameSlug="3d-biodiversity-collect-em-all"
+          gameTitle="WildCal"
+          defaultHandle={playerName === 'Explorer' ? '' : playerName}
+          onSubmit={(result) => {
+            handleRenamePlayer(result.handle)
+            setBiokeaPromptOpen(false)
+          }}
+        />
       )}
     </div>
   )
