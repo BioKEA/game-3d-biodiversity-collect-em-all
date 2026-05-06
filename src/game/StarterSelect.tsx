@@ -39,9 +39,9 @@ const STARTERS: StarterOption[] = [
   {
     creature: {
       id: 'gray-fox',
-      name: 'Gray Fox',
-      scientificName: 'Urocyon cinereoargenteus',
-      description: 'A nimble nocturnal fox that can climb trees. Often spotted in the Marin Headlands at dusk.',
+      name: 'Sierra Nevada Red Fox',
+      scientificName: 'Vulpes vulpes necator',
+      description: 'A critically endangered Sierra subspecies — fewer than 50 remain. Active at dusk and dawn.',
       type: 'beast',
       rarity: 'uncommon',
       biomes: ['forest', 'grassland', 'mountain'],

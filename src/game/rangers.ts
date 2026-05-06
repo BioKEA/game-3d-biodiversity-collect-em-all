@@ -415,7 +415,7 @@ export const RANGERS: Ranger[] = [
       {
         id: 'tam-fox',
         title: 'Mountain Fox Tracking',
-        description: 'Gray Foxes are one of the few canines that climb trees. Catch one on the mountain trails.',
+        description: 'The Sierra Nevada Red Fox is one of the rarest mammals in North America. Catch one on the mountain trails.',
         rangerId: 'ranger-tamalpais',
         objective: { type: 'catch', creatureId: 'gray-fox', count: 1 },
         reward: {

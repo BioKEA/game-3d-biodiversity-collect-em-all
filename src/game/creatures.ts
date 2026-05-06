@@ -112,11 +112,16 @@ export const ALL_CREATURES: Creature[] = [
     ],
   },
   {
+    // The id stays 'gray-fox' for save-compat with players who already
+    // picked the fox starter. Display + lore + scientific name update
+    // to a Sierra Nevada Red Fox per BioKEA's preference for spotlighting
+    // genuinely-rare species — there are fewer than 50 of these in the
+    // wild, making any encounter in-game feel meaningful.
     id: 'gray-fox',
-    name: 'Gray Fox',
-    scientificName: 'Urocyon cinereoargenteus',
-    description: 'A nimble nocturnal fox that can climb trees. Often spotted in the Marin Headlands at dusk.',
-    lore: 'The gray fox is the only North American canid that can climb trees, thanks to its rotating forearms and strong curved claws. In the Bay Area, they are far more common than red foxes and prefer the wooded edges of parks like the Marin Headlands. They are among the most ancient canid species, predating wolves and coyotes by millions of years.',
+    name: 'Sierra Nevada Red Fox',
+    scientificName: 'Vulpes vulpes necator',
+    description: 'A critically endangered Sierra Nevada subspecies — fewer than 50 are thought to remain. Active at dusk and dawn.',
+    lore: 'The Sierra Nevada red fox is one of the rarest mammals in North America. Once thought extinct, surviving populations were rediscovered in the high Sierra and southern Cascades. They favor high-elevation mountain meadows, conifer forests, and alpine ridgelines, surviving on rodents, birds, berries, and carrion. Genetic work suggests the lineage has been isolated in the Sierra for ~10,000 years — every individual matters.',
     type: 'beast',
     rarity: 'uncommon',
     biomes: ['forest', 'grassland', 'mountain'],
@@ -124,12 +129,12 @@ export const ALL_CREATURES: Creature[] = [
     stats: { hp: 40, maxHp: 40, attack: 35, defense: 22, speed: 45 },
     isFantasy: false,
     sprite: '🦊',
-    color: '#9ca3af',
-    activeTime: ['dusk', 'night'],
+    color: '#c2410c',
+    activeTime: ['dawn', 'dusk'],
     moves: [
       { name: 'Quick Pounce', power: 30, type: 'attack', description: 'Lightning-fast tackle' },
-      { name: 'Tree Climb', power: 0, type: 'defend', description: 'Climbs a tree to safety' },
-      { name: 'Night Howl', power: 25, type: 'special', description: 'A chilling howl under the moon' },
+      { name: 'Snow Burrow', power: 0, type: 'defend', description: 'Burrows into the snow to evade' },
+      { name: 'Alpine Howl', power: 25, type: 'special', description: 'A piercing howl across the ridgeline' },
     ],
   },
   {
