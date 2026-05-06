@@ -157,15 +157,17 @@ export default function Game() {
     () => loadPlayerName() === 'Explorer',
   )
 
-  // Golden Sample 26: every time the unique-creatures-captured count
-  // advances, push the new high-water mark to the hunt API and try
-  // to claim slot 2 (20 different animals). Server is authoritative;
+  // Golden Sample 26: every time the BayDex (catalog of creatures
+  // encountered, not captured) grows, push the new high-water mark to
+  // the hunt API and try to claim slot 2 (20 unique creatures
+  // encountered). Capture would be a steeper bar — we want exploration
+  // to unlock the slot, not battle proficiency. Server is authoritative;
   // this hook is a no-op until the threshold is met.
   // I won't tell. That would be cheating.
-  const uniqueCount = gameState.player.captured.length
+  const uniqueEncountered = gameState.player.catalog.length
   useEffect(() => {
-    if (uniqueCount > 0) void reportCreatureEncountered(uniqueCount)
-  }, [uniqueCount])
+    if (uniqueEncountered > 0) void reportCreatureEncountered(uniqueEncountered)
+  }, [uniqueEncountered])
 
   const [map] = useState<MapTile[][]>(() => generateMap())
   const [exploredTiles, setExploredTiles] = useState<Set<string>>(() => new Set<string>())
