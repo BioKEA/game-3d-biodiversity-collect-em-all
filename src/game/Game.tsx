@@ -21,6 +21,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
 }
 import { createInitialState, saveGame, loadGame, clearSave, saveStats, loadStats, saveExplored, loadExplored, loadPlayerName, savePlayerName, loadBayDexAck, saveBayDexAck } from './gameState'
 import { BiokeaLeaderboardPrompt } from '@/components/BiokeaLeaderboardPrompt'
+import { reportCreatureEncountered } from '@/lib/golden-sample'
 import type { SaveSlotIndex } from './gameState'
 import { generateMap, getBoatDockAt, getSignpostAt, type BoatDock } from './bayAreaMap'
 import { getRandomEncounter, ALL_CREATURES, isFullMoon, isNewMoon, getLunarBoss, getShadowBoss, LUNAR_BOSSES, SHADOW_BOSSES } from './creatures'
@@ -155,6 +156,16 @@ export default function Game() {
   const [biokeaPromptOpen, setBiokeaPromptOpen] = useState<boolean>(
     () => loadPlayerName() === 'Explorer',
   )
+
+  // Golden Sample 26: every time the unique-creatures-captured count
+  // advances, push the new high-water mark to the hunt API and try
+  // to claim slot 2 (20 different animals). Server is authoritative;
+  // this hook is a no-op until the threshold is met.
+  // I won't tell. That would be cheating.
+  const uniqueCount = gameState.player.captured.length
+  useEffect(() => {
+    if (uniqueCount > 0) void reportCreatureEncountered(uniqueCount)
+  }, [uniqueCount])
 
   const [map] = useState<MapTile[][]>(() => generateMap())
   const [exploredTiles, setExploredTiles] = useState<Set<string>>(() => new Set<string>())
