@@ -1959,6 +1959,24 @@ export default function Game() {
     if (saved.player.reserves === undefined) saved.player.reserves = []
     if (saved.player.coins === undefined) saved.player.coins = 100
 
+    // Force any in-progress battle off on load. The auto-save persists
+    // gameState every change (line 289), so a player who left mid-
+    // battle came back with battle.active=true. The loader forces
+    // screen → 'world' but did not clear the battle struct, and both
+    // world-keyboard effects bail at `screen!=='world' || battle.active`
+    // — so the world rendered but movement was silently dropped. We
+    // reset the struct here, after backward-compat patches, so the
+    // load lands in a movable state regardless of where the player
+    // saved.
+    saved.battle = {
+      active: false,
+      wildCreature: null,
+      playerCreature: null,
+      turn: 'player',
+      log: [],
+      captureChance: 0,
+    }
+
     // Rescue: if the player is stuck on an unwalkable tile (e.g. from an
     // older map generation or a broken fast-travel destination), bump them
     // to the nearest walkable tile with a spiral search.
