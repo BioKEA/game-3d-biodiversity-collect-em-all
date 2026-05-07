@@ -66,7 +66,6 @@ interface GoldenFoundDetail {
   token?: string
   issued_at?: string
   alreadyHeld: boolean
-  sentence: string
 }
 
 export async function reportMilestone(count: number): Promise<void> {
@@ -113,7 +112,6 @@ export async function tryClaimGoldenSample(handle?: string): Promise<void> {
     token: body.token,
     issued_at: body.issued_at,
     alreadyHeld: !body.first_earn,
-    sentence: 'Every Human Now Has Scientific Superpowers',
   }
   window.dispatchEvent(
     new CustomEvent<GoldenFoundDetail>('biokea:golden-found', { detail }),
