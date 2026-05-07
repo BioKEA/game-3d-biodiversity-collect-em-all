@@ -16,11 +16,18 @@ interface Props {
   activeEvent?: WorldEvent | null
 }
 
-// Rectangular minimap — map is 200x500 (2:5 ratio)
+// Rectangular minimap — map is 200x500 (2:5 ratio).
+// Expanded canvas was previously 176×440 which doesn't show enough
+// detail (player feedback: "the map is not the full extent of the
+// region that expanded. we need to increase the map size in the x-
+// and y- dimensions by at least 100% and allow for scrolling to
+// manage the y-axis since it's longer than x"). Bumping both dims
+// ~110% so labels read clearly; the wrapper around the canvas
+// scrolls vertically when the panel is taller than the viewport.
 const SM_W = 96
 const SM_H = 240
-const LG_W = 176
-const LG_H = 440
+const LG_W = 380
+const LG_H = 950
 
 const WEATHER_INFO: Record<WeatherType, { icon: string; color: string }> = {
   clear: { icon: '☀', color: '#fbbf24' },
@@ -40,6 +47,7 @@ const TIME_THEME: Record<TimeOfDay, { bg: string; fogColor: string; exploredBoos
 
 const Minimap = memo(function Minimap({ map, playerX, playerY, journal, exploredTiles, rangers, onFastTravel, timeOfDay = 'day', weather = 'clear', activeEvent }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const scrollWrapRef = useRef<HTMLDivElement>(null)
   const [expanded, setExpanded] = useState(false)
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null)
   const frameRef = useRef(0)
@@ -65,12 +73,22 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
 
   const smW = isMobile ? 64 : SM_W
   const smH = isMobile ? 160 : SM_H
-  const mobileFullW = Math.min(window.innerWidth - 16, 360)
-  const mobileFullH = Math.min(window.innerHeight - 80, Math.round(mobileFullW * 2.2))
+  // Mobile keeps tiles at the same scale as desktop now (380 wide,
+  // 950 tall) — the wrapper scrolls so the player scrolls through
+  // California rather than reading a squished version. innerWidth
+  // still caps it for very small phones.
+  const mobileFullW = Math.min(window.innerWidth - 16, LG_W)
   const lgW = isMobile ? mobileFullW : LG_W
-  const lgH = isMobile ? mobileFullH : LG_H
+  // Canvas is always the full California height; the wrapper around
+  // it gates how much is visible at once.
+  const lgH = isMobile ? Math.round(mobileFullW * (LG_H / LG_W)) : LG_H
   const w = expanded ? lgW : smW
   const h = expanded ? lgH : smH
+
+  // Visible panel height when expanded — clamped to viewport so the
+  // panel never blows off the screen. The canvas inside still renders
+  // at full lgH; the wrapper div scrolls.
+  const expandedMaxVisibleH = Math.min(lgH, Math.max(360, (typeof window !== 'undefined' ? window.innerHeight : 800) - 120))
 
   // Build offscreen tile layer when explored set or time changes
   const buildTileLayer = useCallback(() => {
@@ -510,6 +528,19 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
     tileCanvasRef.current = null
   }, [w, h])
 
+  // When the panel expands, scroll the wrapper so the player tile is
+  // roughly centered. California is taller than it is wide; without
+  // this you open the map and have to hunt for yourself.
+  useEffect(() => {
+    if (!expanded) return
+    const wrap = scrollWrapRef.current
+    if (!wrap) return
+    const ph = h / MAP_HEIGHT
+    const playerScreenY = playerY * ph
+    const target = Math.max(0, playerScreenY - wrap.clientHeight / 2)
+    wrap.scrollTop = target
+  }, [expanded, playerY, h])
+
   useEffect(() => {
     frameRef.current = requestAnimationFrame(draw)
     return () => cancelAnimationFrame(frameRef.current)
@@ -570,13 +601,13 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
 
   return (
     <div
-      className={`${expanded && isMobile ? 'fixed inset-0 flex flex-col items-center justify-center' : 'absolute top-1.5 sm:top-28 right-1.5 sm:right-3'} ${expanded ? 'z-50' : 'z-20'} rounded-xl overflow-hidden border cursor-pointer transition-all duration-300`}
+      className={`${expanded ? 'fixed inset-0 flex flex-col items-center justify-center p-2 sm:p-4' : 'absolute top-1.5 sm:top-28 right-1.5 sm:right-3'} ${expanded ? 'z-50' : 'z-20'} ${expanded ? '' : 'rounded-xl overflow-hidden'} border cursor-pointer transition-colors duration-200`}
       style={{
-        borderColor: expanded ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.1)',
-        background: expanded && isMobile ? 'rgba(0,0,0,0.92)' : 'rgba(0,0,0,0.55)',
+        borderColor: expanded ? 'transparent' : 'rgba(255,255,255,0.1)',
+        background: expanded ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.55)',
         backdropFilter: 'blur(6px)',
         boxShadow: expanded
-          ? '0 0 20px rgba(74,222,128,0.1), inset 0 1px 0 rgba(255,255,255,0.05)'
+          ? 'none'
           : '0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
       }}
       onClick={handleCanvasClick}
@@ -584,11 +615,40 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
       onMouseLeave={() => setHoveredRegion(null)}
       title={expanded ? (onFastTravel ? 'Click a region to fast-travel' : 'Click to shrink') : 'Click to expand'}
     >
-      <canvas
-        ref={canvasRef}
-        className="block"
-        style={{ width: w, height: h, imageRendering: 'pixelated' }}
-      />
+      <div
+        ref={scrollWrapRef}
+        className="rounded-xl overflow-hidden"
+        style={
+          expanded
+            ? {
+                width: w,
+                maxHeight: expandedMaxVisibleH,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                border: '1px solid rgba(74,222,128,0.2)',
+                boxShadow: '0 0 20px rgba(74,222,128,0.1), inset 0 1px 0 rgba(255,255,255,0.05)',
+              }
+            : undefined
+        }
+        onClick={(e) => {
+          // Prevent scroll-area clicks from bubbling up and toggling
+          // the panel; the canvas onClick (parent) still handles
+          // expand/shrink via handleCanvasClick.
+          if (expanded) e.stopPropagation()
+        }}
+      >
+        <canvas
+          ref={canvasRef}
+          className="block"
+          style={{ width: w, height: h, imageRendering: 'pixelated' }}
+          onClick={(e) => {
+            // Forward canvas clicks (fast-travel + shrink) to the
+            // parent handler — the scroll wrapper above swallowed
+            // bubbles to keep scroll-bar clicks inert.
+            handleCanvasClick(e as unknown as React.MouseEvent<HTMLDivElement>)
+          }}
+        />
+      </div>
       <div className={`flex items-center justify-between px-1.5 sm:px-3 py-0.5 sm:py-1 ${expanded && isMobile ? 'flex-wrap gap-1' : ''}`}>
         <p className="text-[9px] sm:text-sm text-white/30 font-medium">CALIFORNIA</p>
         <div className={`flex items-center ${expanded && isMobile ? 'gap-2 flex-wrap' : 'gap-3'}`}>
