@@ -12,6 +12,10 @@ export interface RoamingTrainer {
   team: RangerTeamMember[]
   rewardXp: number
   rewardItem?: { id: string; name: string; sprite: string; type: 'capture' | 'heal' | 'boost' | 'material'; quantity: number; description: string }
+  // One-line strategy hint shown in the encounter overlay. Player
+  // feedback: "When you encounter joggers and battle, can you
+  // provide tips on strategies to the player?"
+  strategyTip?: string
 }
 
 // Pool of roaming trainers that appear randomly in the world
@@ -30,6 +34,7 @@ export const ROAMING_TRAINERS: RoamingTrainer[] = [
       { creatureId: 'gray-fox', level: 6 },
     ],
     rewardXp: 80,
+    strategyTip: 'Lizard + fox lineup — lead with a fast water- or bird-type to break their reptile core.',
   },
   {
     id: 'birder-mei',
@@ -46,6 +51,7 @@ export const ROAMING_TRAINERS: RoamingTrainer[] = [
       { creatureId: 'great-blue-heron', level: 7 },
     ],
     rewardXp: 120,
+    strategyTip: 'All-bird team — high evasion and speed. Reptiles + ground creatures hit them where it counts.',
   },
   {
     id: 'surfer-kai',
@@ -63,6 +69,7 @@ export const ROAMING_TRAINERS: RoamingTrainer[] = [
     ],
     rewardXp: 150,
     rewardItem: { id: 'bio-capsule', name: 'Bio Capsule', sprite: '🔮', type: 'capture', quantity: 3, description: 'A standard capture device.' },
+    strategyTip: 'Heavy water lineup — bring an electric- or grass-type lead. Heal between rounds; the seal hits hard.',
   },
   {
     id: 'jogger-priya',
@@ -78,6 +85,7 @@ export const ROAMING_TRAINERS: RoamingTrainer[] = [
       { creatureId: 'mission-blue-butterfly', level: 5 },
     ],
     rewardXp: 70,
+    strategyTip: 'Quick mammal + a fragile butterfly — heavy hitters end this fast. Watch for evasion turns from the butterfly.',
   },
   {
     id: 'mycologist-finn',
@@ -95,6 +103,7 @@ export const ROAMING_TRAINERS: RoamingTrainer[] = [
     ],
     rewardXp: 180,
     rewardItem: { id: 'herb-potion', name: 'Herb Potion', sprite: '🧪', type: 'heal', quantity: 3, description: 'Restores 30 HP.' },
+    strategyTip: 'Slug + amphibian lineup — slow but tanky. Burst damage works; long fights wear you down via toxin chip.',
   },
   {
     id: 'photographer-luna',
@@ -112,6 +121,7 @@ export const ROAMING_TRAINERS: RoamingTrainer[] = [
     ],
     rewardXp: 200,
     rewardItem: { id: 'golden-capsule', name: 'Golden Capsule', sprite: '✨', type: 'capture', quantity: 2, description: 'A premium capture device with higher success rate.' },
+    strategyTip: 'Mixed apex predators — no single type beats all three. Keep a balanced team and heal aggressively.',
   },
   {
     id: 'night-owl-raven',
@@ -128,6 +138,7 @@ export const ROAMING_TRAINERS: RoamingTrainer[] = [
       { creatureId: 'midnight-coyote', level: 15 },
     ],
     rewardXp: 250,
+    strategyTip: 'Nocturnals hit hard but have low defense. Lead aggressive; keep a heal queued for the coyote burst.',
   },
   {
     id: 'marine-biologist-ocean',
@@ -145,6 +156,7 @@ export const ROAMING_TRAINERS: RoamingTrainer[] = [
     ],
     rewardXp: 300,
     rewardItem: { id: 'golden-capsule', name: 'Golden Capsule', sprite: '✨', type: 'capture', quantity: 3, description: 'A premium capture device with higher success rate.' },
+    strategyTip: 'Late-game marine boss. Tide Phantom is the threat — bring electric- or storm-type with high speed.',
   },
 ]
 

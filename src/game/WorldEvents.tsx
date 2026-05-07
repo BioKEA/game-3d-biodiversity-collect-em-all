@@ -162,6 +162,11 @@ interface BannerProps {
   dismissed: boolean
   dismiss: () => void
   currentSubregion: string
+  // Optional jump handler — when present, the banner shows a clearly
+  // labeled "Go see what's happening" button that warps the player
+  // to the event location. Player feedback: "include clear shortcut
+  // to 'go see what's happening' and fast-travel to that location."
+  onJumpToEvent?: () => void
 }
 
 export function useWorldEvents(gameMinutes: number, gameDay: number) {
@@ -201,7 +206,7 @@ export function useWorldEvents(gameMinutes: number, gameDay: number) {
   return { activeEvent, remainingMinutes, dismissed, dismiss }
 }
 
-export default function WorldEventBanner({ activeEvent, remainingMinutes, dismissed, dismiss, currentSubregion }: BannerProps) {
+export default function WorldEventBanner({ activeEvent, remainingMinutes, dismissed, dismiss, currentSubregion, onJumpToEvent }: BannerProps) {
   if (!activeEvent || dismissed) return null
 
   const isAtLocation = currentSubregion === activeEvent.subregion
@@ -210,8 +215,7 @@ export default function WorldEventBanner({ activeEvent, remainingMinutes, dismis
   return (
     <div className="absolute top-16 sm:top-28 left-1/2 -translate-x-1/2 z-20 w-[calc(100%-24px)] max-w-[560px]">
       <div
-        className="rounded-xl sm:rounded-2xl px-3 py-3 sm:px-6 sm:py-5 border shadow-lg cursor-pointer transition-all hover:scale-[1.02]"
-        onClick={dismiss}
+        className="rounded-xl sm:rounded-2xl px-3 py-3 sm:px-6 sm:py-5 border shadow-lg transition-all"
         style={{
           background: isAtLocation
             ? 'linear-gradient(135deg, rgba(74,222,128,0.12), rgba(34,211,238,0.08))'
@@ -237,14 +241,35 @@ export default function WorldEventBanner({ activeEvent, remainingMinutes, dismis
           {activeEvent.description} <span className="text-white/70 font-medium">{activeEvent.location}</span>
           {isAtLocation && <span className="text-emerald-400"> — You're here!</span>}
         </p>
-        <div className="flex items-center justify-between mt-1.5 sm:mt-3">
+        <div className="flex items-center justify-between gap-2 mt-1.5 sm:mt-3 flex-wrap">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <span className="text-xs sm:text-base" style={{ color: urgency ? '#f87171' : 'rgba(255,255,255,0.3)' }}>⏱</span>
             <span className="text-xs sm:text-base" style={{ color: urgency ? '#f87171' : 'rgba(255,255,255,0.3)' }}>
               {remainingMinutes}m remaining
             </span>
           </div>
-          <span className="text-[10px] sm:text-sm text-white/15">tap to dismiss</span>
+          <div className="flex items-center gap-2">
+            {!isAtLocation && onJumpToEvent && (
+              <button
+                onClick={onJumpToEvent}
+                className="px-3 py-1.5 rounded-md text-xs sm:text-sm font-bold transition-all hover:scale-[1.04] active:scale-95"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(20,184,166,0.35), rgba(20,184,166,0.18))',
+                  border: '1px solid rgba(20,184,166,0.55)',
+                  color: '#a7f3d0',
+                  boxShadow: '0 0 14px rgba(20,184,166,0.18)',
+                }}
+              >
+                Go there →
+              </button>
+            )}
+            <button
+              onClick={dismiss}
+              className="text-[10px] sm:text-sm text-white/30 hover:text-white/60 px-2 py-1"
+            >
+              Dismiss
+            </button>
+          </div>
         </div>
       </div>
     </div>

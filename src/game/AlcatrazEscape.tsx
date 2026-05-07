@@ -471,10 +471,18 @@ export default function AlcatrazEscape({ playerTeam, playerLevel, stage, cellBlo
     >
       {stage !== 'freedom' && (
         <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-white/20 hover:text-white/50 text-xs transition-colors z-10"
+          onClick={() => {
+            // Quick confirm; the previous version had this button at
+            // text-white/20 which most players never noticed, and the
+            // gauntlet kept auto-resuming after every battle. Make
+            // it loud so they understand they can leave.
+            if (confirm('Leave the Guardian Gauntlet? You can come back any time by docking at Alcatraz again.')) {
+              onClose()
+            }
+          }}
+          className="absolute top-3 right-3 z-10 px-3 py-1.5 rounded-md text-xs font-semibold text-white bg-red-900/40 hover:bg-red-700/60 border border-red-500/40 transition-colors"
         >
-          ✕ Abandon
+          ✕ Leave gauntlet
         </button>
       )}
 

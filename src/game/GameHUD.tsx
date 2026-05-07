@@ -993,13 +993,17 @@ export default function GameHUD({
               <button
                 onClick={onToggleFastTravel}
                 title="Fast travel"
-                className="w-6 h-6 sm:w-8 sm:h-8 rounded-md flex items-center justify-center active:scale-90 transition-all"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-md flex flex-col items-center justify-center gap-0 active:scale-90 transition-all"
                 style={{
-                  background: 'rgba(0,0,0,0.5)',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'linear-gradient(135deg, rgba(20,184,166,0.30), rgba(20,184,166,0.10))',
+                  border: '1px solid rgba(20,184,166,0.55)',
+                  boxShadow: '0 0 14px rgba(20,184,166,0.18)',
                 }}
               >
-                <span className="text-[10px] sm:text-sm">🗺️</span>
+                <span className="text-base sm:text-lg leading-none">🗺️</span>
+                <span className="text-[6px] sm:text-[7px] text-teal-200/85 font-semibold tracking-wider uppercase">
+                  Travel
+                </span>
               </button>
             )}
             {onToggleHotkeys && (

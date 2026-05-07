@@ -190,6 +190,11 @@ export default function Game() {
     isNewSpecies: boolean
     teamFull: boolean
   } | null>(null)
+  // Friendly gift notification — surfaces the item the creature gave
+  // when the player accepts a gift in a friendly encounter. Without
+  // this the gift just lands silently in inventory ("Animals give you
+  // gifts but it is not clear what they gave you" — player feedback).
+  const [giftNotif, setGiftNotif] = useState<FriendlyGift | null>(null)
   const [nicknamePrompt, setNicknamePrompt] = useState<{
     creature: Creature
     teamIndex: number
@@ -1183,6 +1188,8 @@ export default function Game() {
         encounterCooldown: 5,
       }
     })
+    setGiftNotif(gift)
+    setTimeout(() => setGiftNotif(null), 4000)
   }, [])
 
   // Ranger battle handlers
@@ -2159,7 +2166,22 @@ export default function Game() {
 
       {/* World event banner */}
       {gameState.screen === 'world' && (
-        <WorldEventBanner activeEvent={worldEvents.activeEvent} remainingMinutes={worldEvents.remainingMinutes} dismissed={worldEvents.dismissed} dismiss={worldEvents.dismiss} currentSubregion={gameState.currentSubregion} />
+        <WorldEventBanner
+          activeEvent={worldEvents.activeEvent}
+          remainingMinutes={worldEvents.remainingMinutes}
+          dismissed={worldEvents.dismissed}
+          dismiss={worldEvents.dismiss}
+          currentSubregion={gameState.currentSubregion}
+          onJumpToEvent={() => {
+            const evt = worldEvents.activeEvent
+            if (!evt) return
+            const dest = FAST_TRAVEL_DESTINATIONS.find((d) => d.subregion === evt.subregion)
+            if (dest) {
+              handleFastTravel(dest.x, dest.y, dest.subregion)
+              worldEvents.dismiss()
+            }
+          }}
+        />
       )}
 
       {/* State border message */}
@@ -2287,6 +2309,35 @@ export default function Game() {
                 <p className="text-white/25 text-[8px]">
                   {gameState.player.captured.length}/{56} species documented
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Friendly-gift notification — what the creature gave you */}
+      {gameState.screen === 'world' && giftNotif && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-24px)] max-w-[300px]">
+          <div
+            className="rounded-xl p-3 border shadow-lg flex items-center gap-3"
+            style={{
+              background: 'linear-gradient(135deg, rgba(244,182,52,0.18), rgba(251,191,36,0.10))',
+              borderColor: 'rgba(251,191,36,0.4)',
+              backdropFilter: 'blur(12px)',
+              boxShadow: '0 0 24px rgba(251,191,36,0.18), 0 8px 24px rgba(0,0,0,0.3)',
+              animation: 'notif-enter 0.4s ease-out',
+            }}
+          >
+            <div className="text-3xl leading-none flex-shrink-0">{giftNotif.sprite}</div>
+            <div className="min-w-0">
+              <div className="text-[9px] font-black uppercase tracking-[3px] text-amber-400/90">
+                Gift received
+              </div>
+              <div className="text-white text-sm font-bold leading-tight mt-0.5">
+                {giftNotif.itemName}
+              </div>
+              <div className="text-white/55 text-[10px] mt-0.5">
+                Added to inventory · +1
               </div>
             </div>
           </div>

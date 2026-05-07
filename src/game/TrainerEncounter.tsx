@@ -102,6 +102,23 @@ export default function TrainerEncounter({ trainer, onAccept, onDecline }: Props
           </p>
         </div>
 
+        {trainer.strategyTip && (
+          <div
+            className="rounded-xl px-3 py-2 w-full"
+            style={{
+              background: 'linear-gradient(135deg, rgba(34,211,238,0.10), rgba(34,211,238,0.04))',
+              border: '1px solid rgba(34,211,238,0.25)',
+            }}
+          >
+            <p className="text-cyan-300/80 text-[8px] font-black uppercase tracking-[3px] mb-0.5">
+              Battle tip
+            </p>
+            <p className="text-white/75 text-[11px] leading-snug">
+              {trainer.strategyTip}
+            </p>
+          </div>
+        )}
+
         {/* Team preview */}
         <div className="flex items-center gap-3 justify-center">
           {trainer.team.map((member, i) => (

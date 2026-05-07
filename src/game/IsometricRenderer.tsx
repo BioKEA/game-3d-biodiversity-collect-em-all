@@ -67,18 +67,23 @@ interface LightKeyframe {
   gradeR: number; gradeG: number; gradeB: number; gradeA: number
 }
 
+// Dark-period values softened (~35% lift on tintA + gradeA, ~25% lift
+// on vignetteStrength) so terrain reads clearly even at night/dawn/dusk.
+// Player feedback: "the game board is a little dark, can you increase
+// the contrast or brightness of the map features." Daytime values
+// already approach zero tint so we only nudge them slightly.
 const LIGHT_KEYFRAMES: LightKeyframe[] = [
-  { m: 0,    tintR: 30,  tintG: 50,  tintB: 120, tintA: 0.25, shadowAlpha: 0.40, bloomIntensity: 0.35, vignetteStrength: 0.55, gradeR: 68, gradeG: 102, gradeB: 170, gradeA: 0.25 },
-  { m: 300,  tintR: 80,  tintG: 60,  tintB: 100, tintA: 0.18, shadowAlpha: 0.30, bloomIntensity: 0.30, vignetteStrength: 0.45, gradeR: 120, gradeG: 80, gradeB: 100, gradeA: 0.15 },
-  { m: 360,  tintR: 255, tintG: 180, tintB: 120, tintA: 0.14, shadowAlpha: 0.22, bloomIntensity: 0.28, vignetteStrength: 0.40, gradeR: 255, gradeG: 150, gradeB: 100, gradeA: 0.12 },
-  { m: 420,  tintR: 255, tintG: 220, tintB: 180, tintA: 0.08, shadowAlpha: 0.22, bloomIntensity: 0.20, vignetteStrength: 0.32, gradeR: 255, gradeG: 240, gradeB: 220, gradeA: 0.05 },
-  { m: 540,  tintR: 255, tintG: 255, tintB: 240, tintA: 0.05, shadowAlpha: 0.25, bloomIntensity: 0.15, vignetteStrength: 0.30, gradeR: 255, gradeG: 255, gradeB: 238, gradeA: 0.04 },
-  { m: 720,  tintR: 255, tintG: 255, tintB: 240, tintA: 0.05, shadowAlpha: 0.25, bloomIntensity: 0.15, vignetteStrength: 0.30, gradeR: 255, gradeG: 255, gradeB: 238, gradeA: 0.04 },
-  { m: 1020, tintR: 255, tintG: 200, tintB: 140, tintA: 0.10, shadowAlpha: 0.25, bloomIntensity: 0.20, vignetteStrength: 0.35, gradeR: 255, gradeG: 180, gradeB: 100, gradeA: 0.08 },
-  { m: 1080, tintR: 200, tintG: 100, tintB: 60,  tintA: 0.18, shadowAlpha: 0.30, bloomIntensity: 0.25, vignetteStrength: 0.45, gradeR: 200, gradeG: 70, gradeB: 100, gradeA: 0.15 },
-  { m: 1140, tintR: 80,  tintG: 60,  tintB: 120, tintA: 0.22, shadowAlpha: 0.35, bloomIntensity: 0.30, vignetteStrength: 0.50, gradeR: 80, gradeG: 80, gradeB: 140, gradeA: 0.20 },
-  { m: 1260, tintR: 30,  tintG: 50,  tintB: 120, tintA: 0.25, shadowAlpha: 0.40, bloomIntensity: 0.35, vignetteStrength: 0.55, gradeR: 68, gradeG: 102, gradeB: 170, gradeA: 0.25 },
-  { m: 1440, tintR: 30,  tintG: 50,  tintB: 120, tintA: 0.25, shadowAlpha: 0.40, bloomIntensity: 0.35, vignetteStrength: 0.55, gradeR: 68, gradeG: 102, gradeB: 170, gradeA: 0.25 },
+  { m: 0,    tintR: 30,  tintG: 50,  tintB: 120, tintA: 0.16, shadowAlpha: 0.30, bloomIntensity: 0.35, vignetteStrength: 0.40, gradeR: 68, gradeG: 102, gradeB: 170, gradeA: 0.16 },
+  { m: 300,  tintR: 80,  tintG: 60,  tintB: 100, tintA: 0.12, shadowAlpha: 0.22, bloomIntensity: 0.30, vignetteStrength: 0.32, gradeR: 120, gradeG: 80, gradeB: 100, gradeA: 0.10 },
+  { m: 360,  tintR: 255, tintG: 180, tintB: 120, tintA: 0.10, shadowAlpha: 0.18, bloomIntensity: 0.28, vignetteStrength: 0.28, gradeR: 255, gradeG: 150, gradeB: 100, gradeA: 0.08 },
+  { m: 420,  tintR: 255, tintG: 220, tintB: 180, tintA: 0.06, shadowAlpha: 0.18, bloomIntensity: 0.20, vignetteStrength: 0.24, gradeR: 255, gradeG: 240, gradeB: 220, gradeA: 0.04 },
+  { m: 540,  tintR: 255, tintG: 255, tintB: 240, tintA: 0.04, shadowAlpha: 0.20, bloomIntensity: 0.15, vignetteStrength: 0.22, gradeR: 255, gradeG: 255, gradeB: 238, gradeA: 0.03 },
+  { m: 720,  tintR: 255, tintG: 255, tintB: 240, tintA: 0.04, shadowAlpha: 0.20, bloomIntensity: 0.15, vignetteStrength: 0.22, gradeR: 255, gradeG: 255, gradeB: 238, gradeA: 0.03 },
+  { m: 1020, tintR: 255, tintG: 200, tintB: 140, tintA: 0.07, shadowAlpha: 0.20, bloomIntensity: 0.20, vignetteStrength: 0.26, gradeR: 255, gradeG: 180, gradeB: 100, gradeA: 0.06 },
+  { m: 1080, tintR: 200, tintG: 100, tintB: 60,  tintA: 0.12, shadowAlpha: 0.22, bloomIntensity: 0.25, vignetteStrength: 0.32, gradeR: 200, gradeG: 70, gradeB: 100, gradeA: 0.10 },
+  { m: 1140, tintR: 80,  tintG: 60,  tintB: 120, tintA: 0.14, shadowAlpha: 0.26, bloomIntensity: 0.30, vignetteStrength: 0.36, gradeR: 80, gradeG: 80, gradeB: 140, gradeA: 0.13 },
+  { m: 1260, tintR: 30,  tintG: 50,  tintB: 120, tintA: 0.16, shadowAlpha: 0.30, bloomIntensity: 0.35, vignetteStrength: 0.40, gradeR: 68, gradeG: 102, gradeB: 170, gradeA: 0.16 },
+  { m: 1440, tintR: 30,  tintG: 50,  tintB: 120, tintA: 0.16, shadowAlpha: 0.30, bloomIntensity: 0.35, vignetteStrength: 0.40, gradeR: 68, gradeG: 102, gradeB: 170, gradeA: 0.16 },
 ]
 
 function lerpLighting(minutes: number): LightKeyframe {
