@@ -19,8 +19,8 @@ interface Props {
 // Rectangular minimap — map is 200x500 (2:5 ratio)
 const SM_W = 96
 const SM_H = 240
-const LG_W = 176
-const LG_H = 440
+const LG_W = 384
+const MAP_ASPECT = MAP_HEIGHT / MAP_WIDTH
 
 const WEATHER_INFO: Record<WeatherType, { icon: string; color: string }> = {
   clear: { icon: '☀', color: '#fbbf24' },
@@ -66,11 +66,15 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
   const smW = isMobile ? 64 : SM_W
   const smH = isMobile ? 160 : SM_H
   const mobileFullW = Math.min(window.innerWidth - 16, 360)
-  const mobileFullH = Math.min(window.innerHeight - 80, Math.round(mobileFullW * 2.2))
-  const lgW = isMobile ? mobileFullW : LG_W
-  const lgH = isMobile ? mobileFullH : LG_H
+  const desktopFullW = Math.min(window.innerWidth - 32, LG_W)
+  const lgW = isMobile ? mobileFullW : desktopFullW
+  const lgH = Math.round(lgW * MAP_ASPECT)
   const w = expanded ? lgW : smW
   const h = expanded ? lgH : smH
+  const maxExpandedPanelH = Math.max(260, window.innerHeight - (isMobile ? 16 : 132))
+  const expandedControlsH = isMobile ? 86 : 38
+  const mapViewportH = expanded ? Math.min(h, Math.max(180, maxExpandedPanelH - expandedControlsH)) : h
+  const mapNeedsScroll = expanded && h > mapViewportH
   const totalExplorableTiles = useMemo(() => {
     let total = 0
     for (const row of map) {
@@ -565,7 +569,6 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
         }
       }
     }
-    setExpanded(false)
   }, [expanded, onFastTravel])
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -596,8 +599,10 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
 
   return (
     <div
-      className={`${expanded && isMobile ? 'fixed inset-0 flex flex-col items-center justify-center' : 'absolute top-1.5 sm:top-28 right-1.5 sm:right-3'} ${expanded ? 'z-50' : 'z-20'} rounded-xl overflow-hidden border cursor-pointer transition-all duration-300`}
+      className={`${expanded && isMobile ? 'fixed inset-0 flex flex-col items-center justify-center' : 'absolute top-1.5 sm:top-28 right-1.5 sm:right-3'} ${expanded ? 'z-50' : 'z-20'} rounded-xl overflow-hidden border transition-all duration-300`}
       style={{
+        width: expanded ? w : undefined,
+        maxHeight: expanded ? maxExpandedPanelH : undefined,
         borderColor: expanded ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.1)',
         background: expanded && isMobile ? 'rgba(0,0,0,0.92)' : 'rgba(0,0,0,0.55)',
         backdropFilter: 'blur(6px)',
@@ -605,18 +610,35 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
           ? '0 0 20px rgba(74,222,128,0.1), inset 0 1px 0 rgba(255,255,255,0.05)'
           : '0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
       }}
-      onClick={handleCanvasClick}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => setHoveredRegion(null)}
-      title={expanded ? (onFastTravel ? 'Click a region to fast-travel' : 'Click to shrink') : 'Click to expand'}
     >
-      <canvas
-        ref={canvasRef}
-        className="block"
-        style={{ width: w, height: h, imageRendering: 'pixelated' }}
-      />
+      <div
+        className={`${mapNeedsScroll ? 'overflow-y-auto overflow-x-hidden' : 'overflow-hidden'} ${!expanded || onFastTravel ? 'cursor-pointer' : 'cursor-default'}`}
+        style={{
+          width: w,
+          height: expanded ? mapViewportH : h,
+          maxHeight: mapViewportH,
+          scrollbarColor: 'rgba(74,222,128,0.35) rgba(255,255,255,0.06)',
+        }}
+        onClick={handleCanvasClick}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHoveredRegion(null)}
+        title={expanded ? (onFastTravel ? 'Click a region label to fast-travel' : 'Scroll the map') : 'Click to expand'}
+      >
+        <canvas
+          ref={canvasRef}
+          className="block"
+          style={{ width: w, height: h, imageRendering: 'pixelated' }}
+        />
+      </div>
       <div className={`flex items-center justify-between px-1.5 sm:px-3 py-0.5 sm:py-1 ${expanded && isMobile ? 'flex-wrap gap-1' : ''}`}>
-        <p className="text-[9px] sm:text-sm text-white/35 font-bold tracking-wider">CA FIELD MAP</p>
+        <button
+          type="button"
+          className="text-[9px] sm:text-sm text-white/35 hover:text-emerald-200/80 font-bold tracking-wider transition-colors"
+          onClick={(e) => { e.stopPropagation(); setExpanded(v => !v) }}
+          title={expanded ? 'Shrink field map' : 'Expand field map'}
+        >
+          CA FIELD MAP
+        </button>
         <div className={`flex items-center ${expanded && isMobile ? 'gap-2 flex-wrap' : 'gap-3'}`}>
           {expanded && (
             <>
@@ -647,7 +669,14 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
             </span>
           )}
           {!(expanded && isMobile) && (
-            <span className="text-sm text-white/20">{expanded ? '−' : '+'}</span>
+            <button
+              type="button"
+              className="text-sm text-white/20 hover:text-white/50 transition-colors"
+              onClick={(e) => { e.stopPropagation(); setExpanded(v => !v) }}
+              title={expanded ? 'Shrink field map' : 'Expand field map'}
+            >
+              {expanded ? '−' : '+'}
+            </button>
           )}
         </div>
       </div>
