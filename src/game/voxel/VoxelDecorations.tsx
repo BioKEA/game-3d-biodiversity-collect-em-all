@@ -32,8 +32,8 @@ function getDecorations(tile: MapTile): DecoInstance[] {
   // Trees for forest/redwood
   if ((biome === 'forest' || biome === 'redwood' || biome === 'oak_woodland') && r > 0.35) {
     const h = biome === 'redwood' ? 0.6 + r2 * 0.4 : 0.3 + r2 * 0.3
-    const trunkC = biome === 'redwood' ? '#5c2e0e' : '#8b6914'
-    const leafC = biome === 'redwood' ? '#0a4a20' : biome === 'oak_woodland' ? '#4a7c10' : '#1a8a30'
+    const trunkC = biome === 'redwood' ? '#5b321d' : '#79613c'
+    const leafC = biome === 'redwood' ? '#17482d' : biome === 'oak_woodland' ? '#5e7738' : '#356f45'
     // Trunk
     decos.push({ x: wx + (r2 - 0.5) * 0.3, y: groundY + h * 0.4, z: wz + (r - 0.5) * 0.3, sx: 0.08, sy: h * 0.8, sz: 0.08, color: trunkC })
     // Canopy (stacked cubes for voxel feel)
@@ -45,35 +45,35 @@ function getDecorations(tile: MapTile): DecoInstance[] {
 
   // Grass tufts for grassland
   if (biome === 'grassland' && r > 0.5) {
-    decos.push({ x: wx + (r2 - 0.5) * 0.4, y: groundY + 0.06, z: wz + (r - 0.5) * 0.4, sx: 0.08, sy: 0.12, sz: 0.08, color: '#2dd44a' })
+    decos.push({ x: wx + (r2 - 0.5) * 0.4, y: groundY + 0.06, z: wz + (r - 0.5) * 0.4, sx: 0.08, sy: 0.12, sz: 0.08, color: '#b4bd77' })
   }
 
   // Rocks for mountain/rocky_beach
   if ((biome === 'mountain' || biome === 'rocky_beach') && r > 0.4) {
     const rs = 0.08 + r2 * 0.1
-    decos.push({ x: wx + (r2 - 0.5) * 0.3, y: groundY + rs / 2, z: wz + (r - 0.5) * 0.3, sx: rs, sy: rs, sz: rs, color: '#777777' })
+    decos.push({ x: wx + (r2 - 0.5) * 0.3, y: groundY + rs / 2, z: wz + (r - 0.5) * 0.3, sx: rs, sy: rs, sz: rs, color: '#8b8376' })
   }
 
   // Marsh reeds
   if (biome === 'marsh' && r > 0.4) {
-    decos.push({ x: wx + (r2 - 0.5) * 0.3, y: groundY + 0.1, z: wz + (r - 0.5) * 0.3, sx: 0.03, sy: 0.2, sz: 0.03, color: '#6b8a20' })
-    if (r > 0.6) decos.push({ x: wx + (r - 0.5) * 0.3, y: groundY + 0.08, z: wz + (r2 - 0.5) * 0.3, sx: 0.03, sy: 0.16, sz: 0.03, color: '#7a9a30' })
+    decos.push({ x: wx + (r2 - 0.5) * 0.3, y: groundY + 0.1, z: wz + (r - 0.5) * 0.3, sx: 0.03, sy: 0.2, sz: 0.03, color: '#788751' })
+    if (r > 0.6) decos.push({ x: wx + (r - 0.5) * 0.3, y: groundY + 0.08, z: wz + (r2 - 0.5) * 0.3, sx: 0.03, sy: 0.16, sz: 0.03, color: '#a6a463' })
   }
 
   // Urban small buildings
   if (biome === 'urban' && r > 0.55) {
     const bh = 0.15 + r2 * 0.2
-    decos.push({ x: wx + (r2 - 0.5) * 0.2, y: groundY + bh / 2, z: wz + (r - 0.5) * 0.2, sx: 0.18, sy: bh, sz: 0.18, color: '#9ca3af' })
+    decos.push({ x: wx + (r2 - 0.5) * 0.2, y: groundY + bh / 2, z: wz + (r - 0.5) * 0.2, sx: 0.18, sy: bh, sz: 0.18, color: '#9aa3a7' })
   }
 
   // Chaparral scrub bushes
   if (biome === 'chaparral' && r > 0.45) {
-    decos.push({ x: wx + (r2 - 0.5) * 0.3, y: groundY + 0.06, z: wz + (r - 0.5) * 0.3, sx: 0.15, sy: 0.12, sz: 0.15, color: '#8a8a40' })
+    decos.push({ x: wx + (r2 - 0.5) * 0.3, y: groundY + 0.06, z: wz + (r - 0.5) * 0.3, sx: 0.15, sy: 0.12, sz: 0.15, color: '#8f8458' })
   }
 
   // Beach shells/debris
   if (biome === 'beach' && r > 0.7) {
-    decos.push({ x: wx + (r2 - 0.5) * 0.4, y: groundY + 0.02, z: wz + (r - 0.5) * 0.4, sx: 0.05, sy: 0.03, sz: 0.05, color: '#f5deb3' })
+    decos.push({ x: wx + (r2 - 0.5) * 0.4, y: groundY + 0.02, z: wz + (r - 0.5) * 0.4, sx: 0.05, sy: 0.03, sz: 0.05, color: '#ead7a4' })
   }
 
   return decos

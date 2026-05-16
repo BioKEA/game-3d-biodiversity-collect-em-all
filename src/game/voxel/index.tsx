@@ -9,6 +9,7 @@ import VoxelLandmarks from './VoxelLandmarks'
 import VoxelEntities from './VoxelEntities'
 import VoxelEnvironment from './VoxelEnvironment'
 import VoxelDecorations from './VoxelDecorations'
+import VoxelSurfaceDetails from './VoxelSurfaceDetails'
 
 interface RangerPosition {
   x: number
@@ -71,6 +72,7 @@ function Scene({ map, playerX, playerY, rangers, timeOfDay = 'day', weather = 'c
       <CameraController playerX={playerX} playerY={playerY} map={map} />
       <VoxelEnvironment timeOfDay={timeOfDay} weather={weather} />
       <VoxelTerrain map={map} playerX={playerX} playerY={playerY} />
+      <VoxelSurfaceDetails map={map} playerX={playerX} playerY={playerY} />
       <VoxelDecorations map={map} playerX={playerX} playerY={playerY} />
       <VoxelLandmarks playerX={playerX} playerY={playerY} map={map} />
       <VoxelPlayer x={playerX} y={playerY} map={map} />

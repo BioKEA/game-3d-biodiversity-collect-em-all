@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { BiomeType } from '@/types/game'
 import { SFX } from './sounds'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface FishDef {
   id: string
@@ -279,7 +280,7 @@ export default function FishingScreen({ biome, onClose, onCatch, fishLog = [] }:
 
         {phase === 'hooked' && fish && (
           <div className="flex flex-col items-center gap-3 animate-in zoom-in duration-300">
-            <span className="text-5xl animate-bounce">{fish.sprite}</span>
+            <PixelCreatureToken creature={{ ...fish, color: rarityColor }} size={64} selected style={{ animation: 'bounce 1s infinite' }} />
             <p className="text-white font-bold">{fish.name}</p>
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{
               color: rarityColor,
@@ -321,10 +322,10 @@ export default function FishingScreen({ biome, onClose, onCatch, fishLog = [] }:
 
               {/* Fish position */}
               <div
-                className="absolute left-1/2 -translate-x-1/2 text-xl transition-none"
+                className="absolute left-1/2 -translate-x-1/2 transition-none"
                 style={{ top: `${reelPos - 2}%` }}
               >
-                {fish.sprite}
+                <PixelCreatureToken creature={{ ...fish, color: rarityColor }} size={24} />
               </div>
             </div>
 
@@ -336,7 +337,7 @@ export default function FishingScreen({ biome, onClose, onCatch, fishLog = [] }:
                 border: '1px solid rgba(255,255,255,0.06)',
               }}>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">{fish.sprite}</span>
+                  <PixelCreatureToken creature={{ ...fish, color: rarityColor }} size={28} />
                   <div>
                     <p className="text-white text-xs font-semibold">{fish.name}</p>
                     <span className="text-[8px] font-semibold" style={{ color: rarityColor }}>
@@ -401,7 +402,7 @@ export default function FishingScreen({ biome, onClose, onCatch, fishLog = [] }:
         {phase === 'caught' && fish && (
           <div className="flex flex-col items-center gap-4 animate-in zoom-in duration-500">
             <div className="relative">
-              <span className="text-6xl block">{fish.sprite}</span>
+              <PixelCreatureToken creature={{ ...fish, color: rarityColor }} size={76} selected />
               <div className="absolute -inset-4 rounded-full animate-ping opacity-20" style={{
                 background: `radial-gradient(circle, ${rarityColor}, transparent)`,
               }} />

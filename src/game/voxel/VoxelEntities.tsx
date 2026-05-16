@@ -2,6 +2,7 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { MapTile } from '@/types/game'
+import { FIELD_GUIDE_ENTITY_COLORS } from '../artDirection'
 import { TILE_SIZE, TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS, seededRand } from './constants'
 
 interface RangerPosition {
@@ -20,7 +21,7 @@ interface Props {
 const _dummy = new THREE.Object3D()
 const _color = new THREE.Color()
 
-// Creature markers — glowing orbs on tiles that have creatures
+// Creature markers on tiles that have creatures
 function CreatureMarkers({ map, playerX, playerY }: Omit<Props, 'rangers'>) {
   const meshRef = useRef<THREE.InstancedMesh>(null)
 
@@ -53,12 +54,11 @@ function CreatureMarkers({ map, playerX, playerY }: Omit<Props, 'rangers'>) {
       const groundY = TILE_BASE_HEIGHT + elevation * ELEVATION_SCALE
       const bob = Math.sin(t * 2 + seededRand(tile.x, tile.y) * 6.28) * 0.08
       _dummy.position.set(tile.x * TILE_SIZE, groundY + 0.3 + bob, -tile.y * TILE_SIZE)
-      _dummy.scale.setScalar(0.12 + Math.sin(t * 3 + i) * 0.02)
+      const pulse = Math.sin(t * 3 + i) * 0.015
+      _dummy.scale.set(0.12 + pulse, 0.18 + pulse, 0.12 + pulse)
       _dummy.updateMatrix()
       mesh.setMatrixAt(i, _dummy.matrix)
-      // Green-yellow glow
-      const hue = 0.25 + seededRand(tile.x, tile.y, 1) * 0.15
-      _color.setHSL(hue, 0.8, 0.6)
+      _color.set(seededRand(tile.x, tile.y, 1) > 0.5 ? FIELD_GUIDE_ENTITY_COLORS.creatureMarker : FIELD_GUIDE_ENTITY_COLORS.creatureMarkerDark)
       mesh.setColorAt(i, _color)
     })
     mesh.count = creatureTiles.length
@@ -68,14 +68,16 @@ function CreatureMarkers({ map, playerX, playerY }: Omit<Props, 'rangers'>) {
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, 200]}>
-      <sphereGeometry args={[1, 6, 6]} />
+      <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial
         color="#ffffff"
-        emissive="#44ff44"
-        emissiveIntensity={0.5}
+        emissive={FIELD_GUIDE_ENTITY_COLORS.creatureMarkerDark}
+        emissiveIntensity={0.08}
         transparent
-        opacity={0.85}
+        opacity={0.9}
+        roughness={0.92}
         toneMapped={false}
+        flatShading
       />
     </instancedMesh>
   )
@@ -98,21 +100,21 @@ function Rangers({ rangers = [], map }: { rangers: RangerPosition[]; map: MapTil
             {/* Body */}
             <mesh position={[0, s * 3.5, 0]}>
               <boxGeometry args={[s * 3.5, s * 4, s * 2.5]} />
-              <meshStandardMaterial color="#2d5016" flatShading />
+              <meshStandardMaterial color={FIELD_GUIDE_ENTITY_COLORS.rangerJacket} flatShading />
             </mesh>
             {/* Head */}
             <mesh position={[0, s * 7, 0]}>
               <boxGeometry args={[s * 3, s * 3, s * 3]} />
-              <meshStandardMaterial color="#deb887" flatShading />
+              <meshStandardMaterial color={FIELD_GUIDE_ENTITY_COLORS.skin} flatShading />
             </mesh>
             {/* Ranger hat */}
             <mesh position={[0, s * 9, 0]}>
               <boxGeometry args={[s * 4, s * 1, s * 4]} />
-              <meshStandardMaterial color="#8b4513" flatShading />
+              <meshStandardMaterial color={FIELD_GUIDE_ENTITY_COLORS.rangerHat} flatShading />
             </mesh>
             <mesh position={[0, s * 9.8, 0]}>
               <boxGeometry args={[s * 2.5, s * 1.2, s * 2.5]} />
-              <meshStandardMaterial color="#8b4513" flatShading />
+              <meshStandardMaterial color={FIELD_GUIDE_ENTITY_COLORS.rangerHat} flatShading />
             </mesh>
             {/* Legs */}
             <mesh position={[-s * 0.8, s * 0.5, 0]}>

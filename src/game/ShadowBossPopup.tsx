@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, memo } from 'react'
 import type { Creature } from '@/types/game'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   boss: Creature
@@ -134,11 +135,12 @@ const ShadowBossPopup = memo(function ShadowBossPopup({ boss, onReady, onFlee }:
               filter: `drop-shadow(0 0 25px ${boss.color}90) drop-shadow(0 0 50px ${boss.color}50)`,
             }}
           >
-            <span className="text-8xl" style={{
-              animation: 'shadow-boss-breathe 4s ease-in-out infinite',
-            }}>
-              {boss.sprite}
-            </span>
+            <PixelCreatureToken
+              creature={boss}
+              size={104}
+              selected
+              style={{ animation: 'shadow-boss-breathe 4s ease-in-out infinite' }}
+            />
             <span className="absolute -top-2 -right-2 text-xl" style={{
               animation: 'shadow-boss-eye 2s ease-in-out infinite',
               filter: 'drop-shadow(0 0 6px rgba(168,85,247,0.8))',

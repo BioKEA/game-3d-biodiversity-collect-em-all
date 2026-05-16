@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Creature } from '@/types/game'
 import { ALL_CREATURES } from './creatures'
 import { SFX } from './sounds'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   playerLevel: number
@@ -415,13 +416,13 @@ export default function DivingMinigame({ playerLevel: _playerLevel, onClose, onE
           </div>
 
           <div className="relative">
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl" style={{
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{
               background: 'linear-gradient(135deg, rgba(6,182,212,0.15), rgba(59,130,246,0.1))',
               border: '2px solid rgba(6,182,212,0.3)',
               boxShadow: '0 0 20px rgba(6,182,212,0.15)',
               animation: 'pulse 2s ease-in-out infinite',
             }}>
-              {encounterCreature.sprite}
+              <PixelCreatureToken creature={encounterCreature} size={58} selected />
             </div>
             {captured.includes(encounterCreature.id) && (
               <span className="absolute -top-1 -right-1 text-[8px] bg-green-500/80 text-white px-1 rounded-full">✓</span>

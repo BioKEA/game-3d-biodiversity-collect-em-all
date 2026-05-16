@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { CapturedCreature } from '@/types/game'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface StarterOption {
   creature: CapturedCreature
@@ -234,15 +235,7 @@ export default function StarterSelect({ onSelect }: Props) {
                 }}
               >
                 <div className="flex items-center gap-3">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-all shrink-0"
-                    style={{
-                      background: isSelected ? `${starter.creature.color}20` : 'rgba(255,255,255,0.03)',
-                      boxShadow: isSelected ? `0 0 20px ${starter.creature.color}30` : 'none',
-                    }}
-                  >
-                    {starter.creature.sprite}
-                  </div>
+                  <PixelCreatureToken creature={starter.creature} size={48} selected={isSelected} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-white font-semibold text-sm truncate">{starter.creature.name}</span>

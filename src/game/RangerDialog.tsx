@@ -4,6 +4,7 @@ import { ALL_CREATURES } from './creatures'
 import { FINAL_BOSS_ID, MINI_BOSS_IDS, GRAND_CHAMPION_ID, canChallengeFinalBoss, canChallengeGrandChampion, getGrandChampionProgress } from './rangers'
 import { describeObjective, getQuestProgress, getObjectiveTarget } from './questHelpers'
 import { getRangerActivity, getActivityEmoji, getActivityLabel } from './npcSchedules'
+import PixelCreatureToken from './PixelCreatureToken'
 
 // Pick a response based on simple keyword matching over the user's message.
 // Falls back to a generic reply. Ranger-flavored, Bay Area ecology themed.
@@ -596,7 +597,7 @@ export default function RangerDialog({
                         const c = ALL_CREATURES.find(cr => cr.id === m.creatureId)
                         return (
                           <div key={i} className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/8">
-                            <span className="text-sm">{c?.sprite ?? '?'}</span>
+                            {c ? <PixelCreatureToken creature={c} size={20} /> : <span className="text-white/15 text-xs">?</span>}
                             <span className="text-[9px] text-white/50">Lv.{m.level}</span>
                           </div>
                         )

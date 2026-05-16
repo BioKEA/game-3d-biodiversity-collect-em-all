@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { Creature, BiomeType, TimeOfDay } from '@/types/game'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   creature: Creature
@@ -279,15 +280,14 @@ export default function EncounterTransition({ creature, biome, timeOfDay, onComp
             transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
           }}
         >
-          {/* Sprite with bounce */}
+          {/* Pixel-box creature reveal */}
           <div
-            className="text-8xl"
             style={{
               filter: `drop-shadow(0 0 20px ${creature.color}60)`,
               animation: phase === 'reveal' || phase === 'text' ? 'encounter-creature-bounce 0.6s ease-out' : undefined,
             }}
           >
-            {creature.sprite}
+            <PixelCreatureToken creature={creature} size={104} selected={isRare || isLegendary} />
           </div>
 
           {/* Sparkle particles around creature */}

@@ -2,6 +2,7 @@ import type { Creature } from '@/types/game'
 import { ALL_CREATURES } from './creatures'
 import { getMonth, getMonthName, isCreatureInSeason } from './timeWeather'
 import FloatingPanel from './FloatingPanel'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   gameDay: number
@@ -96,7 +97,7 @@ export default function MigrationCalendar({ gameDay, onClose }: Props) {
               <div key={row.creature.id} className="flex items-center gap-2">
                 {/* Name + sprite */}
                 <div className="w-[110px] shrink-0 flex items-center gap-1.5 min-w-0">
-                  <span className="text-sm shrink-0">{row.creature.sprite}</span>
+                  <PixelCreatureToken creature={row.creature} size={20} />
                   <div className="flex-1 min-w-0">
                     <div
                       className="text-[10px] font-medium truncate"

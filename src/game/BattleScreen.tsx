@@ -14,6 +14,7 @@ import { getEffectiveStats, getHeldItem } from './heldItems'
 import { SFX } from './sounds'
 import BattleBiomeBackground from './BattleBiomeBackground'
 import { TypeMatchupBadge } from './TypeChart'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   wildCreature: Creature
@@ -1015,13 +1016,8 @@ export default function BattleScreen({
                 </div>
 
                 {/* Creature sprite */}
-                <div className="w-16 h-16 mx-auto rounded-xl flex items-center justify-center text-4xl mb-2" style={{
-                  background: wildCreature.isShiny ? 'rgba(192,132,252,0.12)' : wildCreature.isAlpha ? 'rgba(251,191,36,0.12)' : `${wildCreature.color}15`,
-                  border: `1px solid ${wildCreature.isShiny ? 'rgba(192,132,252,0.3)' : wildCreature.isAlpha ? 'rgba(251,191,36,0.3)' : `${wildCreature.color}30`}`,
-                  boxShadow: `0 0 20px ${wildCreature.isShiny ? 'rgba(192,132,252,0.2)' : wildCreature.isAlpha ? 'rgba(251,191,36,0.2)' : `${wildCreature.color}15`}`,
-                  filter: wildCreature.isShiny ? 'hue-rotate(180deg) saturate(1.3)' : 'none',
-                }}>
-                  {wildCreature.sprite}
+                <div className="flex justify-center mb-2">
+                  <PixelCreatureToken creature={wildCreature} size={70} selected />
                 </div>
 
                 {/* Name and info */}
@@ -1197,7 +1193,7 @@ export default function BattleScreen({
                 ))}
               </div>
             )}
-            <div className="text-6xl mb-1 drop-shadow-lg relative" style={{
+            <div className="mb-1 relative inline-flex" style={{
               filter: enemyHp <= 0 ? 'grayscale(1) opacity(0.5)'
                 : enemyHitFlash ? 'brightness(3)'
                 : enemyStatusFlash === 'poison' ? 'brightness(0.7) hue-rotate(80deg)'
@@ -1211,13 +1207,7 @@ export default function BattleScreen({
               transition: 'filter 0.15s, transform 0.1s',
               animation: enemyHp > 0 ? 'creature-float 4s ease-in-out infinite, creature-breathe 3s ease-in-out infinite, creature-blink 5s ease-in-out infinite' : 'none',
             }}>
-              {wildCreature.sprite}
-              {wildCreature.isAlpha && (
-                <span className="absolute -top-2 -right-3 text-xs">⭐</span>
-              )}
-              {wildCreature.isShiny && (
-                <span className="absolute -top-2 -right-3 text-xs" style={{ animation: 'capture-sparkle 1.5s ease-in-out infinite' }}>✨</span>
-              )}
+              <PixelCreatureToken creature={wildCreature} size={68} selected={wildCreature.rarity === 'rare' || wildCreature.rarity === 'legendary'} />
             </div>
             {/* Ground shadow with breathing sync */}
             <div className="mx-auto -mt-1 mb-2" style={{
@@ -1395,7 +1385,7 @@ export default function BattleScreen({
               </div>
             )}
             <div style={{ animation: 'creature-float 4s ease-in-out infinite 0.5s, creature-breathe 3s ease-in-out infinite 0.5s' }}>
-              <div className="text-5xl mb-1 drop-shadow-lg relative" style={{
+              <div className="mb-1 relative inline-flex" style={{
                 transform: `scaleX(-1) ${shakePlayer ? 'translateX(4px)' : ''} ${playerStatus.effect === 'confuse' ? 'rotate(-5deg)' : ''}`,
                 transition: 'filter 0.15s, transform 0.1s',
                 filter: playerHitFlash ? 'brightness(3) drop-shadow(0 0 8px rgba(74,222,128,0.2))'
@@ -1406,7 +1396,7 @@ export default function BattleScreen({
                   : 'drop-shadow(0 0 8px rgba(74,222,128,0.2))',
                 animation: 'creature-blink 5s ease-in-out infinite 1s',
               }}>
-                {playerCreature.sprite}
+                <PixelCreatureToken creature={playerCreature} size={60} selected flipped />
                 {getHeldItem(playerCreature) && (
                   <span
                     className="absolute -bottom-0.5 -right-0.5 text-base"
@@ -1710,8 +1700,8 @@ export default function BattleScreen({
             }}
           >
             <div className="text-center mb-3.5">
-              <div className="text-5xl mb-1.5" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>
-                {wildCreature.sprite}
+              <div className="flex justify-center mb-1.5">
+                <PixelCreatureToken creature={wildCreature} size={58} selected />
               </div>
               <div className="text-[15px] text-white font-bold tracking-wide">{wildCreature.name}</div>
               <div className="flex justify-center gap-1.5 mt-1">
@@ -1911,7 +1901,7 @@ export default function BattleScreen({
                     className="p-2 rounded-lg bg-white/5 border border-white/10 text-left disabled:opacity-50"
                   >
                     <div className="flex items-center gap-1.5">
-                      <span className="text-lg">{c.sprite}</span>
+                      <PixelCreatureToken creature={c} size={30} />
                       <div>
                         <span className="text-white text-xs font-semibold block">
                           {c.nickname || c.name}

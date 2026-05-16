@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import type { BiomeType, CreatureType } from '@/types/game'
 import { ALL_CREATURES } from './creatures'
 import FloatingPanel from './FloatingPanel'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   catalogSeen: string[]
@@ -217,12 +218,11 @@ export default function HabitatMap({ catalogSeen, catalogCaptured, onClose }: Pr
                     }}
                   >
                     <div className="flex items-center gap-1.5">
-                      <span className="text-lg" style={{
-                        filter: isSeen ? 'none' : 'brightness(0) saturate(0)',
-                        opacity: isSeen ? 1 : 0.3,
-                      }}>
-                        {isSeen ? creature.sprite : '❓'}
-                      </span>
+                      {isSeen ? (
+                        <PixelCreatureToken creature={creature} size={26} selected={isCaught} />
+                      ) : (
+                        <span className="text-white/15 text-sm">?</span>
+                      )}
                       <div className="min-w-0 flex-1">
                         <p className="text-white text-[9px] font-semibold truncate">
                           {isSeen ? creature.name : '???'}

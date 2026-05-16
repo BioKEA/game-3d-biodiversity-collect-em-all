@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { CapturedCreature } from '@/types/game'
 import type { PlayerStats } from './achievements'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   playerName: string
@@ -186,12 +187,12 @@ export default function ChampionScreen({ playerName, playerLevel, team, stats, i
             <div key={i} className="flex flex-col items-center" style={{
               animation: phase >= 3 ? `team-pop 0.5s ease-out ${i * 0.1}s both` : 'none',
             }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{
                 background: 'linear-gradient(135deg, rgba(251,191,36,0.1), rgba(168,85,247,0.08))',
                 border: '1px solid rgba(251,191,36,0.2)',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
               }}>
-                {c.sprite}
+                <PixelCreatureToken creature={c} size={34} selected={isGrand} />
               </div>
               <span className="text-[8px] text-white/30 mt-1">Lv.{c.level}</span>
             </div>

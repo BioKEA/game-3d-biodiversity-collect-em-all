@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { CapturedCreature } from '@/types/game'
 import FloatingPanel from './FloatingPanel'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   team: CapturedCreature[]
@@ -39,11 +40,7 @@ export default function AdoptionCenter({ team, reserves, onClose, onRelease, onS
               }}
             >
               <div className="flex items-center gap-2">
-                <span className="text-xl" style={{
-                  filter: creature.isShiny ? 'hue-rotate(180deg) saturate(1.3)' : 'none',
-                }}>
-                  {creature.sprite}
-                </span>
+                <PixelCreatureToken creature={creature} size={30} selected={i === 0} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1">
                     <span className="text-white text-[10px] font-semibold truncate">{creature.nickname || creature.name}</span>
@@ -104,11 +101,7 @@ export default function AdoptionCenter({ team, reserves, onClose, onRelease, onS
                 style={{ background: 'rgba(255,255,255,0.02)' }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-xl" style={{
-                    filter: creature.isShiny ? 'hue-rotate(180deg) saturate(1.3)' : 'none',
-                  }}>
-                    {creature.sprite}
-                  </span>
+                  <PixelCreatureToken creature={creature} size={30} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
                       <span className="text-white text-[10px] font-semibold truncate">{creature.nickname || creature.name}</span>
@@ -178,7 +171,7 @@ export default function AdoptionCenter({ team, reserves, onClose, onRelease, onS
               return (
                 <>
                   <div className="text-center mb-3">
-                    <span className="text-4xl block mb-2">{creature.sprite}</span>
+                    <span className="flex justify-center mb-2"><PixelCreatureToken creature={creature} size={56} /></span>
                     <p className="text-white/50 text-[10px]">Release</p>
                     <p className="text-white font-bold text-sm">{creature.nickname || creature.name}?</p>
                   </div>

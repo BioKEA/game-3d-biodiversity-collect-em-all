@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { TILE_SIZE, TILE_BASE_HEIGHT, ELEVATION_SCALE } from './constants'
+import { FIELD_GUIDE_ENTITY_COLORS } from '../artDirection'
 import type { MapTile } from '@/types/game'
 
 interface Props {
@@ -39,19 +40,19 @@ export default function VoxelPlayer({ x, y, map }: Props) {
       {/* Body - main torso */}
       <mesh position={[0, s * 3.5, 0]}>
         <boxGeometry args={[s * 4, s * 4, s * 3]} />
-        <meshStandardMaterial color="#4a90d9" flatShading />
+        <meshStandardMaterial color={FIELD_GUIDE_ENTITY_COLORS.explorerJacket} flatShading />
       </mesh>
 
       {/* Head */}
       <mesh position={[0, s * 7, 0]}>
         <boxGeometry args={[s * 3.5, s * 3.5, s * 3.5]} />
-        <meshStandardMaterial color="#ffd5a0" flatShading />
+        <meshStandardMaterial color={FIELD_GUIDE_ENTITY_COLORS.skin} flatShading />
       </mesh>
 
       {/* Hair */}
       <mesh position={[0, s * 9, 0]}>
         <boxGeometry args={[s * 3.8, s * 1.5, s * 3.8]} />
-        <meshStandardMaterial color="#5c3317" flatShading />
+        <meshStandardMaterial color={FIELD_GUIDE_ENTITY_COLORS.hair} flatShading />
       </mesh>
 
       {/* Eyes */}
@@ -67,31 +68,31 @@ export default function VoxelPlayer({ x, y, map }: Props) {
       {/* Left leg */}
       <mesh position={[-s * 1, s * 0.5, 0]}>
         <boxGeometry args={[s * 1.5, s * 2.5, s * 1.8]} />
-        <meshStandardMaterial color="#3d3d3d" flatShading />
+        <meshStandardMaterial color={FIELD_GUIDE_ENTITY_COLORS.explorerPants} flatShading />
       </mesh>
 
       {/* Right leg */}
       <mesh position={[s * 1, s * 0.5, 0]}>
         <boxGeometry args={[s * 1.5, s * 2.5, s * 1.8]} />
-        <meshStandardMaterial color="#3d3d3d" flatShading />
+        <meshStandardMaterial color={FIELD_GUIDE_ENTITY_COLORS.explorerPants} flatShading />
       </mesh>
 
       {/* Left arm */}
       <mesh position={[-s * 2.8, s * 3.5, 0]}>
         <boxGeometry args={[s * 1.5, s * 3.5, s * 1.5]} />
-        <meshStandardMaterial color="#4a90d9" flatShading />
+        <meshStandardMaterial color={FIELD_GUIDE_ENTITY_COLORS.explorerJacket} flatShading />
       </mesh>
 
       {/* Right arm */}
       <mesh position={[s * 2.8, s * 3.5, 0]}>
         <boxGeometry args={[s * 1.5, s * 3.5, s * 1.5]} />
-        <meshStandardMaterial color="#4a90d9" flatShading />
+        <meshStandardMaterial color={FIELD_GUIDE_ENTITY_COLORS.explorerJacket} flatShading />
       </mesh>
 
       {/* Backpack */}
       <mesh position={[0, s * 3.5, -s * 2]}>
         <boxGeometry args={[s * 3, s * 3, s * 1.5]} />
-        <meshStandardMaterial color="#c05621" flatShading />
+        <meshStandardMaterial color={FIELD_GUIDE_ENTITY_COLORS.explorerPack} flatShading />
       </mesh>
     </group>
   )

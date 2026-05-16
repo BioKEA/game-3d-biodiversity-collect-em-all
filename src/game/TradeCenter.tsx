@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { CapturedCreature } from '@/types/game'
 import { encodeCreature, decodeCreature, isDecodeError } from './tradeCode'
 import FloatingPanel from './FloatingPanel'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   team: CapturedCreature[]
@@ -156,11 +157,13 @@ export default function TradeCenter({ team, onClose, onImportCreature, onRemoveC
               /* Confirmation */
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
                 <p className="text-red-300 text-xs font-medium mb-1">Confirm Trade</p>
-                <p className="text-white/50 text-[10px] mb-3">
-                  <span className="text-lg">{team[selectedIndex]?.sprite}</span>{' '}
-                  <strong className="text-white/70">{team[selectedIndex]?.nickname || team[selectedIndex]?.name}</strong>{' '}
-                  (Lv.{team[selectedIndex]?.level}) will be removed from your team.
-                </p>
+                <div className="flex items-center gap-2 text-white/50 text-[10px] mb-3">
+                  {team[selectedIndex] && <PixelCreatureToken creature={team[selectedIndex]} size={28} />}
+                  <p>
+                    <strong className="text-white/70">{team[selectedIndex]?.nickname || team[selectedIndex]?.name}</strong>{' '}
+                    (Lv.{team[selectedIndex]?.level}) will be removed from your team.
+                  </p>
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={handleConfirmExport}
@@ -206,7 +209,7 @@ export default function TradeCenter({ team, onClose, onImportCreature, onRemoveC
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <span className="text-2xl">{creature.sprite}</span>
+                            <PixelCreatureToken creature={creature} size={34} selected={isSelected} />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5">
                                 <span className="text-white text-xs font-semibold truncate">
@@ -296,7 +299,7 @@ export default function TradeCenter({ team, onClose, onImportCreature, onRemoveC
               }`}>
                 {importResult.success && importResult.creature ? (
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl">{importResult.creature.sprite}</span>
+                    <PixelCreatureToken creature={importResult.creature} size={42} selected />
                     <div>
                       <p className="text-emerald-300 text-xs font-medium">{importResult.message}</p>
                       <p className="text-white/30 text-[9px] mt-0.5">
@@ -326,7 +329,7 @@ export default function TradeCenter({ team, onClose, onImportCreature, onRemoveC
                       }`}
                     >
                       {c ? (
-                        <span className="text-lg" title={`${c.nickname || c.name} Lv.${c.level}`}>{c.sprite}</span>
+                        <PixelCreatureToken creature={c} size={28} title={`${c.nickname || c.name} Lv.${c.level}`} />
                       ) : (
                         <span className="text-white/10 text-[10px]">+</span>
                       )}

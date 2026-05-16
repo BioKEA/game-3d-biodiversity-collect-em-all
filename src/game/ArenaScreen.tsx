@@ -3,6 +3,7 @@ import type { CapturedCreature, WeatherType, TimeOfDay } from '@/types/game'
 import { type ArenaTier, getTierConfig, generateArenaChallenger, type ArenaChallenger } from './arena'
 import RangerBattleScreen from './RangerBattleScreen'
 import FloatingPanel from './FloatingPanel'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   team: CapturedCreature[]
@@ -107,7 +108,7 @@ export default function ArenaScreen({ team, weather, timeOfDay, arenaWins, onWin
                 {team.slice(0, 3).map((c, i) => (
                   <div key={i} className="w-12 h-12 rounded-lg flex items-center justify-center"
                     style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.2)' }}>
-                    <span className="text-xl">{c.sprite}</span>
+                    <PixelCreatureToken creature={c} size={34} />
                   </div>
                 ))}
               </div>

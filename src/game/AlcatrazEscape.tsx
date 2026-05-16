@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import type { CapturedCreature, Creature } from '@/types/game'
 import { ALL_CREATURES } from './creatures'
 import { SFX } from './sounds'
+import PixelCreatureToken from './PixelCreatureToken'
 
 // The Alcatraz Escape is a multi-stage quest:
 // Stage 1: "Lockdown" - You arrive and the ferry breaks down. Ranger Ghost warns you.
@@ -174,7 +175,11 @@ export default function AlcatrazEscape({ playerTeam, playerLevel, stage, cellBlo
                     border: `1px solid ${i < cellBlockProgress ? 'rgba(74,222,128,0.3)' : i === cellBlockProgress ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.05)'}`,
                   }}
                 >
-                  <span className="text-xl block">{i < cellBlockProgress ? '✅' : creature.sprite}</span>
+                  <span className="flex justify-center">
+                    {i < cellBlockProgress ? '✅' : (
+                      <PixelCreatureToken creature={creature} size={30} selected={i === cellBlockProgress} />
+                    )}
+                  </span>
                   <p className="text-white/50 text-[8px] mt-1">{creature.name}</p>
                   <p className="text-white/25 text-[7px]">
                     {i < cellBlockProgress ? 'Defeated' : i === cellBlockProgress ? 'Next' : 'Locked'}
@@ -188,7 +193,9 @@ export default function AlcatrazEscape({ playerTeam, playerLevel, stage, cellBlo
                 <div className="rounded-xl p-3 w-full text-center" style={{
                   background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
                 }}>
-                  <span className="text-3xl block mb-1">{cellBlockCreatures[cellBlockProgress].sprite}</span>
+                  <span className="mb-2 flex justify-center">
+                    <PixelCreatureToken creature={cellBlockCreatures[cellBlockProgress]} size={48} selected />
+                  </span>
                   <p className="text-white font-semibold text-sm">{cellBlockCreatures[cellBlockProgress].name}</p>
                   <p className="text-white/30 text-[9px] mt-1">{cellBlockCreatures[cellBlockProgress].description}</p>
                   <p className="text-red-400 text-[8px] mt-1">Level {playerLevel + 2 + cellBlockProgress * 2}</p>
@@ -330,13 +337,13 @@ export default function AlcatrazEscape({ playerTeam, playerLevel, stage, cellBlo
 
             {wardenCreature && (
               <div className="relative">
-                <div className="w-24 h-24 rounded-2xl flex items-center justify-center text-5xl" style={{
+                <div className="w-24 h-24 rounded-2xl flex items-center justify-center" style={{
                   background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(239,68,68,0.1))',
                   border: '2px solid rgba(139,92,246,0.3)',
                   boxShadow: '0 0 30px rgba(139,92,246,0.15), 0 8px 32px rgba(0,0,0,0.4)',
                   animation: 'pulse 2s ease-in-out infinite',
                 }}>
-                  {wardenCreature.sprite}
+                  <PixelCreatureToken creature={wardenCreature} size={72} selected />
                 </div>
                 <div className="absolute -top-1 -right-1 text-xs">👑</div>
               </div>
@@ -422,11 +429,11 @@ export default function AlcatrazEscape({ playerTeam, playerLevel, stage, cellBlo
             {/* Team display */}
             <div className="flex gap-1.5 justify-center">
               {playerTeam.slice(0, 6).map((c, i) => (
-                <div key={i} className="w-8 h-8 rounded-lg flex items-center justify-center text-lg" style={{
+                <div key={i} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{
                   background: 'rgba(255,255,255,0.05)',
                   border: '1px solid rgba(251,191,36,0.15)',
                 }}>
-                  {c.sprite}
+                  <PixelCreatureToken creature={c} size={24} />
                 </div>
               ))}
             </div>
@@ -482,4 +489,3 @@ export default function AlcatrazEscape({ playerTeam, playerLevel, stage, cellBlo
     </div>
   )
 }
-

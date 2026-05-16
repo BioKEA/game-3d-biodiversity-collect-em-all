@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, memo } from 'react'
 import type { Creature } from '@/types/game'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   boss: Creature
@@ -141,11 +142,12 @@ const LunarBossPopup = memo(function LunarBossPopup({ boss, onReady, onFlee }: P
               filter: `drop-shadow(0 0 20px ${boss.color}80) drop-shadow(0 0 40px ${boss.color}40)`,
             }}
           >
-            <span className="text-8xl" style={{
-              animation: 'lunar-boss-float 3s ease-in-out infinite',
-            }}>
-              {boss.sprite}
-            </span>
+            <PixelCreatureToken
+              creature={boss}
+              size={104}
+              selected
+              style={{ animation: 'lunar-boss-float 3s ease-in-out infinite' }}
+            />
             <span className="absolute -top-3 -right-3 text-2xl" style={{
               animation: 'lunar-boss-star 1.5s ease-in-out infinite',
             }}>⭐</span>

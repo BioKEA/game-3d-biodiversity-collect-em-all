@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import type { CapturedCreature, BreedingSlot } from '@/types/game'
 import { canBreed, startBreeding, isBreedingReady, getBreedingTimeLeft, hatchOffspring, getBreedingTypeLabel } from './breeding'
 import FloatingPanel from './FloatingPanel'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   team: CapturedCreature[]
@@ -70,7 +71,9 @@ export default function BreedingScreen({ team, nursery, onClose, onStartBreeding
         {/* Hatched result */}
         {hatched ? (
           <div className="flex flex-col items-center gap-4 py-8">
-            <div className="text-6xl animate-bounce">{hatched.sprite}</div>
+            <div className="animate-bounce">
+              <PixelCreatureToken creature={hatched} size={72} selected />
+            </div>
             <div className="text-center">
               <p className="text-pink-400 text-xs tracking-widest uppercase mb-1">A new creature hatched!</p>
               <h3 className="text-white text-xl font-bold">{hatched.name}</h3>
@@ -114,13 +117,17 @@ export default function BreedingScreen({ team, nursery, onClose, onStartBreeding
           <div className="flex flex-col items-center gap-4 py-4">
             <div className="flex items-center gap-6">
               <div className="text-center">
-                <div className="text-4xl mb-1">{nursery.parent1.sprite}</div>
+                <div className="mb-2 flex justify-center">
+                  <PixelCreatureToken creature={nursery.parent1} size={48} />
+                </div>
                 <p className="text-white text-xs">{nursery.parent1.name}</p>
                 <p className="text-white/40 text-[10px]">Lv.{nursery.parent1.level}</p>
               </div>
               <div className="text-pink-400 text-2xl">+</div>
               <div className="text-center">
-                <div className="text-4xl mb-1">{nursery.parent2.sprite}</div>
+                <div className="mb-2 flex justify-center">
+                  <PixelCreatureToken creature={nursery.parent2} size={48} />
+                </div>
                 <p className="text-white text-xs">{nursery.parent2.name}</p>
                 <p className="text-white/40 text-[10px]">Lv.{nursery.parent2.level}</p>
               </div>
@@ -180,7 +187,7 @@ export default function BreedingScreen({ team, nursery, onClose, onStartBreeding
               >
                 {p1 ? (
                   <>
-                    <span className="text-3xl">{p1.sprite}</span>
+                    <PixelCreatureToken creature={p1} size={40} selected />
                     <p className="text-white text-[10px] mt-1 truncate w-full text-center px-1">{p1.name}</p>
                     <p className="text-white/40 text-[9px]">Lv.{p1.level}</p>
                   </>
@@ -203,7 +210,7 @@ export default function BreedingScreen({ team, nursery, onClose, onStartBreeding
               >
                 {p2 ? (
                   <>
-                    <span className="text-3xl">{p2.sprite}</span>
+                    <PixelCreatureToken creature={p2} size={40} selected />
                     <p className="text-white text-[10px] mt-1 truncate w-full text-center px-1">{p2.name}</p>
                     <p className="text-white/40 text-[9px]">Lv.{p2.level}</p>
                   </>
@@ -270,7 +277,7 @@ export default function BreedingScreen({ team, nursery, onClose, onStartBreeding
                       borderColor: isP1 ? '#ec4899' : isP2 ? '#a855f7' : 'rgba(255,255,255,0.06)',
                     }}
                   >
-                    <span className="text-2xl">{creature.sprite}</span>
+                    <PixelCreatureToken creature={creature} size={34} selected={isSelected} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-white text-xs font-semibold truncate">{creature.nickname || creature.name}</span>

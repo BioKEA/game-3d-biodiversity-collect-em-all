@@ -33,11 +33,13 @@ import {
   type FriendlyGift, type Personality,
 } from './encounterSystem'
 import IsometricRenderer from './IsometricRenderer'
+import VoxelRenderer from './voxel'
 import BattleScreen from './BattleScreen'
 import CatalogScreen from './CatalogScreen'
 import TeamScreen, { getHealAmount } from './TeamScreen'
 import TitleScreen from './TitleScreen'
 import StarterSelect from './StarterSelect'
+import PixelCreatureToken from './PixelCreatureToken'
 import GameHUD from './GameHUD'
 import Minimap from './Minimap'
 import FieldJournal from './FieldJournal'
@@ -99,6 +101,19 @@ import ShadowBossPopup from './ShadowBossPopup'
 import BossTrophyRoom from './BossTrophyRoom'
 import ConservationPrompt from './ConservationPrompt'
 
+type RendererMode = 'canvas' | 'voxel'
+
+const RENDERER_MODE_KEY = 'wildcal-renderer-mode'
+
+function loadRendererMode(): RendererMode {
+  try {
+    const saved = localStorage.getItem(RENDERER_MODE_KEY)
+    return saved === 'canvas' ? 'canvas' : 'voxel'
+  } catch {
+    return 'voxel'
+  }
+}
+
 // Curated fast-travel destinations — only unlocks once the tile has been explored.
 // Coordinates and subregion names match getSubregion() in bayAreaMap.ts.
 const FAST_TRAVEL_DESTINATIONS: { name: string; emoji: string; x: number; y: number; region: string; subregion: string; description: string }[] = [
@@ -142,6 +157,15 @@ export default function Game() {
   const [gameState, setGameState] = useState<GameState>(() => createInitialState())
   const [playerName, setPlayerName] = useState<string>(() => loadPlayerName())
   const [bayDexAck, setBayDexAck] = useState<string[]>([])
+  const [rendererMode, setRendererMode] = useState<RendererMode>(() => loadRendererMode())
+
+  const toggleRendererMode = useCallback(() => {
+    setRendererMode(prev => {
+      const next = prev === 'canvas' ? 'voxel' : 'canvas'
+      try { localStorage.setItem(RENDERER_MODE_KEY, next) } catch { /* ignore */ }
+      return next
+    })
+  }, [])
 
   const handleRenamePlayer = useCallback((name: string) => {
     savePlayerName(name)
@@ -723,6 +747,8 @@ export default function Game() {
           setGameState(prev => ({ ...prev, screen: 'questlog' })); break
         case 'm': case 'M':
           Music.toggle(); break
+        case 'v': case 'V':
+          toggleRendererMode(); break
         case 'r': case 'R':
           setGameState(prev => ({ ...prev, screen: 'crafting' })); break
         case 'h': case 'H':
@@ -774,7 +800,7 @@ export default function Game() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [gameState.screen, gameState.battle.active, movePlayer, nearbyRangerId, nearbyBartStation, atSteamerLane, atBoardwalk, nearbyDock, boatAnimating, handleBoatTravel])
+  }, [gameState.screen, gameState.battle.active, movePlayer, nearbyRangerId, nearbyBartStation, atSteamerLane, atBoardwalk, nearbyDock, boatAnimating, handleBoatTravel, toggleRendererMode])
 
 
   // Hold-to-move for keyboard
@@ -2024,11 +2050,25 @@ export default function Game() {
 
   return (
     <div className="w-full h-screen bg-[#0e1a2e] relative overflow-hidden select-none">
-      <IsometricRenderer map={memoizedMap} playerX={gameState.player.x} playerY={gameState.player.y} rangers={rangerPositions} timeOfDay={gameState.timeOfDay} weather={gameState.weather} gameMinutes={gameState.gameMinutes} />
-      <DayNightSky gameMinutes={gameState.gameMinutes} gameDay={gameState.gameDay ?? 75} />
-      <NightAtmosphere timeOfDay={gameState.timeOfDay} gameMinutes={gameState.gameMinutes} />
-      <WeatherEffects weather={gameState.weather} timeOfDay={gameState.timeOfDay} />
-      <BiomeTransition biome={gameState.currentBiome} />
+      {rendererMode === 'voxel' ? (
+        <VoxelRenderer
+          map={memoizedMap}
+          playerX={gameState.player.x}
+          playerY={gameState.player.y}
+          rangers={rangerPositions}
+          timeOfDay={gameState.timeOfDay}
+          weather={gameState.weather}
+          gameMinutes={gameState.gameMinutes}
+        />
+      ) : (
+        <>
+          <IsometricRenderer map={memoizedMap} playerX={gameState.player.x} playerY={gameState.player.y} rangers={rangerPositions} timeOfDay={gameState.timeOfDay} weather={gameState.weather} gameMinutes={gameState.gameMinutes} />
+          <DayNightSky gameMinutes={gameState.gameMinutes} gameDay={gameState.gameDay ?? 75} />
+          <NightAtmosphere timeOfDay={gameState.timeOfDay} gameMinutes={gameState.gameMinutes} />
+          <WeatherEffects weather={gameState.weather} timeOfDay={gameState.timeOfDay} />
+          <BiomeTransition biome={gameState.currentBiome} />
+        </>
+      )}
 
       {/* Border crossing tint overlay */}
       {borderPeek && (
@@ -2053,11 +2093,40 @@ export default function Game() {
           </div>
         </div>
       )}
-      <BiomeParticles biome={gameState.currentBiome} timeOfDay={gameState.timeOfDay} weather={gameState.weather} />
-      <WalkParticles playerX={gameState.player.x} playerY={gameState.player.y} biome={gameState.currentBiome} />
-      <CreatureFootprints map={memoizedMap} playerX={gameState.player.x} playerY={gameState.player.y} currentBiome={gameState.currentBiome} />
+      {rendererMode === 'canvas' && (
+        <>
+          <BiomeParticles biome={gameState.currentBiome} timeOfDay={gameState.timeOfDay} weather={gameState.weather} />
+          <WalkParticles playerX={gameState.player.x} playerY={gameState.player.y} biome={gameState.currentBiome} />
+          <CreatureFootprints map={memoizedMap} playerX={gameState.player.x} playerY={gameState.player.y} currentBiome={gameState.currentBiome} />
+        </>
+      )}
       <TutorialTip tip={tutorialTip} onDismiss={() => setTutorialTip(null)} />
       <Minimap map={memoizedMap} playerX={gameState.player.x} playerY={gameState.player.y} journal={gameState.player.journal} exploredTiles={exploredTiles} rangers={rangerPositions} onFastTravel={handleFastTravel} timeOfDay={gameState.timeOfDay} weather={gameState.weather} activeEvent={worldEvents.activeEvent} />
+
+      {gameState.screen === 'world' && (
+        <button
+          type="button"
+          onClick={toggleRendererMode}
+          aria-label="Toggle art renderer"
+          title="Toggle renderer (V)"
+          className="absolute left-2 bottom-[74px] sm:left-4 sm:bottom-24 z-40 pointer-events-auto rounded-lg px-2.5 py-2 text-[10px] sm:text-xs font-bold tracking-wide transition-all active:scale-95"
+          style={{
+            background: rendererMode === 'voxel'
+              ? 'linear-gradient(135deg, rgba(213,195,108,0.18), rgba(70,88,49,0.16))'
+              : 'rgba(0,0,0,0.5)',
+            border: rendererMode === 'voxel'
+              ? '1px solid rgba(213,195,108,0.36)'
+              : '1px solid rgba(255,255,255,0.12)',
+            color: rendererMode === 'voxel' ? '#f3ecd7' : 'rgba(255,255,255,0.62)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: rendererMode === 'voxel'
+              ? '0 4px 18px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)'
+              : '0 4px 14px rgba(0,0,0,0.25)',
+          }}
+        >
+          <span className="mr-1.5">▣</span>{rendererMode === 'voxel' ? 'Voxel' : 'Canvas'}
+        </button>
+      )}
 
       <GameHUD
         player={gameState.player}
@@ -2218,14 +2287,7 @@ export default function Game() {
 
             <div className="flex items-center gap-3">
               {/* Creature sprite */}
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0" style={{
-                background: captureNotif.creature.isShiny ? 'rgba(192,132,252,0.12)' : captureNotif.creature.isAlpha ? 'rgba(251,191,36,0.12)' : `${captureNotif.creature.color}15`,
-                border: `1px solid ${captureNotif.creature.isShiny ? 'rgba(192,132,252,0.3)' : captureNotif.creature.isAlpha ? 'rgba(251,191,36,0.3)' : `${captureNotif.creature.color}30`}`,
-                boxShadow: (captureNotif.isNewSpecies || captureNotif.creature.isAlpha || captureNotif.creature.isShiny) ? `0 0 12px ${captureNotif.creature.isShiny ? 'rgba(192,132,252,0.2)' : captureNotif.creature.isAlpha ? 'rgba(251,191,36,0.2)' : `${captureNotif.creature.color}20`}` : 'none',
-                filter: captureNotif.creature.isShiny ? 'hue-rotate(180deg) saturate(1.3)' : 'none',
-              }}>
-                {captureNotif.creature.sprite}
-              </div>
+              <PixelCreatureToken creature={captureNotif.creature} size={52} selected={captureNotif.isNewSpecies} />
 
               {/* Info */}
               <div className="flex-1 min-w-0">
@@ -2268,12 +2330,8 @@ export default function Game() {
             animation: 'notif-enter 0.3s ease-out',
           }}>
             <div className="text-center mb-3">
-              <div className="w-14 h-14 mx-auto rounded-xl flex items-center justify-center text-3xl mb-2" style={{
-                background: `${nicknamePrompt.creature.color}12`,
-                border: `1px solid ${nicknamePrompt.creature.color}25`,
-                filter: nicknamePrompt.creature.isShiny ? 'hue-rotate(180deg) saturate(1.3)' : 'none',
-              }}>
-                {nicknamePrompt.creature.sprite}
+              <div className="flex justify-center mb-2">
+                <PixelCreatureToken creature={nicknamePrompt.creature} size={60} selected />
               </div>
               <p className="text-white/50 text-[10px]">Give a nickname to</p>
               <p className="text-white font-bold text-sm">{nicknamePrompt.creature.name}</p>
@@ -3190,9 +3248,7 @@ export default function Game() {
               boxShadow: '0 0 24px rgba(192,132,252,0.25)',
             }}
           >
-            <span className="text-2xl" style={{ filter: 'drop-shadow(0 0 6px rgba(192,132,252,0.8))' }}>
-              {evolveReadyToast.sprite}
-            </span>
+            <PixelCreatureToken creature={{ sprite: evolveReadyToast.sprite, name: evolveReadyToast.name }} size={34} selected />
             <div>
               <p className="text-purple-300 text-[10px] uppercase tracking-wider font-bold">✨ Almost Ready to Evolve</p>
               <p className="text-white text-xs font-medium">

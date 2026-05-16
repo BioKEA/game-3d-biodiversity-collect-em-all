@@ -5,6 +5,7 @@ import { getWeatherInfo, getSeason, getSeasonInfo } from './timeWeather'
 import { LANDMARKS, LANDMARK_INFO, LANDMARK_REGIONS } from './landmarks'
 import type { LandmarkRegion, LandmarkDef } from './landmarks'
 import FloatingPanel from './FloatingPanel'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   journal: Record<string, JournalEntry>
@@ -227,9 +228,11 @@ export default function FieldJournal({ journal, currentSubregion, onClose, weath
                             encountered ? 'bg-white/5' : 'bg-white/2'
                           }`}
                         >
-                          <span className={`text-base ${encountered ? '' : 'grayscale opacity-30'}`}>
-                            {encountered ? creature.sprite : '❓'}
-                          </span>
+                          {encountered ? (
+                            <PixelCreatureToken creature={creature} size={24} selected={captured} />
+                          ) : (
+                            <span className="text-white/15 text-sm">?</span>
+                          )}
                           <div className="flex-1 min-w-0">
                             <p className={`text-xs font-medium ${encountered ? 'text-white/80' : 'text-white/20'}`}>
                               {encountered ? creature.name : '???'}
@@ -280,9 +283,11 @@ export default function FieldJournal({ journal, currentSubregion, onClose, weath
                               encountered ? 'bg-white/3' : 'bg-white/1'
                             }`}
                           >
-                            <span className={`text-sm ${encountered ? '' : 'grayscale opacity-20'}`}>
-                              {encountered ? creature.sprite : '❓'}
-                            </span>
+                            {encountered ? (
+                              <PixelCreatureToken creature={creature} size={20} />
+                            ) : (
+                              <span className="text-white/10 text-xs">?</span>
+                            )}
                             <p className={`text-[10px] ${encountered ? 'text-white/50' : 'text-white/15'}`}>
                               {encountered ? creature.name : '???'}
                             </p>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { CapturedCreature } from '@/types/game'
 import { SFX } from './sounds'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   fromCreature: CapturedCreature
@@ -500,8 +501,10 @@ export default function EvolutionScreen({ fromCreature, toCreature, description,
           )}
 
           {/* Old creature — morphs via flickering during helix phase */}
-          <span
-            className="text-5xl sm:text-6xl absolute transition-all"
+          <PixelCreatureToken
+            creature={fromCreature}
+            size={72}
+            className="absolute transition-all"
             style={{
               opacity: phaseIndex >= 3 ? 0
                 : phaseIndex === 2 ? (morphFlicker ? 0 : 1)
@@ -519,28 +522,29 @@ export default function EvolutionScreen({ fromCreature, toCreature, description,
               transitionDuration: phaseIndex === 3 ? '0.2s' : phaseIndex === 2 ? '0.1s' : '1.5s',
               animation: phaseIndex === 2 ? 'evo-morph-pulse 0.8s ease-in-out infinite' : 'none',
             }}
-          >
-            {fromCreature.sprite}
-          </span>
+          />
 
           {/* New creature peeking through during morph flicker */}
           {phaseIndex === 2 && (
-            <span
-              className="text-5xl sm:text-6xl absolute pointer-events-none"
+            <PixelCreatureToken
+              creature={toCreature}
+              size={72}
+              className="absolute pointer-events-none"
               style={{
                 opacity: morphFlicker ? (0.5 + morphProgress * 0.5) : 0,
                 transform: `scale(${0.7 + morphProgress * 0.3})`,
                 filter: `brightness(${2 - morphProgress}) drop-shadow(0 0 ${8 + morphProgress * 12}px ${toCreature.color})`,
                 transition: 'opacity 0.05s, transform 0.15s',
               }}
-            >
-              {toCreature.sprite}
-            </span>
+            />
           )}
 
           {/* New creature — dramatic entrance on reveal */}
-          <span
-            className="text-5xl sm:text-7xl absolute"
+          <PixelCreatureToken
+            creature={toCreature}
+            size={88}
+            selected
+            className="absolute"
             style={{
               opacity: phaseIndex >= 4 ? 1 : 0,
               animation: phaseIndex === 4
@@ -550,21 +554,19 @@ export default function EvolutionScreen({ fromCreature, toCreature, description,
                   : 'none',
               filter: phaseIndex >= 4 ? `drop-shadow(0 0 15px ${toCreature.color}50)` : 'none',
             }}
-          >
-            {toCreature.sprite}
-          </span>
+          />
 
           {/* Energy silhouette during helix phase — breathing morph */}
           {phaseIndex === 2 && (
-            <span
-              className="text-5xl sm:text-6xl absolute pointer-events-none"
+            <PixelCreatureToken
+              creature={morphProgress > 0.5 ? toCreature : fromCreature}
+              size={72}
+              className="absolute pointer-events-none"
               style={{
                 filter: `brightness(0) drop-shadow(0 0 ${12 + morphProgress * 8}px ${toCreature.color})`,
                 animation: 'evo-silhouette-breathe 1.2s ease-in-out infinite',
               }}
-            >
-              {morphProgress > 0.5 ? toCreature.sprite : fromCreature.sprite}
-            </span>
+            />
           )}
         </div>
 
@@ -591,9 +593,9 @@ export default function EvolutionScreen({ fromCreature, toCreature, description,
             transition: 'opacity 0.5s 0.3s',
           }}
         >
-          <span className="text-white/20 text-xs">{fromCreature.sprite}</span>
+          <PixelCreatureToken creature={fromCreature} size={20} />
           <span className="text-white/30 text-xs">→</span>
-          <span className="text-white/20 text-xs">{toCreature.sprite}</span>
+          <PixelCreatureToken creature={toCreature} size={20} selected />
           <span
             className="text-[9px] px-1.5 py-0.5 rounded-full ml-1"
             style={{

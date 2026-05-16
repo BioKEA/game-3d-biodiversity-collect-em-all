@@ -5,6 +5,7 @@ import { getEvolutionTarget, getPreEvolution } from './evolutions'
 import FloatingPanel from './FloatingPanel'
 import TypeChart from './TypeChart'
 import CreatureCard from './CreatureCard'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   catalogSeen: string[]
@@ -202,10 +203,8 @@ function CreatureGrid({ creatures, catalogSeen, catalogCaptured, selectedId, onS
               >✨</span>
             )}
             {/* Sprite */}
-            <div className="w-8 h-8 flex items-center justify-center text-xl mt-1" style={{
-              filter: seen ? 'none' : 'grayscale(1) brightness(0.3)',
-            }}>
-              {seen ? creature.sprite : '?'}
+            <div className="mt-1" style={{ filter: seen ? 'none' : 'grayscale(1) brightness(0.3)' }}>
+              {seen ? <PixelCreatureToken creature={creature} size={32} selected={isActive} /> : <span className="text-xl text-white/20">?</span>}
             </div>
             {/* Name */}
             <span className="text-[7px] text-white/50 truncate w-full text-center mt-0.5">
@@ -261,14 +260,15 @@ function CreatureList({ creatures, catalogSeen, catalogCaptured, selectedId, onS
               #{String(idx + 1).padStart(3, '0')}
             </span>
             {/* Sprite */}
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xl shrink-0"
-              style={{
-                background: caught ? `${creature.color}15` : 'rgba(255,255,255,0.03)',
-                border: `1px solid ${caught ? `${creature.color}25` : 'rgba(255,255,255,0.05)'}`,
-              }}
-            >
-              {seen ? creature.sprite : '?'}
-            </div>
+            {seen ? (
+              <PixelCreatureToken creature={creature} size={38} selected={isActive || caught} />
+            ) : (
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xl shrink-0"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+              >
+                ?
+              </div>
+            )}
             {/* Info */}
             <div className="min-w-0 flex-1">
               <p className="text-white text-[10px] font-semibold truncate">
@@ -342,10 +342,7 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
     <div className="p-3 space-y-3">
       {/* Hero */}
       <div className="flex items-start gap-3">
-        <div className="w-16 h-16 rounded-xl flex items-center justify-center text-4xl shrink-0"
-          style={{ background: `${creature.color}12`, border: `1px solid ${creature.color}25` }}>
-          {creature.sprite}
-        </div>
+        <PixelCreatureToken creature={creature} size={66} selected={caught} />
         <div className="flex-1 min-w-0">
           <h3 className="text-white font-bold text-sm">{creature.name}</h3>
           <p className="text-white/30 text-[10px] italic">{creature.scientificName}</p>
@@ -615,7 +612,7 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
                 <button onClick={() => onSelect(preEvoCreature.id)}
                   className="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors hover:bg-white/5"
                   style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span className="text-base">{preEvoCreature.sprite}</span>
+                  <PixelCreatureToken creature={preEvoCreature} size={22} />
                   <div>
                     <p className="text-white text-[9px] font-semibold">{preEvoCreature.name}</p>
                     <p className="text-white/25 text-[7px]">Lv.{preEvo!.level}+</p>
@@ -626,7 +623,7 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
             )}
             <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg"
               style={{ border: '1px solid rgba(34,211,238,0.2)', background: 'rgba(34,211,238,0.05)' }}>
-              <span className="text-base">{creature.sprite}</span>
+              <PixelCreatureToken creature={creature} size={22} selected />
               <p className="text-cyan-400 text-[9px] font-semibold">{creature.name}</p>
             </div>
             {evoTargetCreature && (
@@ -635,7 +632,7 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
                 <button onClick={() => catalogSeen.includes(evoTargetCreature.id) ? onSelect(evoTargetCreature.id) : undefined}
                   className="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors hover:bg-white/5"
                   style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span className="text-base">{catalogSeen.includes(evoTargetCreature.id) ? evoTargetCreature.sprite : '?'}</span>
+                  {catalogSeen.includes(evoTargetCreature.id) ? <PixelCreatureToken creature={evoTargetCreature} size={22} /> : <span className="text-base">?</span>}
                   <div>
                     <p className="text-white text-[9px] font-semibold">
                       {catalogSeen.includes(evoTargetCreature.id) ? evoTargetCreature.name : '???'}
@@ -874,7 +871,7 @@ export default function BayDex({ catalogSeen, catalogCaptured, onClose, defaultS
                     }}
                     onClick={() => setSelectedId(c.id)}
                   >
-                    {c.sprite}
+                    <PixelCreatureToken creature={c} size={24} selected={caught} />
                   </div>
                 )
               })}

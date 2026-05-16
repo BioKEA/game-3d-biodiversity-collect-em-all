@@ -5,6 +5,7 @@ import type { SaveSlotSummary } from './gameState'
 import { ALL_CREATURES } from './creatures'
 import { MINI_BOSS_IDS, RANGERS } from './rangers'
 import { createInitialStats } from './achievements'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   onLoadSlot: (slot: SaveSlotIndex) => void
@@ -162,10 +163,7 @@ function SaveSlotCard({ summary, slot, onLoad, onNew, onDelete, onRename }: {
           {/* Team sprites */}
           <div className="flex flex-wrap justify-center gap-1 max-w-[100px] sm:max-w-[140px]">
             {state.player.team.slice(0, 6).map((c, i) => (
-              <span key={i} className="text-xl sm:text-2xl" title={c.nickname || c.name}
-                style={{ filter: 'drop-shadow(0 0 5px rgba(74,222,128,0.2))' }}>
-                {c.sprite}
-              </span>
+              <PixelCreatureToken key={i} creature={c} size={window.innerWidth < 640 ? 26 : 30} title={c.nickname || c.name} />
             ))}
             {state.player.team.length === 0 && <span className="text-sm text-white/20">No team</span>}
           </div>

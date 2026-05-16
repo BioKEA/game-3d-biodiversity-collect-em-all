@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Html } from '@react-three/drei'
 import { LANDMARKS } from '../landmarks'
+import { FIELD_GUIDE_ENTITY_COLORS } from '../artDirection'
 import type { MapTile } from '@/types/game'
 import { TILE_SIZE, TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS } from './constants'
 
@@ -9,6 +10,21 @@ interface Props {
   playerY: number
   map: MapTile[][]
 }
+
+const PRIORITY_LABELS = new Set([
+  'Golden Gate Bridge',
+  'Alcatraz Island',
+  'Coit Tower',
+  'Transamerica Pyramid',
+  'Salesforce Tower',
+  'Muir Woods',
+  'Mt. Tamalpais',
+  'Twin Peaks',
+  'UC Berkeley',
+  'Stanford',
+  'Lake Merritt',
+  'Mt. Diablo',
+])
 
 export default function VoxelLandmarks({ playerX, playerY, map }: Props) {
   const visible = useMemo(() => {
@@ -22,6 +38,8 @@ export default function VoxelLandmarks({ playerX, playerY, map }: Props) {
   return (
     <>
       {visible.map(lm => {
+        const dx = lm.x - playerX
+        const dy = lm.y - playerY
         const tile = map[lm.y]?.[lm.x]
         const elevation = tile?.elevation ?? 0
         const groundY = TILE_BASE_HEIGHT + elevation * ELEVATION_SCALE
@@ -29,6 +47,8 @@ export default function VoxelLandmarks({ playerX, playerY, map }: Props) {
         const buildingW = lm.width * 0.06
         const wx = lm.x * TILE_SIZE
         const wz = -lm.y * TILE_SIZE
+        const labelRadius = PRIORITY_LABELS.has(lm.name) ? 13 : 8
+        const showLabel = dx * dx + dy * dy <= labelRadius * labelRadius
 
         return (
           <group key={lm.name} position={[wx, groundY, wz]}>
@@ -53,28 +73,30 @@ export default function VoxelLandmarks({ playerX, playerY, map }: Props) {
             />
 
             {/* Floating label */}
-            <Html
-              position={[0, buildingH + 0.5, 0]}
-              center
-              distanceFactor={12}
-              occlude={false}
-              style={{ pointerEvents: 'none' }}
-            >
-              <div style={{
-                background: 'rgba(0,0,0,0.7)',
-                color: '#fff',
-                padding: '2px 6px',
-                borderRadius: 4,
-                fontSize: 10,
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-                fontFamily: 'system-ui',
-                textShadow: `0 0 4px ${lm.glow}`,
-              }}>
-                {lm.emoji && <span style={{ marginRight: 3 }}>{lm.emoji}</span>}
-                {lm.label}
-              </div>
-            </Html>
+            {showLabel && (
+              <Html
+                position={[0, buildingH + 0.5, 0]}
+                center
+                occlude={false}
+                zIndexRange={[8, 0]}
+                style={{ pointerEvents: 'none' }}
+              >
+                <div style={{
+                  background: FIELD_GUIDE_ENTITY_COLORS.labelBg,
+                  color: FIELD_GUIDE_ENTITY_COLORS.labelText,
+                  padding: '2px 6px',
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  fontFamily: 'system-ui',
+                  border: '1px solid rgba(243, 236, 215, 0.16)',
+                }}>
+                  {lm.emoji && <span style={{ marginRight: 3 }}>{lm.emoji}</span>}
+                  {lm.label}
+                </div>
+              </Html>
+            )}
           </group>
         )
       })}

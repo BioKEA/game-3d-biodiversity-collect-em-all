@@ -2,6 +2,7 @@ import { memo } from 'react'
 import type { BossDefeat } from '@/types/game'
 import { LUNAR_BOSSES, SHADOW_BOSSES } from './creatures'
 import FloatingPanel from './FloatingPanel'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   defeats: BossDefeat[]
@@ -158,17 +159,11 @@ function TrophyCard({ boss, defeated, captured, defeatCount, lastDefeat, type }:
     >
       {/* Sprite */}
       <div className="flex items-center gap-2 mb-2">
-        <span
-          className="text-3xl"
-          style={{
-            filter: defeated
-              ? `drop-shadow(0 0 8px ${boss.color}60)`
-              : 'grayscale(1) brightness(0.3)',
-            opacity: defeated ? 1 : 0.3,
-          }}
-        >
-          {defeated ? boss.sprite : '❓'}
-        </span>
+        {defeated ? (
+          <PixelCreatureToken creature={boss} size={40} selected={captured} style={{ filter: `drop-shadow(0 0 8px ${boss.color}60)` }} />
+        ) : (
+          <span className="text-white/15 text-lg">?</span>
+        )}
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold text-white truncate" style={{
             opacity: defeated ? 1 : 0.3,

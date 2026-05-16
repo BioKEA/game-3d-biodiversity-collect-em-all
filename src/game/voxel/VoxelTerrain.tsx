@@ -1,6 +1,7 @@
 import { useRef, useMemo, useEffect } from 'react'
 import * as THREE from 'three'
 import type { MapTile } from '@/types/game'
+import { FIELD_GUIDE_PIXEL_BOX_STYLE } from '../artDirection'
 import { TILE_SIZE, TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS, getBiomeColor, seededRand } from './constants'
 
 interface Props {
@@ -75,8 +76,7 @@ export default function VoxelTerrain({ map, playerX, playerY }: Props) {
       _dummy.scale.set(TILE_SIZE, h, TILE_SIZE)
       _dummy.updateMatrix()
       mesh.setMatrixAt(i, _dummy.matrix)
-      const isKelp = tile.biome === 'kelp_forest'
-      _color.set(isKelp ? '#0f766e' : '#2196F3')
+      _color.copy(getBiomeColor(tile.biome))
       mesh.setColorAt(i, _color)
     })
     mesh.count = waterTiles.length
@@ -91,7 +91,7 @@ export default function VoxelTerrain({ map, playerX, playerY }: Props) {
       {/* Land tiles */}
       <instancedMesh ref={landRef} args={[undefined, undefined, maxTiles]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="#ffffff" roughness={0.85} flatShading />
+        <meshStandardMaterial color="#ffffff" roughness={FIELD_GUIDE_PIXEL_BOX_STYLE.materialRoughness} flatShading />
       </instancedMesh>
 
       {/* Water tiles */}
@@ -100,9 +100,9 @@ export default function VoxelTerrain({ map, playerX, playerY }: Props) {
         <meshStandardMaterial
           color="#ffffff"
           transparent
-          opacity={0.75}
-          roughness={0.1}
-          metalness={0.3}
+          opacity={FIELD_GUIDE_PIXEL_BOX_STYLE.waterOpacity}
+          roughness={0.72}
+          metalness={0}
           flatShading
         />
       </instancedMesh>

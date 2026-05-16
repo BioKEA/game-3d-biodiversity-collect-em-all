@@ -4,6 +4,7 @@ import { ALL_CREATURES, getWeatherBoostedTypes, WEATHER_TYPE_BONUSES, TIME_RARIT
 import { getEvolutionTarget } from './evolutions'
 import { getTimeLabel, getTimeSky, getWeatherInfo, getWeatherForecast } from './timeWeather'
 import { Music } from './sounds'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   player: PlayerState
@@ -519,17 +520,15 @@ export default function GameHUD({
           {activeCreature ? (
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="relative">
-                <span
-                  className="text-xl sm:text-3xl block"
+                <PixelCreatureToken
+                  creature={activeCreature}
+                  size={isMobile ? 30 : 44}
+                  selected={activeReadyToEvolve}
+                  className="block"
                   style={{
-                    filter: activeReadyToEvolve
-                      ? 'drop-shadow(0 0 10px rgba(192,132,252,0.9)) drop-shadow(0 0 18px rgba(192,132,252,0.5))'
-                      : 'drop-shadow(0 0 4px rgba(74,222,128,0.2))',
                     animation: activeReadyToEvolve ? 'hud-evo-pulse 1.8s ease-in-out infinite' : 'none',
                   }}
-                >
-                  {activeCreature.sprite}
-                </span>
+                />
                 {activeReadyToEvolve && (
                   <span
                     className="absolute -top-1 -right-1 text-xs"
@@ -712,7 +711,7 @@ export default function GameHUD({
                               background: 'rgba(34,211,238,0.06)',
                               border: '1px solid rgba(34,211,238,0.12)',
                             }}>
-                              <span className="text-xs">{c.sprite}</span>
+                              <PixelCreatureToken creature={c} size={18} />
                               <span className="text-[8px] text-cyan-300/60">{c.name.split(' ').slice(-1)[0]}</span>
                             </div>
                           ))}
@@ -814,7 +813,7 @@ export default function GameHUD({
                           background: `${todColor}0.06)`,
                           border: `1px solid ${todColor}0.12)`,
                         }}>
-                          <span className="text-xs">{c.sprite}</span>
+                          <PixelCreatureToken creature={c} size={18} />
                           <span className="text-[8px]" style={{ color: `${todColor}0.6)` }}>{c.name.split(' ').slice(-1)[0]}</span>
                         </div>
                       ))}

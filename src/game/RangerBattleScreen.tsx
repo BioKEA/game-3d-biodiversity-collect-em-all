@@ -7,6 +7,7 @@ import { getBattleModifiers, getWeatherInfo } from './timeWeather'
 import { getEffectiveStats, getHeldItem } from './heldItems'
 import { rollHappinessCrit } from './happiness'
 import { SFX } from './sounds'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface DamageNumber {
   id: number
@@ -385,7 +386,7 @@ export default function RangerBattleScreen({ ranger, playerTeam, weather, timeOf
                   background: rangerHps[i] > 0 ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.1)',
                   border: i === rangerIdx ? '1px solid rgba(239,68,68,0.8)' : '1px solid transparent',
                 }}>
-                  {rangerHps[i] > 0 ? c.sprite : '✕'}
+                  {rangerHps[i] > 0 ? <PixelCreatureToken creature={c} size={12} /> : '✕'}
                 </div>
               ))}
             </div>
@@ -407,20 +408,18 @@ export default function RangerBattleScreen({ ranger, playerTeam, weather, timeOf
               background: playerHps[i] > 0 ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)',
               border: i === playerIdx ? '1.5px solid rgba(74,222,128,0.8)' : '1px solid rgba(255,255,255,0.1)',
             }}>
-              {playerHps[i] > 0 ? c.sprite : '✕'}
+              {playerHps[i] > 0 ? <PixelCreatureToken creature={c} size={14} /> : '✕'}
             </div>
           ))}
         </div>
 
         {/* Ranger creature */}
         <div className={`absolute right-8 top-[15%] transition-transform ${shakeEnemy ? 'translate-x-2' : ''}`}>
-          <div className="mb-2" style={{
-            fontSize: '7.5rem',
-            lineHeight: 1,
+          <div className="mb-2 inline-flex" style={{
             filter: rangerHp <= 0 ? 'grayscale(1) opacity(0.3)' : 'none',
             animation: rangerHp > 0 ? 'creature-float 4s ease-in-out infinite' : 'none',
           }}>
-            {rangerCreature.sprite}
+            <PixelCreatureToken creature={rangerCreature} size={122} selected />
           </div>
           <div className="mx-auto -mt-2 mb-4" style={{
             width: 128, height: 24,
@@ -447,12 +446,10 @@ export default function RangerBattleScreen({ ranger, playerTeam, weather, timeOf
 
         {/* Player creature */}
         <div className={`absolute left-8 bottom-[20%] transition-transform ${shakePlayer ? '-translate-x-2' : ''}`}>
-          <div className="mb-2 relative" style={{
-            fontSize: '6rem',
-            lineHeight: 1,
+          <div className="mb-2 relative inline-flex" style={{
             filter: playerHp <= 0 ? 'grayscale(1) opacity(0.3)' : 'none',
           }}>
-            {playerCreature.sprite}
+            <PixelCreatureToken creature={playerCreature} size={96} selected flipped />
             {getHeldItem(playerCreature) && (
               <span
                 className="absolute -bottom-2 -right-2 text-3xl"
@@ -596,7 +593,7 @@ export default function RangerBattleScreen({ ranger, playerTeam, weather, timeOf
                       opacity: isFainted ? 0.4 : 1,
                     }}
                   >
-                    <span className="text-lg">{c.sprite}</span>
+                    <PixelCreatureToken creature={c} size={30} />
                     <div>
                       <p className="text-white text-[9px] font-medium">{c.nickname || c.name}</p>
                       <p className="text-white/30 text-[8px]">{hp}/{c.stats.maxHp} HP</p>

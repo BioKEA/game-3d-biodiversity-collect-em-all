@@ -3,6 +3,7 @@ import type { CapturedCreature } from '@/types/game'
 import { ABILITY_STONES, canLearnMove, teachMove, type AbilityStone } from './moveTutor'
 import { TEACHABLE_ABILITY_LIST, getEffectiveAbility, type TeachableAbility } from './abilities'
 import FloatingPanel from './FloatingPanel'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   team: CapturedCreature[]
@@ -198,7 +199,7 @@ export default function MoveTutorScreen({ team, coins, onTeachMove, onLearnAbili
                     }}
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className="text-2xl">{creature.sprite}</span>
+                      <PixelCreatureToken creature={creature} size={34} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-white text-xs font-semibold truncate">{creature.nickname || creature.name}</span>
@@ -353,7 +354,7 @@ export default function MoveTutorScreen({ team, coins, onTeachMove, onLearnAbili
                     }}
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className="text-2xl">{creature.sprite}</span>
+                      <PixelCreatureToken creature={creature} size={34} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-white text-xs font-semibold truncate">{creature.nickname || creature.name}</span>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { CapturedCreature, CreatureType, Move } from '@/types/game'
 import { SFX } from './sounds'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   team: CapturedCreature[]
@@ -290,7 +291,7 @@ export default function FusionLab({ team, onFuse, onClose }: Props) {
                     border: `1px solid ${isSelected ? 'rgba(192,132,252,0.4)' : 'rgba(255,255,255,0.06)'}`,
                     boxShadow: isSelected ? '0 0 12px rgba(192,132,252,0.2)' : 'none',
                   }}>
-                  <span className="text-2xl block">{c.sprite}</span>
+                  <PixelCreatureToken creature={c} size={38} selected={isSelected} />
                   <p className="text-white/70 text-[8px] mt-1 truncate">{c.nickname || c.name}</p>
                   <p className="text-white/30 text-[7px]">Lv.{c.level} · {c.type}</p>
                   {selNum > 0 && (
@@ -313,11 +314,20 @@ export default function FusionLab({ team, onFuse, onClose }: Props) {
               {previewRecipe ? (
                 <>
                   <div className="flex items-center justify-center gap-2 mb-1">
-                    <span className="text-lg">{team[selected1!].sprite}</span>
+                    <PixelCreatureToken creature={team[selected1!]} size={28} />
                     <span className="text-purple-400 text-xs font-bold">+</span>
-                    <span className="text-lg">{team[selected2!].sprite}</span>
+                    <PixelCreatureToken creature={team[selected2!]} size={28} />
                     <span className="text-amber-400 text-xs">=</span>
-                    <span className="text-xl" style={{ filter: 'drop-shadow(0 0 6px rgba(192,132,252,0.4))' }}>{previewRecipe.sprite}</span>
+                    <PixelCreatureToken
+                      creature={{
+                        sprite: previewRecipe.sprite,
+                        name: previewRecipe.namePrefix,
+                        type: previewRecipe.resultType,
+                        color: previewRecipe.color,
+                      }}
+                      size={32}
+                      selected
+                    />
                   </div>
                   <p className="text-white/60 text-[9px]">{previewRecipe.description}</p>
                   <p className="text-purple-300 text-[8px] mt-1">Type: {previewRecipe.resultType} · Bonus: +{previewRecipe.bonus}</p>
@@ -357,12 +367,20 @@ export default function FusionLab({ team, onFuse, onClose }: Props) {
             <canvas ref={canvasRef} style={{ width: Math.min(300, window.innerWidth - 48), height: Math.min(300, window.innerWidth - 48) }} />
             {/* Creature sprites overlaid */}
             <div className="absolute inset-0 flex items-center justify-center gap-6 pointer-events-none">
-              <span className="text-3xl opacity-60" style={{ animation: 'fusion-float 1s ease-in-out infinite' }}>
-                {team[selected1!]?.sprite}
-              </span>
-              <span className="text-3xl opacity-60" style={{ animation: 'fusion-float 1s ease-in-out infinite 0.5s' }}>
-                {team[selected2!]?.sprite}
-              </span>
+              {team[selected1!] && (
+                <PixelCreatureToken
+                  creature={team[selected1!]}
+                  size={46}
+                  style={{ animation: 'fusion-float 1s ease-in-out infinite', opacity: 0.64 }}
+                />
+              )}
+              {team[selected2!] && (
+                <PixelCreatureToken
+                  creature={team[selected2!]}
+                  size={46}
+                  style={{ animation: 'fusion-float 1s ease-in-out infinite 0.5s', opacity: 0.64 }}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -371,9 +389,7 @@ export default function FusionLab({ team, onFuse, onClose }: Props) {
       {phase === 'result' && result && recipe && (
         <div className="flex flex-col items-center gap-3 max-w-xs w-full px-4">
           <div className="text-center" style={{ animation: 'fusion-float 3s ease-in-out infinite' }}>
-            <span className="text-6xl block mb-2" style={{
-              filter: `drop-shadow(0 0 12px ${recipe.color})`,
-            }}>{recipe.sprite}</span>
+            <PixelCreatureToken creature={result} size={76} selected style={{ filter: `drop-shadow(0 0 12px ${recipe.color})` }} />
           </div>
 
           <div className="text-center">
@@ -415,11 +431,11 @@ export default function FusionLab({ team, onFuse, onClose }: Props) {
           </div>
 
           <div className="flex items-center gap-2 text-white/25 text-[8px]">
-            <span>{team[selected1!]?.sprite}</span>
+            {team[selected1!] && <PixelCreatureToken creature={team[selected1!]} size={22} />}
             <span>+</span>
-            <span>{team[selected2!]?.sprite}</span>
+            {team[selected2!] && <PixelCreatureToken creature={team[selected2!]} size={22} />}
             <span>→</span>
-            <span className="text-lg">{recipe.sprite}</span>
+            <PixelCreatureToken creature={result} size={26} selected />
           </div>
 
           <p className="text-white/40 text-[9px]">

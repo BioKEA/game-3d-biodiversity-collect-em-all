@@ -1,33 +1,10 @@
 import type { BiomeType, MapTile } from '@/types/game'
+import { FIELD_GUIDE_BIOME_COLORS } from './artDirection'
 
 const MAP_WIDTH = 200
 const MAP_HEIGHT = 500
 
-export const BIOME_COLORS: Record<BiomeType, { top: string; side: string; dark: string }> = {
-  forest: { top: '#22c55e', side: '#16a34a', dark: '#15803d' },
-  marsh: { top: '#84cc16', side: '#65a30d', dark: '#4d7c0f' },
-  beach: { top: '#eab308', side: '#ca8a04', dark: '#a16207' },
-  rocky_beach: { top: '#a8a29e', side: '#78716c', dark: '#44403c' },
-  urban: { top: '#6b7280', side: '#4b5563', dark: '#374151' },
-  water: { top: '#38bdf8', side: '#0284c7', dark: '#0369a1' },
-  mountain: { top: '#78716c', side: '#57534e', dark: '#44403c' },
-  grassland: { top: '#4ade80', side: '#22c55e', dark: '#16a34a' },
-  redwood: { top: '#166534', side: '#14532d', dark: '#052e16' },
-  tidepool: { top: '#67e8f9', side: '#0891b2', dark: '#155e75' },
-  chaparral: { top: '#a3a056', side: '#7c7c2f', dark: '#5b5a14' },
-  oak_woodland: { top: '#65a30d', side: '#3f6212', dark: '#1a2e05' },
-  kelp_forest: { top: '#0f766e', side: '#115e59', dark: '#134e4a' },
-  desert: { top: '#d4a574', side: '#b8956a', dark: '#96775a' },
-  alpine: { top: '#94a3b8', side: '#64748b', dark: '#475569' },
-  snow: { top: '#f0f4f8', side: '#cbd5e1', dark: '#94a3b8' },
-  valley: { top: '#a3d977', side: '#7cb342', dark: '#558b2f' },
-  volcanic: { top: '#5c4033', side: '#4a332a', dark: '#3e2723' },
-  scrubland: { top: '#c4a882', side: '#a08868', dark: '#7c6850' },
-  dunes: { top: '#e8d5a3', side: '#d4c090', dark: '#b8a070' },
-  canyon: { top: '#c07040', side: '#a05a30', dark: '#804828' },
-  lakeshore: { top: '#7ec8a0', side: '#5da87e', dark: '#3d8860' },
-  old_growth: { top: '#0d4a20', side: '#0a3818', dark: '#072810' },
-}
+export const BIOME_COLORS: Record<BiomeType, { top: string; side: string; dark: string }> = FIELD_GUIDE_BIOME_COLORS
 
 function interpX(y: number, pts: [number, number][]): number {
   if (y <= pts[0][0]) return pts[0][1]

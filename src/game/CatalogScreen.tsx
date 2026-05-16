@@ -1,5 +1,6 @@
 import { ALL_CREATURES } from './creatures'
 import FloatingPanel from './FloatingPanel'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   catalogSeen: string[]
@@ -58,12 +59,12 @@ export default function CatalogScreen({ catalogSeen, catalogCaptured, onClose }:
               }}
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xl shrink-0"
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
                   style={{
                     background: captured ? `${creature.color}15` : 'rgba(255,255,255,0.03)',
                   }}
                 >
-                  {seen ? creature.sprite : '?'}
+                  {seen ? <PixelCreatureToken creature={creature} size={28} selected={captured} /> : <span className="text-white/30 text-sm">?</span>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">

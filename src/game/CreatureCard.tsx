@@ -1,6 +1,7 @@
 import type { Creature } from '@/types/game'
 import { getEvolutionTarget, getPreEvolution } from './evolutions'
 import { ALL_CREATURES } from './creatures'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   creature: Creature
@@ -143,15 +144,7 @@ export default function CreatureCard({ creature, caught, onClose }: Props) {
                 background: `radial-gradient(circle, ${typeColor}15, transparent 70%)`,
               }} />
             </div>
-            <span className="text-7xl relative z-10" style={{
-              filter: isLegendary
-                ? `drop-shadow(0 0 12px ${typeColor}80)`
-                : isRare
-                  ? `drop-shadow(0 0 8px ${typeColor}40)`
-                  : 'none',
-            }}>
-              {creature.sprite}
-            </span>
+            <PixelCreatureToken creature={creature} size={88} selected={isRare || isLegendary} className="relative z-10" />
             {/* Rarity badge */}
             <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider"
               style={{
@@ -248,7 +241,7 @@ export default function CreatureCard({ creature, caught, onClose }: Props) {
                 {preEvoCreature && (
                   <>
                     <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-2xl">{preEvoCreature.sprite}</span>
+                      <PixelCreatureToken creature={preEvoCreature} size={34} />
                       <span className="text-[8px] text-white/40">{preEvoCreature.name}</span>
                     </div>
                     <div className="flex flex-col items-center">
@@ -258,10 +251,7 @@ export default function CreatureCard({ creature, caught, onClose }: Props) {
                   </>
                 )}
                 <div className="flex flex-col items-center gap-0.5">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-2xl"
-                    style={{ border: `1px solid ${typeColor}30`, background: `${typeColor}08` }}>
-                    {creature.sprite}
-                  </div>
+                  <PixelCreatureToken creature={creature} size={40} selected />
                   <span className="text-[8px] text-white/60 font-semibold">{creature.name}</span>
                 </div>
                 {evoTargetCreature && (
@@ -271,7 +261,7 @@ export default function CreatureCard({ creature, caught, onClose }: Props) {
                       <span className="text-[7px] text-purple-400/50">Lv.{evoTarget!.level}</span>
                     </div>
                     <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-2xl">{evoTargetCreature.sprite}</span>
+                      <PixelCreatureToken creature={evoTargetCreature} size={34} />
                       <span className="text-[8px] text-white/40">{evoTargetCreature.name}</span>
                     </div>
                   </>

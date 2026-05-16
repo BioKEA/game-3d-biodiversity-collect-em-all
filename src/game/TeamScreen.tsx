@@ -5,6 +5,7 @@ import { ALL_CREATURES } from './creatures'
 import { HELD_ITEMS, getHeldItem } from './heldItems'
 import { getHappiness, getHappinessLabel, MAX_HAPPINESS } from './happiness'
 import FloatingPanel from './FloatingPanel'
+import PixelCreatureToken from './PixelCreatureToken'
 
 interface Props {
   team: CapturedCreature[]
@@ -110,17 +111,14 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
               }}
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl shrink-0 relative"
+                <div
+                  className="shrink-0 relative"
                   style={{
-                    background: creature.isShiny ? 'rgba(192,132,252,0.12)' : creature.isAlpha ? 'rgba(251,191,36,0.12)' : `${creature.color}15`,
-                    filter: creature.isShiny ? 'hue-rotate(180deg) saturate(1.3)' : 'none',
                     transform: petBounce === i ? 'scale(1.2)' : 'scale(1)',
                     transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   }}
                 >
-                  {creature.sprite}
-                  {creature.isAlpha && <span className="absolute -top-1 -right-1 text-[10px]">⭐</span>}
-                  {creature.isShiny && <span className="absolute -top-1 -right-1 text-[10px]">✨</span>}
+                  <PixelCreatureToken creature={creature} size={42} selected={i === 0} />
                   {petHearts.filter(h => h.idx === i).map(h => (
                     <span key={h.id} className="absolute text-sm pointer-events-none" style={{
                       animation: 'pet-heart-float 1.2s ease-out forwards',
@@ -236,7 +234,8 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
                     return (
                       <div className={`flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[8px] ${ready ? 'bg-amber-500/10 text-amber-300' : 'bg-white/[0.02] text-white/30'}`}>
                         <span>{ready ? '✨' : '→'}</span>
-                        <span>{ready ? `Ready → ${target.sprite} ${target.name}` : `Lv.${evo.level} → ${target.sprite} ${target.name}`}</span>
+                        <span>{ready ? `Ready → ${target.name}` : `Lv.${evo.level} → ${target.name}`}</span>
+                        <PixelCreatureToken creature={target} size={18} selected={ready} />
                         {ready && onEvolve && (
                           <button
                             onClick={(e) => { e.stopPropagation(); onEvolve(i) }}
@@ -303,7 +302,7 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
                 }}
                 onClick={e => e.stopPropagation()}>
                 <div className="flex items-center gap-2 pb-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span className="text-2xl">{creature.sprite}</span>
+                  <PixelCreatureToken creature={creature} size={34} />
                   <div className="flex-1">
                     <p className="text-white text-xs font-bold">{creature.nickname || creature.name}</p>
                     <p className="text-white/40 text-[9px]">{currentlyHeld ? `Holding: ${currentlyHeld.name}` : 'No held item'}</p>
@@ -450,7 +449,7 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
                         }}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-xl">{c.sprite}</span>
+                          <PixelCreatureToken creature={c} size={30} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
                               <p className="text-white text-[11px] font-bold truncate">{c.nickname || c.name}</p>

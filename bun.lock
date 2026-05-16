@@ -5,6 +5,7 @@
     "": {
       "name": "claude-ship-app",
       "dependencies": {
+        "@biokea/leaderboard": "github:BioKEA/games-leaderboard-js#main",
         "@hookform/resolvers": "^5.2.2",
         "@radix-ui/react-accordion": "^1.2.12",
         "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -66,6 +67,9 @@
       },
     },
   },
+  "trustedDependencies": [
+    "@biokea/leaderboard",
+  ],
   "overrides": {
     "vite": "6.4.2",
   },
@@ -119,6 +123,8 @@
     "@babel/traverse": ["@babel/traverse@7.29.0", "", { "dependencies": { "@babel/code-frame": "^7.29.0", "@babel/generator": "^7.29.0", "@babel/helper-globals": "^7.28.0", "@babel/parser": "^7.29.0", "@babel/template": "^7.28.6", "@babel/types": "^7.29.0", "debug": "^4.3.1" } }, "sha512-4HPiQr0X7+waHfyXPZpWPfWL/J7dcN1mx9gL6WdQVMbPnF3+ZhSMs8tCxN7oHddJE9fhNE7+lxdnlyemKfJRuA=="],
 
     "@babel/types": ["@babel/types@7.29.0", "", { "dependencies": { "@babel/helper-string-parser": "^7.27.1", "@babel/helper-validator-identifier": "^7.28.5" } }, "sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A=="],
+
+    "@biokea/leaderboard": ["@biokea/leaderboard@github:BioKEA/games-leaderboard-js#ad71ac8", { "peerDependencies": { "@supabase/supabase-js": ">=2.0.0" } }, "BioKEA-games-leaderboard-js-ad71ac8", "sha512-ryFzS6D601AmnfxTgzzG9gNoSOVSdq2d5cKQDqeGZ9AenbfuXBG6v3ok2tWTsjlnSDGtbqonrRz1O1pFeFis5g=="],
 
     "@bramus/specificity": ["@bramus/specificity@2.4.2", "", { "dependencies": { "css-tree": "^3.0.0" }, "bin": { "specificity": "bin/cli.js" } }, "sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw=="],
 
