@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { BiomeType, TimeOfDay } from '@/types/game'
+import { FIELD_GUIDE_BIOME_COLORS } from './artDirection'
 
 interface Props {
   biome: BiomeType
@@ -455,6 +456,142 @@ function GroundLayer({ color, style = 'flat' }: { color: string; style?: 'flat' 
   )
 }
 
+function PixelBlock({ left, bottom, width, height, depth, top, side, dark, opacity = 1 }: {
+  left: string
+  bottom: string
+  width: number
+  height: number
+  depth: number
+  top: string
+  side: string
+  dark: string
+  opacity?: number
+}) {
+  return (
+    <span
+      className="absolute"
+      style={{
+        left,
+        bottom,
+        width,
+        height,
+        opacity,
+        imageRendering: 'pixelated',
+        background: top,
+        border: `1px solid ${dark}66`,
+        boxShadow: `${depth}px ${depth}px 0 ${side}, inset ${-Math.max(2, depth / 2)}px ${Math.max(2, depth / 2)}px 0 ${dark}33`,
+        transform: 'skewY(-5deg)',
+      }}
+    />
+  )
+}
+
+function PixelParallaxScene({ biome, timeOfDay }: { biome: BiomeType; timeOfDay: TimeOfDay }) {
+  const palette = FIELD_GUIDE_BIOME_COLORS[biome]
+  const isNight = timeOfDay === 'night'
+  const fade = isNight ? 0.55 : 0.78
+  const dry = biome === 'desert' || biome === 'dunes' || biome === 'scrubland' || biome === 'canyon' || biome === 'beach'
+  const wet = biome === 'water' || biome === 'kelp_forest' || biome === 'tidepool' || biome === 'marsh' || biome === 'lakeshore'
+  const forested = biome === 'forest' || biome === 'redwood' || biome === 'old_growth' || biome === 'oak_woodland'
+  const mountain = biome === 'mountain' || biome === 'alpine' || biome === 'snow' || biome === 'volcanic' || biome === 'canyon'
+
+  return (
+    <div className="absolute inset-x-0 bottom-0 h-[42%] pointer-events-none overflow-hidden" style={{ imageRendering: 'pixelated' }}>
+      <div
+        className="absolute inset-x-0 bottom-0 h-[42%]"
+        style={{
+          background: `linear-gradient(180deg, ${palette.top}55, ${palette.dark}${isNight ? 'bb' : '99'})`,
+          clipPath: wet
+            ? 'polygon(0 38%, 12% 33%, 24% 40%, 36% 30%, 48% 36%, 60% 29%, 76% 37%, 88% 31%, 100% 36%, 100% 100%, 0 100%)'
+            : 'polygon(0 46%, 15% 36%, 32% 44%, 50% 32%, 68% 42%, 86% 34%, 100% 40%, 100% 100%, 0 100%)',
+        }}
+      />
+
+      {wet && [8, 22, 36, 52, 68, 84].map((left, i) => (
+        <PixelBlock
+          key={`wave-${i}`}
+          left={`${left}%`}
+          bottom={`${20 + (i % 2) * 6}%`}
+          width={34 + (i % 3) * 8}
+          height={4}
+          depth={3}
+          top={i % 2 === 0 ? palette.detail : palette.top}
+          side={palette.side}
+          dark={palette.dark}
+          opacity={0.42}
+        />
+      ))}
+
+      {forested && [10, 19, 32, 43, 57, 69, 82, 92].map((left, i) => (
+        <span key={`tree-${i}`}>
+          <PixelBlock left={`${left}%`} bottom="24%" width={8} height={44 + (i % 3) * 16} depth={4} top="#6a4a32" side="#4c3424" dark="#2f2118" opacity={fade} />
+          <PixelBlock left={`${left - 1.8}%`} bottom={`${42 + (i % 3) * 4}%`} width={18 + (i % 2) * 6} height={28 + (i % 3) * 8} depth={5} top={palette.top} side={palette.side} dark={palette.dark} opacity={fade} />
+        </span>
+      ))}
+
+      {biome === 'urban' && [7, 16, 28, 39, 51, 63, 76, 88].map((left, i) => (
+        <PixelBlock
+          key={`city-${i}`}
+          left={`${left}%`}
+          bottom="22%"
+          width={18 + (i % 3) * 6}
+          height={44 + ((i * 17) % 58)}
+          depth={5}
+          top={i === 3 ? '#9aa4aa' : palette.top}
+          side={palette.side}
+          dark={palette.dark}
+          opacity={isNight ? 0.82 : 0.68}
+        />
+      ))}
+
+      {mountain && [0, 12, 24, 38, 52, 66, 80, 92].map((left, i) => (
+        <PixelBlock
+          key={`ridge-${i}`}
+          left={`${left}%`}
+          bottom={`${26 + (i % 2) * 5}%`}
+          width={52}
+          height={26 + ((i * 19) % 40)}
+          depth={6}
+          top={biome === 'snow' ? '#dfe9e6' : palette.top}
+          side={palette.side}
+          dark={palette.dark}
+          opacity={isNight ? 0.48 : 0.62}
+        />
+      ))}
+
+      {!wet && !forested && biome !== 'urban' && !mountain && [6, 18, 31, 44, 58, 71, 85].map((left, i) => (
+        <PixelBlock
+          key={`field-${i}`}
+          left={`${left}%`}
+          bottom={`${19 + (i % 3) * 5}%`}
+          width={32 + (i % 2) * 12}
+          height={dry ? 8 : 12 + (i % 3) * 4}
+          depth={4}
+          top={i % 2 === 0 ? palette.detail : palette.top}
+          side={palette.side}
+          dark={palette.dark}
+          opacity={isNight ? 0.44 : 0.58}
+        />
+      ))}
+
+      {[2, 15, 29, 43, 57, 72, 86].map((left, i) => (
+        <PixelBlock
+          key={`front-${i}`}
+          left={`${left}%`}
+          bottom={`${2 + (i % 2) * 2}%`}
+          width={54}
+          height={18 + (i % 3) * 4}
+          depth={7}
+          top={i % 2 === 0 ? palette.top : palette.detail}
+          side={palette.side}
+          dark={palette.dark}
+          opacity={isNight ? 0.82 : 0.94}
+        />
+      ))}
+    </div>
+  )
+}
+
 // Location banner
 function LocationBanner({ subregion, biome, biomeName }: { subregion: string; biome: BiomeType; biomeName: string }) {
   const biomeColors: Record<BiomeType, string> = {
@@ -782,6 +919,8 @@ export default function BattleBiomeBackground({ biome, subregion, timeOfDay }: P
           <TreeLine variant="sparse" color={isNight ? '#060e08' : '#2a4020'} bottom="30%" />
         </>
       )}
+
+      <PixelParallaxScene biome={biome} timeOfDay={timeOfDay} />
 
       {/* Animated particles */}
       <div className="absolute inset-0 pointer-events-none">

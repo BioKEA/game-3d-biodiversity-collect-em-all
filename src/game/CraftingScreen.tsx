@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { InventoryItem } from '@/types/game'
 import { RECIPES, MATERIALS, canCraft, type CraftingRecipe } from './crafting'
 import { SFX } from './sounds'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   inventory: InventoryItem[]
@@ -52,7 +53,7 @@ export default function CraftingScreen({ inventory, playerLevel, onCraft, onClos
         <div className="flex items-center justify-between px-4 py-3 border-b border-purple-900/30"
           style={{ background: 'linear-gradient(90deg, rgba(139,92,246,0.1) 0%, transparent 100%)' }}>
           <div className="flex items-center gap-2">
-            <span className="text-lg">⚗️</span>
+            <PixelIcon icon="⚗️" size={30} variant="mystic" selected />
             <span className="text-white font-bold text-sm tracking-wide">Crafting</span>
             <span className="text-purple-400/60 text-[10px] ml-1">Lv.{playerLevel}</span>
           </div>
@@ -72,7 +73,7 @@ export default function CraftingScreen({ inventory, playerLevel, onCraft, onClos
               {materialItems.map(item => (
                 <div key={item.id}
                   className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
-                  <span className="text-xs">{item.sprite}</span>
+                  <PixelIcon icon={item.sprite} size={18} variant="item" />
                   <span className="text-white/70 text-[10px]">{item.quantity}</span>
                 </div>
               ))}
@@ -101,10 +102,8 @@ export default function CraftingScreen({ inventory, playerLevel, onCraft, onClos
                 }`}>
                 {/* Recipe header */}
                 <div className="flex items-center gap-3 px-3 py-2.5">
-                  <div className={`text-xl w-8 h-8 flex items-center justify-center rounded-lg ${
-                    craftable ? 'bg-purple-500/15' : 'bg-white/5'
-                  } ${craftAnimation && isSelected ? 'animate-pulse' : ''}`}>
-                    {recipe.sprite}
+                  <div className={craftAnimation && isSelected ? 'animate-pulse' : ''}>
+                    <PixelIcon icon={recipe.sprite} size={34} variant="mystic" selected={craftable || isSelected} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -133,7 +132,7 @@ export default function CraftingScreen({ inventory, playerLevel, onCraft, onClos
                             className={`flex items-center gap-1.5 px-2 py-1 rounded border text-[10px] ${
                               enough ? 'border-green-500/20 bg-green-950/20 text-green-300/80' : 'border-red-500/20 bg-red-950/20 text-red-300/80'
                             }`}>
-                            <span className="text-xs">{mat?.sprite ?? '?'}</span>
+                            <PixelIcon icon={mat?.sprite ?? '?'} size={20} variant={enough ? 'nature' : 'danger'} />
                             <span>{mat?.name ?? ing.itemId}</span>
                             <span className="font-mono font-bold">{have}/{ing.quantity}</span>
                           </div>
@@ -144,7 +143,7 @@ export default function CraftingScreen({ inventory, playerLevel, onCraft, onClos
                     {/* Result preview */}
                     <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/5 border border-white/5 mb-3">
                       <span className="text-[9px] text-white/30">→</span>
-                      <span className="text-sm">{recipe.result.sprite}</span>
+                      <PixelIcon icon={recipe.result.sprite} size={24} variant="item" selected />
                       <span className="text-white/70 text-[10px]">{recipe.result.name} ×{recipe.result.quantity}</span>
                       <span className="text-white/20 text-[9px] ml-auto">{recipe.result.description}</span>
                     </div>

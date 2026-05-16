@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { InventoryItem } from '@/types/game'
 import { HELD_ITEM_LIST } from './heldItems'
+import PixelIcon from './PixelIcon'
 
 interface ShopItem {
   item: InventoryItem
@@ -136,12 +137,15 @@ export default function Shop({ coins, inventory, onBuy, onClose }: Props) {
                 }}
               >
                 <div className="flex items-start gap-2">
-                  <span className="text-xl">{shopItem.item.sprite}</span>
+                  <PixelIcon icon={shopItem.item.sprite} size={34} variant={shopItem.item.type === 'heal' ? 'nature' : shopItem.item.type === 'capture' ? 'capture' : shopItem.item.type === 'held' ? 'mystic' : 'item'} selected={isSelected} />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-white/80 truncate">{shopItem.item.name}</p>
                     <p className="text-[9px] text-white/30 leading-tight mt-0.5">{shopItem.item.description}</p>
                     <div className="flex items-center justify-between mt-1.5">
-                      <span className="text-[10px] font-bold text-yellow-400">💰 {shopItem.price}</span>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-yellow-400">
+                        <PixelIcon icon="💰" size={15} variant="gold" />
+                        {shopItem.price}
+                      </span>
                       {owned > 0 && (
                         <span className="text-[9px] text-white/25">Owned: {owned}</span>
                       )}
@@ -160,7 +164,7 @@ export default function Shop({ coins, inventory, onBuy, onClose }: Props) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-sm">{selected.item.sprite}</span>
+                <PixelIcon icon={selected.item.sprite} size={24} variant={selected.item.type === 'heal' ? 'nature' : selected.item.type === 'capture' ? 'capture' : selected.item.type === 'held' ? 'mystic' : 'item'} selected />
                 <span className="text-xs text-white/60 font-medium">{selected.item.name}</span>
               </div>
               {/* Quantity selector */}

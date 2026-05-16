@@ -71,6 +71,15 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
   const lgH = isMobile ? mobileFullH : LG_H
   const w = expanded ? lgW : smW
   const h = expanded ? lgH : smH
+  const totalExplorableTiles = useMemo(() => {
+    let total = 0
+    for (const row of map) {
+      for (const tile of row) {
+        if (tile.isWalkable && !tile.borderState) total++
+      }
+    }
+    return Math.max(1, total)
+  }, [map])
 
   // Build offscreen tile layer when explored set or time changes
   const buildTileLayer = useCallback(() => {
@@ -112,6 +121,24 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
       }
     }
     ctx.globalAlpha = 1
+
+    // Coastline and major water edges, so the California silhouette reads even before full exploration.
+    ctx.save()
+    ctx.strokeStyle = 'rgba(154, 183, 189, 0.38)'
+    ctx.lineWidth = expanded ? 0.8 : 0.55
+    ctx.beginPath()
+    for (let y = 1; y < MAP_HEIGHT - 1; y++) {
+      for (let x = 1; x < MAP_WIDTH - 1; x++) {
+        const tile = map[y][x]
+        if (tile.borderState || tile.biome === 'water' || tile.biome === 'kelp_forest') continue
+        const touchesWater = map[y]?.[x - 1]?.biome === 'water' || map[y]?.[x + 1]?.biome === 'water' ||
+          map[y - 1]?.[x]?.biome === 'water' || map[y + 1]?.[x]?.biome === 'water'
+        if (!touchesWater) continue
+        ctx.rect(x * pw, y * ph, Math.max(0.7, pw), Math.max(0.7, ph))
+      }
+    }
+    ctx.stroke()
+    ctx.restore()
 
     // State border line on minimap
     ctx.save()
@@ -492,9 +519,8 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
     ctx.fillText('S', compassX, compassY + compassR + 4)
 
     // Explored percentage
-    const totalLand = MAP_WIDTH * MAP_HEIGHT
     const exploredCount = exploredTiles?.size ?? 0
-    const pct = Math.round((exploredCount / totalLand) * 100)
+    const pct = Math.min(100, Math.round((exploredCount / totalExplorableTiles) * 100))
     ctx.font = expanded ? '8px system-ui' : '7px system-ui'
     ctx.textAlign = 'left'
     ctx.textBaseline = 'top'
@@ -502,7 +528,7 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
     ctx.fillText(`${pct}%`, 3, 3)
 
     frameRef.current = requestAnimationFrame(draw)
-  }, [map, playerX, playerY, journal, exploredTiles, rangers, w, h, expanded, hoveredRegion, onFastTravel, timeOfDay, weather, activeEvent, buildTileLayer])
+  }, [map, playerX, playerY, journal, exploredTiles, rangers, w, h, expanded, hoveredRegion, onFastTravel, timeOfDay, weather, activeEvent, buildTileLayer, totalExplorableTiles])
 
   useEffect(() => {
     // Invalidate tile cache on size change
@@ -590,7 +616,7 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
         style={{ width: w, height: h, imageRendering: 'pixelated' }}
       />
       <div className={`flex items-center justify-between px-1.5 sm:px-3 py-0.5 sm:py-1 ${expanded && isMobile ? 'flex-wrap gap-1' : ''}`}>
-        <p className="text-[9px] sm:text-sm text-white/30 font-medium">CALIFORNIA</p>
+        <p className="text-[9px] sm:text-sm text-white/35 font-bold tracking-wider">CA FIELD MAP</p>
         <div className={`flex items-center ${expanded && isMobile ? 'gap-2 flex-wrap' : 'gap-3'}`}>
           {expanded && (
             <>

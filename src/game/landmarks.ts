@@ -54,8 +54,8 @@ export const LANDMARKS: LandmarkDef[] = [
   { x: 115, y: 200, name: 'Half Dome', color: '#94a3b8', accent: '#e2e8f0', label: 'Half Dome', height: 30, width: 8, glow: '#94a3b8', emoji: '🏞️' },
   // Bay Area icons
   { x: 49, y: 216, name: 'Golden Gate Bridge', color: '#cc3300', accent: '#e8a040', label: 'GG Bridge', height: 22, width: 10, glow: '#ff4400', emoji: '🌉' },
-  { x: 52, y: 216, name: 'Alcatraz Island', color: '#78716c', accent: '#94a3b8', label: 'Alcatraz', height: 12, width: 7, glow: '#94a3b8', emoji: '🏚️' },
-  { x: 51, y: 217, name: 'Ghirardelli Square', color: '#8b4513', accent: '#dc2626', label: 'Ghirardelli', height: 10, width: 6, glow: '#dc2626', emoji: '🍫' },
+  { x: 53, y: 213, name: 'Alcatraz Island', color: '#78716c', accent: '#94a3b8', label: 'Alcatraz', height: 12, width: 7, glow: '#94a3b8', emoji: '🏚️' },
+  { x: 53, y: 217, name: 'Ghirardelli Square', color: '#8b4513', accent: '#dc2626', label: 'Ghirardelli', height: 10, width: 6, glow: '#dc2626', emoji: '🍫' },
   { x: 60, y: 236, name: 'Winchester Mystery House', color: '#5b3a1a', accent: '#9ca3af', label: 'Winchester', height: 16, width: 7, glow: '#9ca3af', emoji: '👻' },
   // NorCal
   { x: 30, y: 12, name: 'Redwood National Park', color: '#2d5016', accent: '#4a7c23', label: 'Redwood NP', height: 26, width: 7, glow: '#3a6b1e', emoji: '🌲' },
@@ -85,7 +85,7 @@ export const LANDMARKS: LandmarkDef[] = [
   { x: 136, y: 423, name: 'Disneyland', color: '#1e40af', accent: '#f472b6', label: 'Disneyland', height: 24, width: 8, glow: '#f472b6', emoji: '🎢' },
   { x: 129, y: 421, name: 'Watts Towers', color: '#b45309', accent: '#fbbf24', label: 'Watts Towers', height: 20, width: 4, glow: '#fbbf24', emoji: '🗼' },
   { x: 131, y: 426, name: 'Queen Mary', color: '#1e3a5f', accent: '#f5f5f5', label: 'Queen Mary', height: 12, width: 10, glow: '#f5f5f5', emoji: '🚢' },
-  { x: 119, y: 414, name: 'Getty Center', color: '#f5f5f5', accent: '#a3a3a3', label: 'Getty Center', height: 16, width: 8, glow: '#f5f5f5', emoji: '🏛️' },
+  { x: 121, y: 410, name: 'Getty Center', color: '#f5f5f5', accent: '#a3a3a3', label: 'Getty Center', height: 16, width: 8, glow: '#f5f5f5', emoji: '🏛️' },
   { x: 125, y: 419, name: 'Olvera Street', color: '#cc5500', accent: '#fde047', label: 'Olvera St', height: 10, width: 6, glow: '#fde047', emoji: '🎭' },
   // San Diego
   { x: 144, y: 481, name: 'Balboa Park', color: '#166534', accent: '#4ade80', label: 'Balboa Park', height: 16, width: 8, glow: '#4ade80', emoji: '🐼' },

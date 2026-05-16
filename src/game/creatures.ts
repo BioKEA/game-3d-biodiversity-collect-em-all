@@ -2431,8 +2431,9 @@ const MOON_PHASES: MoonPhase[] = [
   { name: 'Waning Crescent', icon: '🌘', mysticMultiplier: 1.0, legendaryMultiplier: 1.0, label: 'Standard encounter rates' },
 ]
 
-export function getMoonPhase(gameDay: number): MoonPhase {
-  const dayInCycle = ((gameDay % 30) + 30) % 30
+export function getMoonPhase(gameDay: number | undefined = 0): MoonPhase {
+  const safeGameDay = Number.isFinite(gameDay) ? gameDay : 0
+  const dayInCycle = ((safeGameDay % 30) + 30) % 30
   const phaseIndex = Math.floor(dayInCycle / 3.75)
   return MOON_PHASES[Math.min(phaseIndex, 7)]
 }

@@ -15,6 +15,7 @@ import { SFX } from './sounds'
 import BattleBiomeBackground from './BattleBiomeBackground'
 import { TypeMatchupBadge } from './TypeChart'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   wildCreature: Creature
@@ -45,7 +46,7 @@ function StatusBadge({ status }: { status: StatusState }) {
       className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-medium"
       style={{ background: `${info.color}20`, color: info.color, border: `1px solid ${info.color}40` }}
     >
-      {info.icon} {info.label} ({status.turnsLeft})
+      <PixelIcon icon={info.icon} size={16} color={info.color} /> {info.label} ({status.turnsLeft})
     </span>
   )
 }
@@ -1874,8 +1875,10 @@ export default function BattleScreen({
                 disabled={turn !== 'player'}
                 className="p-2 rounded-lg bg-white/5 border border-white/10 text-left disabled:opacity-50"
               >
-                <span className="text-sm">{item.sprite}</span>
-                <span className="text-white text-xs font-semibold ml-1">{item.name}</span>
+                <span className="inline-flex items-center gap-1">
+                  <PixelIcon icon={item.sprite} size={26} variant={item.type === 'heal' ? 'nature' : item.type === 'boost' ? 'gold' : 'item'} />
+                  <span className="text-white text-xs font-semibold">{item.name}</span>
+                </span>
                 <span className="text-white/40 text-[10px] block">x{item.quantity}</span>
               </button>
             ))}
@@ -1931,35 +1934,50 @@ export default function BattleScreen({
               disabled={turn !== 'player' || battleOver}
               className="p-2 sm:p-3 rounded-lg bg-red-500/15 border border-red-500/30 text-red-400 text-xs sm:text-sm font-semibold disabled:opacity-50 active:scale-95 transition-transform"
             >
-              ⚔️ Fight
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <PixelIcon icon="⚔️" size={24} variant="action" />
+                Fight
+              </span>
             </button>
             <button
               onClick={handleCapture}
               disabled={turn !== 'player' || battleOver}
               className="p-2 sm:p-3 rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-400 text-xs sm:text-sm font-semibold disabled:opacity-50 active:scale-95 transition-transform"
             >
-              🔮 Catch ({inventory.find(i => i.id === 'bio-capsule')?.quantity ?? 0})
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <PixelIcon icon="🔮" size={24} variant="capture" />
+                Catch ({inventory.find(i => i.id === 'bio-capsule')?.quantity ?? 0})
+              </span>
             </button>
             <button
               onClick={() => setShowItems(true)}
               disabled={turn !== 'player' || battleOver}
               className="p-2 sm:p-3 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs sm:text-sm font-semibold disabled:opacity-50 active:scale-95 transition-transform"
             >
-              🎒 Items
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <PixelIcon icon="🎒" size={24} variant="item" />
+                Items
+              </span>
             </button>
             <button
               onClick={() => setShowSwitch(true)}
               disabled={turn !== 'player' || battleOver || team.length <= 1}
               className="p-2 sm:p-3 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-xs sm:text-sm font-semibold disabled:opacity-50 active:scale-95 transition-transform"
             >
-              🔄 Switch
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <PixelIcon icon="🔄" size={24} variant="travel" />
+                Switch
+              </span>
             </button>
             <button
               onClick={onFlee}
               disabled={turn !== 'player' || battleOver}
               className="col-span-2 p-1.5 sm:p-2 rounded-lg bg-white/5 border border-white/10 text-white/60 text-xs sm:text-sm font-semibold disabled:opacity-50 active:scale-95 transition-transform"
             >
-              🏃 Run
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <PixelIcon icon="🏃" size={22} variant="neutral" />
+                Run
+              </span>
             </button>
           </div>
         )}

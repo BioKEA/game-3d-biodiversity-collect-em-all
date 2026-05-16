@@ -5,6 +5,7 @@ import { getEvolutionTarget } from './evolutions'
 import { getTimeLabel, getTimeSky, getWeatherInfo, getWeatherForecast } from './timeWeather'
 import { Music } from './sounds'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   player: PlayerState
@@ -137,10 +138,10 @@ function AudioControls() {
     <div className="relative">
       <button
         onClick={() => setShowPanel(p => !p)}
-        className="text-xs opacity-60 hover:opacity-100 transition-opacity"
+        className="opacity-70 hover:opacity-100 transition-opacity"
         title="Audio settings"
       >
-        {musicOn ? '🔊' : '🔇'}
+        <PixelIcon icon={musicOn ? '🔊' : '🔇'} size={22} variant={musicOn ? 'water' : 'neutral'} />
       </button>
 
       {showPanel && (
@@ -160,7 +161,7 @@ function AudioControls() {
               }}
               className="text-[10px] w-5 text-center"
             >
-              🎵
+              <PixelIcon icon="🎵" size={18} variant="mystic" />
             </button>
             <input
               type="range" min="0" max="100" value={Math.round(musicVol * 100)}
@@ -181,7 +182,7 @@ function AudioControls() {
 
           {/* SFX volume */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] w-5 text-center">🔔</span>
+            <PixelIcon icon="🔔" size={18} variant="gold" />
             <input
               type="range" min="0" max="100" value={Math.round(sfxVol * 100)}
               onChange={e => {
@@ -265,7 +266,7 @@ function RadialMenu({ items, groups, open, onClose, anchorRef, mobile }: {
             boxShadow: `0 2px 8px rgba(0,0,0,0.3), 0 0 12px ${item.color}15`,
           }}
         >
-          {item.icon}
+          <PixelIcon icon={item.icon} size={34} color={item.color} selected title={item.label} />
           {item.badge !== undefined && item.badge > 0 && (
             <span
               className="absolute -top-1 -right-1 text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center"
@@ -370,7 +371,7 @@ function RadialMenu({ items, groups, open, onClose, anchorRef, mobile }: {
                 boxShadow: `0 2px 10px rgba(0,0,0,0.4), 0 0 15px ${item.color}15`,
               }}
             >
-              {item.icon}
+              <PixelIcon icon={item.icon} size={mobile ? 32 : 40} color={item.color} selected title={item.label} />
               {item.badge !== undefined && item.badge > 0 && (
                 <span className="absolute -top-1 -right-1 text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center" style={{
                   background: `linear-gradient(135deg, ${item.color}, ${item.color}cc)`,
@@ -563,7 +564,10 @@ export default function GameHUD({
                       background: 'linear-gradient(90deg, #06b6d4, #4ade80)',
                     }} />
                   </div>
-                  <span className="text-[10px] sm:text-base text-yellow-400/70 font-mono">💰 {player.coins ?? 0}</span>
+                  <span className="inline-flex items-center gap-1 text-[10px] sm:text-base text-yellow-400/70 font-mono">
+                    <PixelIcon icon="💰" size={isMobile ? 14 : 18} variant="gold" />
+                    {player.coins ?? 0}
+                  </span>
                 </div>
               </div>
             </div>
@@ -580,7 +584,10 @@ export default function GameHUD({
                     background: 'linear-gradient(90deg, #06b6d4, #4ade80)',
                   }} />
                 </div>
-                <span className="text-[10px] sm:text-base text-yellow-400/70 font-mono">💰 {player.coins ?? 0}</span>
+                <span className="inline-flex items-center gap-1 text-[10px] sm:text-base text-yellow-400/70 font-mono">
+                  <PixelIcon icon="💰" size={isMobile ? 14 : 18} variant="gold" />
+                  {player.coins ?? 0}
+                </span>
               </div>
             </>
           )}
@@ -595,7 +602,7 @@ export default function GameHUD({
             <span className="text-xs sm:text-lg font-semibold" style={{ color: '#4ade80' }}>{player.captured.length}/{ALL_CREATURES.length}</span>
           </div>
           <div className="flex items-center sm:justify-end gap-1 sm:gap-2 mt-0.5">
-            <span className="text-sm sm:text-lg">{timeSky.icon}</span>
+            <PixelIcon icon={timeSky.icon} size={isMobile ? 18 : 24} variant="gold" title={timeOfDay} />
             <span className="text-white/70 text-[10px] sm:text-base font-medium">{getTimeLabel(gameMinutes)}</span>
             {(() => {
               const moon = getMoonPhase(gameDay)
@@ -606,7 +613,7 @@ export default function GameHUD({
                   title={`${moon.name} — ${moon.label}`}
                   style={{ opacity: isActive ? 1 : 0.4, filter: isActive ? 'drop-shadow(0 0 4px rgba(200,200,255,0.5))' : undefined }}
                 >
-                  {moon.icon}
+                  <PixelIcon icon={moon.icon} size={isMobile ? 18 : 22} variant="mystic" selected={isActive} title={moon.name} />
                 </span>
               )
             })()}
@@ -615,7 +622,7 @@ export default function GameHUD({
               onClick={() => setShowForecast(f => !f)}
               title="Weather forecast"
             >
-              <span className="text-sm sm:text-lg">{weatherInfo.icon}</span>
+              <PixelIcon icon={weatherInfo.icon} size={isMobile ? 18 : 24} variant={weather === 'rain' || weather === 'wind' ? 'water' : weather === 'thunderstorm' || weather === 'fog' ? 'mystic' : 'gold'} title="Weather forecast" />
               <span className="text-white/20 text-[8px] sm:text-xs">{showForecast ? '▲' : '▼'}</span>
             </button>
             <AudioControls />
@@ -649,14 +656,14 @@ export default function GameHUD({
               <p className="text-[9px] text-white/30 font-medium tracking-widest mb-1.5 text-center">FORECAST</p>
               <div className="flex items-center gap-3">
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-lg">{weatherInfo.icon}</span>
+                  <PixelIcon icon={weatherInfo.icon} size={26} variant={weather === 'rain' || weather === 'wind' ? 'water' : weather === 'thunderstorm' || weather === 'fog' ? 'mystic' : 'gold'} />
                   <span className="text-[9px] text-white/50 font-medium">Now</span>
                 </div>
                 {forecast.map((f, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="w-4 h-px bg-white/10" />
                     <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-lg">{getWeatherInfo(f.weather).icon}</span>
+                      <PixelIcon icon={getWeatherInfo(f.weather).icon} size={24} variant={f.weather === 'rain' || f.weather === 'wind' ? 'water' : f.weather === 'thunderstorm' || f.weather === 'fog' ? 'mystic' : 'gold'} />
                       <span className="text-[9px] text-white/40">{f.time}</span>
                     </div>
                   </div>
@@ -840,7 +847,7 @@ export default function GameHUD({
           }}
         >
           <div className="flex items-center gap-1 sm:gap-2">
-            <span className="text-lg sm:text-2xl">🥚</span>
+            <PixelIcon icon="🥚" size={isMobile ? 24 : 32} variant="mystic" selected />
             <span className="text-pink-400 text-xs sm:text-base font-medium hidden sm:inline">Breeding</span>
           </div>
         </div>
@@ -867,7 +874,7 @@ export default function GameHUD({
                 ? 'drop-shadow(0 0 6px rgba(200,210,255,0.6))'
                 : 'drop-shadow(0 0 6px rgba(168,85,247,0.6))',
             }}>
-              {isFullMoon(gameDay) ? '🌕' : '🌑'}
+              <PixelIcon icon={isFullMoon(gameDay) ? '🌕' : '🌑'} size={isMobile ? 22 : 28} variant="mystic" selected />
             </span>
             <span className="text-[9px] sm:text-xs font-bold tracking-wider uppercase" style={{
               color: isFullMoon(gameDay) ? 'rgba(200,210,255,0.8)' : 'rgba(168,85,247,0.8)',
@@ -906,7 +913,7 @@ export default function GameHUD({
                   boxShadow: `0 2px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03)`,
                 }}
               >
-                <span className="text-lg sm:text-2xl">{btn.icon}</span>
+                <PixelIcon icon={btn.icon} size={isMobile ? 30 : 42} color={btn.color} title={btn.label} />
                 <span className="text-[6px] sm:text-[7px] text-white/40 font-medium">{btn.label}</span>
               </button>
               {btn.label === 'WildDex' && bayDexNewCount > 0 && (
@@ -951,7 +958,7 @@ export default function GameHUD({
                   : '0 2px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03)',
               }}
             >
-              <span className="text-lg sm:text-2xl">📖</span>
+              <PixelIcon icon="📖" size={isMobile ? 30 : 42} variant="gold" selected={openRadial === 'collection'} title="Collection" />
               <span className="text-[6px] sm:text-[7px] text-white/40 font-medium">Collection</span>
             </button>
           </div>
@@ -981,7 +988,7 @@ export default function GameHUD({
                   : '0 2px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03)',
               }}
             >
-              <span className="text-lg sm:text-2xl">⚡</span>
+              <PixelIcon icon="⚡" size={isMobile ? 30 : 42} variant="mystic" selected={openRadial === 'activities'} title="Activities" />
               <span className="text-[6px] sm:text-[7px] text-white/40 font-medium">Activities</span>
             </button>
           </div>
@@ -998,7 +1005,7 @@ export default function GameHUD({
                   border: '1px solid rgba(255,255,255,0.1)',
                 }}
               >
-                <span className="text-[10px] sm:text-sm">🗺️</span>
+                <PixelIcon icon="🗺️" size={isMobile ? 18 : 24} variant="travel" title="Fast travel" />
               </button>
             )}
             {onToggleHotkeys && (

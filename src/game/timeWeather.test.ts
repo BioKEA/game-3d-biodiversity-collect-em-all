@@ -31,7 +31,7 @@ describe('Time System', () => {
 
 describe('Weather System', () => {
   it('rollWeather returns valid weather types', () => {
-    const validWeathers = ['clear', 'fog', 'rain', 'wind', 'sunny']
+    const validWeathers = ['clear', 'fog', 'rain', 'wind', 'sunny', 'thunderstorm']
     for (let i = 0; i < 100; i++) {
       const weather = rollWeather('clear', 'forest')
       expect(validWeathers).toContain(weather)
@@ -39,7 +39,7 @@ describe('Weather System', () => {
   })
 
   it('getWeatherInfo returns valid data for all types', () => {
-    for (const weather of ['clear', 'fog', 'rain', 'wind', 'sunny'] as const) {
+    for (const weather of ['clear', 'fog', 'rain', 'wind', 'sunny', 'thunderstorm'] as const) {
       const info = getWeatherInfo(weather)
       expect(info.icon).toBeTruthy()
       expect(info.label).toBeTruthy()
@@ -60,7 +60,7 @@ describe('Battle Modifiers', () => {
 
   it('all modifiers are positive numbers', () => {
     for (const time of ['dawn', 'day', 'dusk', 'night'] as const) {
-      for (const weather of ['clear', 'fog', 'rain', 'wind', 'sunny'] as const) {
+      for (const weather of ['clear', 'fog', 'rain', 'wind', 'sunny', 'thunderstorm'] as const) {
         const mods = getBattleModifiers(weather, time, 'beast', 'bird')
         expect(mods.playerAtkMod).toBeGreaterThan(0)
         expect(mods.playerDefMod).toBeGreaterThan(0)

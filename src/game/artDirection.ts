@@ -92,6 +92,19 @@ export const FIELD_GUIDE_ENTITY_COLORS = {
   labelText: '#f3ecd7',
 } as const
 
+export const FIELD_GUIDE_ICON_COLORS = {
+  neutral: { top: '#6f7780', side: '#505961', dark: '#333b42', accent: '#aab3ba' },
+  action: { top: '#b46b5f', side: '#82473f', dark: '#502b27', accent: '#df9a87' },
+  capture: { top: '#9375ad', side: '#6f528a', dark: '#49365d', accent: '#d4b8ec' },
+  item: { top: '#8f8256', side: '#6d613c', dark: '#473f27', accent: '#d5c36c' },
+  nature: { top: '#6f8f4f', side: '#506b38', dark: '#314426', accent: '#b5c879' },
+  water: { top: '#4f93a4', side: '#346f7e', dark: '#234d58', accent: '#9bcbd0' },
+  travel: { top: '#6f95ad', side: '#4c6e87', dark: '#31495c', accent: '#aac6d3' },
+  mystic: { top: '#a184b6', side: '#765b8d', dark: '#4c3a5e', accent: '#dac2e7' },
+  gold: { top: '#c4a24f', side: '#907336', dark: '#5f4b24', accent: '#ead98a' },
+  danger: { top: '#b8574d', side: '#80382f', dark: '#50211d', accent: '#e38b7c' },
+} as const
+
 export const FIELD_GUIDE_CREATURE_TYPE_COLORS = {
   beast: { top: '#b3835a', side: '#80583a', dark: '#4f3524', accent: '#d7b37d' },
   bird: { top: '#6f95ad', side: '#4c6e87', dark: '#31495c', accent: '#aac6d3' },

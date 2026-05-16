@@ -35,7 +35,7 @@ export const EXPANDED_RANGERS: Ranger[] = [
     ],
     battleTeam: [
       { creatureId: 'black-bear', level: 14 },
-      { creatureId: 'mule-deer', level: 12 },
+      { creatureId: 'black-tailed-deer', level: 12 },
       { creatureId: 'peregrine-falcon', level: 13 },
     ],
     battleQuote: 'The Sierra breeds strong creatures. Let\'s see if yours can match them!',
@@ -72,7 +72,7 @@ export const EXPANDED_RANGERS: Ranger[] = [
     ],
     battleTeam: [
       { creatureId: 'sidewinder', level: 11 },
-      { creatureId: 'desert-kit-fox', level: 12 },
+      { creatureId: 'kit-fox', level: 12 },
       { creatureId: 'gila-monster', level: 13 },
     ],
     battleQuote: 'My desert team has survived worse heat than your hottest attack!',
@@ -140,7 +140,7 @@ export const EXPANDED_RANGERS: Ranger[] = [
     title: 'Monterey Bay Marine Biologist',
     greeting: 'Monterey Bay is one of the most biodiverse marine environments on the planet. The kelp forests here are like underwater cathedrals.',
     sprite: '🧑‍🔬',
-    x: 48, y: 258,
+    x: 60, y: 268,
     subregion: 'Monterey',
     quests: [
       {
@@ -156,7 +156,7 @@ export const EXPANDED_RANGERS: Ranger[] = [
       },
     ],
     battleTeam: [
-      { creatureId: 'sea-otter', level: 14 },
+      { creatureId: 'southern-sea-otter', level: 14 },
       { creatureId: 'harbor-seal', level: 12 },
       { creatureId: 'brown-pelican', level: 13 },
     ],
@@ -193,7 +193,7 @@ export const EXPANDED_RANGERS: Ranger[] = [
       },
     ],
     battleTeam: [
-      { creatureId: 'rattlesnake', level: 11 },
+      { creatureId: 'sidewinder', level: 11 },
       { creatureId: 'coyote', level: 12 },
       { creatureId: 'red-tailed-hawk', level: 10 },
     ],
@@ -214,7 +214,7 @@ export const EXPANDED_RANGERS: Ranger[] = [
     title: 'Lake Tahoe Alpine Ranger',
     greeting: 'Lake Tahoe is the crown jewel of the Sierra — the water is so clear you can see 70 feet down. The creatures up here are hardy mountain folk.',
     sprite: '⛷️',
-    x: 135, y: 135,
+    x: 126, y: 155,
     subregion: 'Lake Tahoe',
     quests: [
       {
@@ -242,7 +242,7 @@ export const EXPANDED_RANGERS: Ranger[] = [
     ],
     battleTeam: [
       { creatureId: 'mountain-lion', level: 15 },
-      { creatureId: 'bald-eagle', level: 14 },
+      { creatureId: 'golden-eagle', level: 14 },
       { creatureId: 'black-bear', level: 13 },
     ],
     battleQuote: 'At 6,000 feet, the air is thin but my team hits hard. Ready for altitude?',
