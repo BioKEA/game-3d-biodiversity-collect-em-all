@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { BiomeType, TimeOfDay } from '@/types/game'
 import { FIELD_GUIDE_BIOME_COLORS } from './artDirection'
+import { getCaliforniaRegionForSubregion } from './californiaRegions'
 
 interface Props {
   biome: BiomeType
@@ -486,8 +487,9 @@ function PixelBlock({ left, bottom, width, height, depth, top, side, dark, opaci
   )
 }
 
-function PixelParallaxScene({ biome, timeOfDay }: { biome: BiomeType; timeOfDay: TimeOfDay }) {
+function PixelParallaxScene({ biome, timeOfDay, subregion }: { biome: BiomeType; timeOfDay: TimeOfDay; subregion: string }) {
   const palette = FIELD_GUIDE_BIOME_COLORS[biome]
+  const region = getCaliforniaRegionForSubregion(subregion)
   const isNight = timeOfDay === 'night'
   const fade = isNight ? 0.55 : 0.78
   const dry = biome === 'desert' || biome === 'dunes' || biome === 'scrubland' || biome === 'canyon' || biome === 'beach'
@@ -497,6 +499,13 @@ function PixelParallaxScene({ biome, timeOfDay }: { biome: BiomeType; timeOfDay:
 
   return (
     <div className="absolute inset-x-0 bottom-0 h-[42%] pointer-events-none overflow-hidden" style={{ imageRendering: 'pixelated' }}>
+      <div
+        className="absolute inset-x-0 bottom-[34%] h-[34%]"
+        style={{
+          background: `linear-gradient(180deg, ${region.color}${isNight ? '18' : '24'}, transparent)`,
+          clipPath: 'polygon(0 66%, 13% 54%, 28% 62%, 45% 48%, 62% 58%, 78% 47%, 100% 60%, 100% 100%, 0 100%)',
+        }}
+      />
       <div
         className="absolute inset-x-0 bottom-0 h-[42%]"
         style={{
@@ -588,12 +597,28 @@ function PixelParallaxScene({ biome, timeOfDay }: { biome: BiomeType; timeOfDay:
           opacity={isNight ? 0.82 : 0.94}
         />
       ))}
+
+      {[9, 27, 49, 73, 91].map((left, i) => (
+        <PixelBlock
+          key={`region-spark-${i}`}
+          left={`${left}%`}
+          bottom={`${18 + (i % 2) * 3}%`}
+          width={7 + (i % 2) * 4}
+          height={3}
+          depth={2}
+          top={region.accent}
+          side={region.color}
+          dark={region.dark}
+          opacity={isNight ? 0.28 : 0.36}
+        />
+      ))}
     </div>
   )
 }
 
 // Location banner
 function LocationBanner({ subregion, biome, biomeName }: { subregion: string; biome: BiomeType; biomeName: string }) {
+  const region = getCaliforniaRegionForSubregion(subregion)
   const biomeColors: Record<BiomeType, string> = {
     urban: '#f59e0b',
     forest: '#22c55e',
@@ -634,6 +659,9 @@ function LocationBanner({ subregion, biome, biomeName }: { subregion: string; bi
           </p>
           <p className="text-[9px] font-medium tracking-wider uppercase" style={{ color: `${color}aa` }}>
             {biomeName}
+          </p>
+          <p className="text-[8px] font-bold tracking-wider uppercase" style={{ color: `${region.color}aa` }}>
+            {region.shortName}
           </p>
         </div>
       </div>
@@ -920,7 +948,7 @@ export default function BattleBiomeBackground({ biome, subregion, timeOfDay }: P
         </>
       )}
 
-      <PixelParallaxScene biome={biome} timeOfDay={timeOfDay} />
+      <PixelParallaxScene biome={biome} timeOfDay={timeOfDay} subregion={subregion} />
 
       {/* Animated particles */}
       <div className="absolute inset-0 pointer-events-none">

@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback, memo, useMemo } from 'react'
 import type { MapTile, JournalEntry, TimeOfDay, WeatherType } from '@/types/game'
 import type { WorldEvent } from './WorldEvents'
 import { BIOME_COLORS, MAP_WIDTH, MAP_HEIGHT } from './bayAreaMap'
+import { getRegionLayerColor } from './californiaRegions'
 import { LANDMARKS } from './landmarks'
 import { drawPixelGlyphOnCanvas, type PixelGlyphKind } from './pixelGlyphArt'
 
@@ -23,7 +24,7 @@ const SM_W = 96
 const SM_H = 240
 const LG_W = 384
 const MAP_ASPECT = MAP_HEIGHT / MAP_WIDTH
-type MapLayer = 'biome' | 'height' | 'routes'
+type MapLayer = 'biome' | 'regions' | 'height' | 'routes'
 
 function isWaterlikeBiome(tile?: MapTile): boolean {
   return tile?.biome === 'water' || tile?.biome === 'kelp_forest'
@@ -131,7 +132,10 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
         const colors = BIOME_COLORS[tile.biome]
         const surveyVisible = expanded && mapLayer !== 'biome'
 
-        if (mapLayer === 'height') {
+        if (mapLayer === 'regions') {
+          ctx.fillStyle = getRegionLayerColor(tile)
+          ctx.globalAlpha = tile.borderState ? 0.28 : (isExplored || surveyVisible ? 0.82 : 0.14)
+        } else if (mapLayer === 'height') {
           const t = Math.max(0, Math.min(1, tile.elevation / 10.5))
           const hue = 190 - t * 155
           const lightness = 24 + t * 48
@@ -707,6 +711,7 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
         <div className="flex items-center gap-1 px-1.5 pt-1 sm:px-3">
           {([
             ['biome', 'Biome'],
+            ['regions', 'Regions'],
             ['height', 'Height'],
             ['routes', 'Routes'],
           ] as const).map(([layer, label]) => (

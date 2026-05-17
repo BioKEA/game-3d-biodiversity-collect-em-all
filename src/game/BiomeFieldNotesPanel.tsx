@@ -49,7 +49,7 @@ export default function BiomeFieldNotesPanel({ player, onClose }: Props) {
                   border: `1px solid ${isSelected ? `${bn.color}66` : 'rgba(255,255,255,0.04)'}`,
                 }}
               >
-                <span className="text-base">{bn.icon}</span>
+                <PixelIcon icon={bn.icon} size={20} variant="nature" color={bn.color} selected={isSelected} />
                 <span
                   className="text-[8px] uppercase tracking-wider font-semibold truncate w-full text-center px-1"
                   style={{ color: isSelected ? '#ffffff' : 'rgba(255,255,255,0.5)' }}
@@ -73,7 +73,7 @@ export default function BiomeFieldNotesPanel({ player, onClose }: Props) {
           }}
         >
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg">{currentBiome.icon}</span>
+            <PixelIcon icon={currentBiome.icon} size={28} variant="nature" color={currentBiome.color} selected />
             <h3 className="text-white text-sm font-bold">{currentBiome.label}</h3>
           </div>
           <p className="text-white/50 text-[10px]">

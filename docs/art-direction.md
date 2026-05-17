@@ -63,6 +63,7 @@ The user-approved improvement program is now tracked in `src/game/overhaulRoadma
 - Ambient effects should use CSS/canvas pixel particles instead of emoji leaves, droplets, or weather symbols.
 - `CartographerPanel` is the shared in-game survey layer for the ten-track overhaul: it exposes current tile data, local relief, creature adaptations, nearby landmarks, route signals, and QA stats.
 - The expanded `Minimap` now has biome, height, and routes layers plus tile hover details, so geography and traversal can be audited directly inside the game.
+- `californiaRegions.ts` is the shared California province model. It drives the expanded map's Regions layer, Cartographer regional identity cards, Field Journal province context, and region-tinted battle parallax accents.
 
 ## Open Art Backlog
 

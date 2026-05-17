@@ -8,6 +8,7 @@
 - The minimap now draws a subtle coastline/water-edge trace and reports explored progress against explorable California tiles, not the full 200x500 grid including ocean and neighboring states.
 - The in-game Cartographer survey exposes the live tile coordinate, biome, subregion, elevation, bridge, walkability, nearby landmarks, local creatures, and neighborhood QA stats.
 - The expanded field map now includes biome, height, and routes layers, with hover details for tile-level map audits.
+- California is now grouped into shared province identities in `californiaRegions.ts`; the expanded field map has a Regions layer and the Cartographer/Journal/Battle surfaces read the same regional model.
 
 ## Questions To Settle Next
 

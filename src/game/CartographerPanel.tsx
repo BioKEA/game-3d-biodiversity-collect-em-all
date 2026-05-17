@@ -6,6 +6,12 @@ import PixelIcon from './PixelIcon'
 import PixelLandmarkIcon from './PixelLandmarkIcon'
 import { MAP_HEIGHT, MAP_WIDTH } from './bayAreaMap'
 import { FIELD_GUIDE_BIOME_COLORS } from './artDirection'
+import {
+  getCaliforniaRegionForLandmarkRegion,
+  getCaliforniaRegionForSubregion,
+  getCaliforniaRegionForTile,
+  getRegionCompletion,
+} from './californiaRegions'
 import { getCreatureArtSpec } from './creatureArt'
 import { getLandmarkAt, getLandmarkRegion, LANDMARKS } from './landmarks'
 import { WILDCAL_OVERHAUL_TRACKS } from './overhaulRoadmap'
@@ -80,6 +86,7 @@ export default function CartographerPanel({
 }: Props) {
   const tile = map[player.y]?.[player.x]
   const palette = tile ? FIELD_GUIDE_BIOME_COLORS[tile.biome] : FIELD_GUIDE_BIOME_COLORS[currentBiome]
+  const currentRegion = tile ? getCaliforniaRegionForTile(tile) : getCaliforniaRegionForSubregion(currentSubregion)
   const localStats = useMemo(() => sampleLocalTiles(map, player.x, player.y), [map, player.x, player.y])
   const localLandmarks = useMemo(() => {
     return LANDMARKS
@@ -123,6 +130,15 @@ export default function CartographerPanel({
 
   const visitedLandmarkCount = new Set(visitedLandmarks).size
   const exploredPct = Math.round((exploredTiles.size / explorableTiles) * 100)
+  const currentRegionProgress = getRegionCompletion(
+    currentRegion.id,
+    player.journal,
+    visitedLandmarks,
+    name => {
+      const landmark = LANDMARKS.find(entry => entry.name === name)
+      return landmark ? getCaliforniaRegionForLandmarkRegion(getLandmarkRegion(landmark.name)).id : undefined
+    },
+  )
   const bars = heightBars(localStats)
   const maxBarElevation = Math.max(1, ...bars)
 
@@ -132,8 +148,8 @@ export default function CartographerPanel({
       detail: tile ? `${tile.subregion || currentSubregion} | ${tile.isWalkable ? 'walkable' : 'blocked'}` : 'No tile data',
     },
     'regional-identity': {
-      signal: formatBiome(currentBiome),
-      detail: `Elevation ${tile?.elevation.toFixed(2) ?? '--'} | ${timeOfDay}`,
+      signal: currentRegion.shortName,
+      detail: currentRegion.terrain,
     },
     'creature-art': {
       signal: `${localCreatures.length} local`,
@@ -145,7 +161,7 @@ export default function CartographerPanel({
     },
     'field-guide': {
       signal: `${player.captured.length}/${ALL_CREATURES.length}`,
-      detail: `${Object.keys(player.journal).length} journal regions`,
+      detail: `${currentRegionProgress.score}% ${currentRegion.shortName} mastery`,
     },
     'landmarks-traversal': {
       signal: `${visitedLandmarkCount}/${LANDMARKS.length}`,
@@ -157,7 +173,7 @@ export default function CartographerPanel({
     },
     'progression-loop': {
       signal: `Lv.${player.level}`,
-      detail: `${activeQuestCount} active quest${activeQuestCount === 1 ? '' : 's'}`,
+      detail: `${activeQuestCount} quest${activeQuestCount === 1 ? '' : 's'} | ${currentRegionProgress.visitedSubregions} regional stops`,
     },
     'animation-juice': {
       signal: timeOfDay,
@@ -189,7 +205,7 @@ export default function CartographerPanel({
             </div>
             <h2 className="truncate text-sm font-black text-white">{tile?.subregion || currentSubregion || 'California'}</h2>
             <p className="text-[10px] text-white/45">
-              {tile ? `x${tile.x} y${tile.y} | ${formatBiome(tile.biome)} | elev ${tile.elevation.toFixed(2)}` : 'No tile selected'}
+              {tile ? `x${tile.x} y${tile.y} | ${currentRegion.shortName} | ${formatBiome(tile.biome)} | elev ${tile.elevation.toFixed(2)}` : currentRegion.name}
             </p>
           </div>
         </div>
@@ -240,6 +256,38 @@ export default function CartographerPanel({
               }}
             />
           ))}
+        </div>
+      </div>
+
+      <div
+        className="mb-3 rounded-lg border p-2"
+        style={{
+          background: `linear-gradient(135deg, ${currentRegion.color}18, rgba(255,255,255,0.03))`,
+          borderColor: `${currentRegion.color}35`,
+        }}
+      >
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <div>
+            <div className="text-[8px] font-black uppercase tracking-[0.18em]" style={{ color: currentRegion.accent }}>
+              Regional Identity
+            </div>
+            <div className="text-xs font-black text-white">{currentRegion.name}</div>
+          </div>
+          <div className="rounded-md px-2 py-1 text-right" style={{ background: `${currentRegion.dark}88` }}>
+            <div className="text-[8px] uppercase tracking-wider text-white/35">Mastery</div>
+            <div className="text-sm font-black" style={{ color: currentRegion.accent }}>{currentRegionProgress.score}%</div>
+          </div>
+        </div>
+        <p className="text-[9px] leading-snug text-white/48">{currentRegion.terrain}</p>
+        <div className="mt-2 grid grid-cols-2 gap-1.5 text-[8px] text-white/38">
+          <div className="rounded-md bg-black/20 p-1.5">
+            <span className="block font-bold uppercase tracking-wider" style={{ color: currentRegion.accent }}>Arena</span>
+            {currentRegion.encounterStage}
+          </div>
+          <div className="rounded-md bg-black/20 p-1.5">
+            <span className="block font-bold uppercase tracking-wider" style={{ color: currentRegion.accent }}>Guide Goal</span>
+            {currentRegion.fieldGuideGoal}
+          </div>
         </div>
       </div>
 

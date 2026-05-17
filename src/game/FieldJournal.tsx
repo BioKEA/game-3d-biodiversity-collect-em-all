@@ -4,6 +4,7 @@ import { ALL_CREATURES } from './creatures'
 import { getWeatherInfo, getSeason, getSeasonInfo } from './timeWeather'
 import { LANDMARKS, LANDMARK_INFO, LANDMARK_REGIONS } from './landmarks'
 import type { LandmarkRegion, LandmarkDef } from './landmarks'
+import { getCaliforniaRegionForLandmarkRegion, getCaliforniaRegionForSubregion } from './californiaRegions'
 import FloatingPanel from './FloatingPanel'
 import PixelCreatureToken from './PixelCreatureToken'
 import PixelLandmarkIcon from './PixelLandmarkIcon'
@@ -89,6 +90,7 @@ export default function FieldJournal({ journal, currentSubregion, onClose, weath
 
   const selected = selectedEntry ? journal[selectedEntry] : null
   const expectedCreatures = selectedEntry ? getExpectedCreatures(selectedEntry) : []
+  const selectedRegion = selectedEntry ? getCaliforniaRegionForSubregion(selectedEntry) : null
 
   return (
     <FloatingPanel
@@ -141,6 +143,7 @@ export default function FieldJournal({ journal, currentSubregion, onClose, weath
               const encounteredCount = entry.creaturesEncountered.length
               const isCurrent = entry.subregion === currentSubregion
               const isSelected = entry.subregion === selectedEntry
+              const region = getCaliforniaRegionForSubregion(entry.subregion)
 
               return (
                 <button
@@ -168,6 +171,10 @@ export default function FieldJournal({ journal, currentSubregion, onClose, weath
                       {BIOME_LABELS[entry.biome]}
                     </span>
                     <span className="text-[9px] text-white/20">·</span>
+                    <span className="text-[9px]" style={{ color: `${region.color}aa` }}>
+                      {region.shortName}
+                    </span>
+                    <span className="text-[9px] text-white/20">·</span>
                     <span className="text-[9px] text-white/30">
                       {encounteredCount}/{expected.length > 0 ? expected.length : '?'} species
                     </span>
@@ -191,7 +198,9 @@ export default function FieldJournal({ journal, currentSubregion, onClose, weath
                   <PixelIcon icon={BIOME_ICONS[selected.biome]} size={30} variant="nature" selected />
                   <div>
                     <h3 className="text-white font-bold text-sm">{selected.subregion}</h3>
-                    <p className="text-white/30 text-[10px]">{BIOME_LABELS[selected.biome]}</p>
+                    <p className="text-white/30 text-[10px]">
+                      {BIOME_LABELS[selected.biome]}{selectedRegion ? ` · ${selectedRegion.shortName}` : ''}
+                    </p>
                   </div>
                 </div>
                 <div className="flex gap-3 mt-2">
@@ -214,6 +223,30 @@ export default function FieldJournal({ journal, currentSubregion, onClose, weath
                   </div>
                 </div>
               </div>
+
+              {selectedRegion && (
+                <div
+                  className="mb-3 rounded-lg border p-3"
+                  style={{
+                    background: `linear-gradient(135deg, ${selectedRegion.color}12, rgba(255,255,255,0.025))`,
+                    borderColor: `${selectedRegion.color}30`,
+                  }}
+                >
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-[8px] font-black uppercase tracking-[0.18em]" style={{ color: selectedRegion.accent }}>
+                        California Province
+                      </p>
+                      <h4 className="text-xs font-black text-white">{selectedRegion.name}</h4>
+                    </div>
+                    <span className="rounded-md px-2 py-1 text-[8px] font-bold uppercase tracking-wider"
+                      style={{ background: `${selectedRegion.dark}88`, color: selectedRegion.accent }}>
+                      {selectedRegion.shortName}
+                    </span>
+                  </div>
+                  <p className="text-[9px] leading-snug text-white/48">{selectedRegion.fieldGuideGoal}</p>
+                </div>
+              )}
 
               {/* Species checklist */}
               <div>
@@ -364,6 +397,7 @@ function LandmarkGuideTab({ visitedLandmarks }: { visitedLandmarks: string[] }) 
   if (selectedLandmark) {
     const info = LANDMARK_INFO[selectedLandmark.name]
     const isFound = visited.has(selectedLandmark.name)
+    const landmarkProvince = selectedRegion ? getCaliforniaRegionForLandmarkRegion(selectedRegion) : null
     return (
       <div className="p-3 space-y-3 overflow-y-auto" style={{ maxHeight: 400 }}>
         <button onClick={() => setSelectedLandmark(null)} className="text-[10px] text-cyan-400 hover:text-cyan-300">
@@ -377,6 +411,14 @@ function LandmarkGuideTab({ visitedLandmarks }: { visitedLandmarks: string[] }) 
               background: isFound ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.06)',
               color: isFound ? '#4ade80' : 'rgba(255,255,255,0.3)',
             }}>{isFound ? 'Discovered' : 'Undiscovered'}</span>
+            {landmarkProvince && (
+              <span className="ml-1 text-[9px] px-1.5 py-0.5 rounded" style={{
+                background: `${landmarkProvince.color}18`,
+                color: landmarkProvince.accent,
+              }}>
+                {landmarkProvince.shortName}
+              </span>
+            )}
           </div>
         </div>
         {isFound && info && (
@@ -408,13 +450,17 @@ function LandmarkGuideTab({ visitedLandmarks }: { visitedLandmarks: string[] }) 
     const names = LANDMARK_REGIONS[selectedRegion] ?? []
     const regionLandmarks = names.map(n => LANDMARKS.find(l => l.name === n)).filter((l): l is LandmarkDef => !!l)
     const found = names.filter(n => visited.has(n)).length
+    const province = getCaliforniaRegionForLandmarkRegion(selectedRegion)
     return (
       <div className="p-3 space-y-2 overflow-y-auto" style={{ maxHeight: 400 }}>
         <button onClick={() => setSelectedRegion(null)} className="text-[10px] text-cyan-400 hover:text-cyan-300">
           ← All Regions
         </button>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white">{selectedRegion}</h3>
+          <div>
+            <h3 className="text-sm font-bold text-white">{selectedRegion}</h3>
+            <p className="text-[9px]" style={{ color: `${province.color}aa` }}>{province.name}</p>
+          </div>
           <span className="text-[10px] text-white/40">{found}/{names.length}</span>
         </div>
         <div className="w-full rounded-full h-1.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
