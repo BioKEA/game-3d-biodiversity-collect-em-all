@@ -55,9 +55,17 @@ describe('Bay Area Bridges', () => {
   })
 
   it('North Bay and Delta crossing tiles exist', () => {
+    expect(getBridgeAt(47, 189)).toBe('Petaluma River Bridge')
+    expect(getBridgeAt(57, 178)).toBe('Napa River Bridge')
     expect(getBridgeAt(67, 198)).toBe('Carquinez Bridge')
     expect(getBridgeAt(75, 193)).toBe('Benicia-Martinez Bridge')
+    expect(getBridgeAt(80, 187)).toBe('Rio Vista Bridge')
     expect(getBridgeAt(85, 182)).toBe('Antioch Bridge')
+    expect(getBridgeAt(86, 167)).toBe('Mokelumne River Bridge')
+    expect(getBridgeAt(85, 172)).toBe('Stockton Channel Bridge')
+    expect(getBridgeAt(79, 150)).toBe('Freeport Bridge')
+    expect(getBridgeAt(80, 140)).toBe('Tower Bridge')
+    expect(getBridgeAt(87, 137)).toBe('Guy West Bridge')
   })
 
   it('bridge tiles are walkable and not water', () => {
@@ -73,7 +81,7 @@ describe('Bay Area Bridges', () => {
         }
       }
     }
-    expect(bridgeCount).toBeGreaterThan(20) // Should have lots of bridge tiles across 5 bridges
+    expect(bridgeCount).toBeGreaterThan(50)
   })
 
   it('bridge tiles have elevation 1', () => {
