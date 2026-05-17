@@ -23,6 +23,10 @@ const SM_H = 240
 const LG_W = 384
 const MAP_ASPECT = MAP_HEIGHT / MAP_WIDTH
 
+function isWaterlikeBiome(tile?: MapTile): boolean {
+  return tile?.biome === 'water' || tile?.biome === 'kelp_forest'
+}
+
 const WEATHER_INFO: Record<WeatherType, { glyph: PixelGlyphKind; color: string; dark: string }> = {
   clear: { glyph: 'sun', color: '#fbbf24', dark: '#7c4d12' },
   sunny: { glyph: 'sun', color: '#f59e0b', dark: '#7c2d12' },
@@ -123,7 +127,7 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
 
         if (isExplored) {
           ctx.fillStyle = tile.borderState ? '#6b7280' : colors.top
-          ctx.globalAlpha = (tile.borderState ? 0.4 : tile.biome === 'water' ? 0.52 : 0.82) * theme.exploredBoost
+          ctx.globalAlpha = (tile.borderState ? 0.4 : isWaterlikeBiome(tile) ? 0.52 : 0.82) * theme.exploredBoost
         } else {
           ctx.fillStyle = tile.borderState ? '#4b5563' : colors.dark
           ctx.globalAlpha = 0.08
@@ -141,9 +145,9 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
     for (let y = 1; y < MAP_HEIGHT - 1; y++) {
       for (let x = 1; x < MAP_WIDTH - 1; x++) {
         const tile = map[y][x]
-        if (tile.borderState || tile.biome === 'water' || tile.biome === 'kelp_forest') continue
-        const touchesWater = map[y]?.[x - 1]?.biome === 'water' || map[y]?.[x + 1]?.biome === 'water' ||
-          map[y - 1]?.[x]?.biome === 'water' || map[y + 1]?.[x]?.biome === 'water'
+        if (tile.borderState || isWaterlikeBiome(tile)) continue
+        const touchesWater = isWaterlikeBiome(map[y]?.[x - 1]) || isWaterlikeBiome(map[y]?.[x + 1]) ||
+          isWaterlikeBiome(map[y - 1]?.[x]) || isWaterlikeBiome(map[y + 1]?.[x])
         if (!touchesWater) continue
         ctx.rect(x * pw, y * ph, Math.max(0.7, pw), Math.max(0.7, ph))
       }

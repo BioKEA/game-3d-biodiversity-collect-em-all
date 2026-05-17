@@ -377,6 +377,7 @@ function getBayAreaBiome(x: number, y: number): BiomeType | null {
 
   // Santa Cruz / Monterey
   if (y >= 245) {
+    if (x < c) return null
     if (inEllipse(x, y, 52, 252, 3, 3)) return 'urban'
     if (inEllipse(x, y, 62, 268, 4, 3)) return 'urban'
     return 'grassland'
@@ -667,7 +668,7 @@ const SUBS: [string, number, number, number][] = [
   ['San Jose',60,232,5],['Fremont',64,228,4],['Fremont / Union City',64,230,3],
   ['Coyote Hills',62,232,3],['Don Edwards Wildlife Refuge',61,233,2],['Alviso Marsh',60,234,2],
   ['Rancho San Antonio',56,232,3],['Sunol Regional Wilderness',68,228,3],
-  ['Livermore',76,226,4],['Half Moon Bay',45,233,3],['Pacifica',47,222,3],
+  ['Livermore',76,226,4],['Half Moon Bay',47,233,3],['Pacifica',47,222,3],
   ['Milpitas',62,233,3],['Marin Headlands',49,215,2],['Hawk Hill',49,214,2],
   ['Muir Beach',47,213,2],['Richardson Bay',51,213,2],
   // Santa Cruz / Monterey
@@ -724,10 +725,10 @@ const SUBS: [string, number, number, number][] = [
   ['Inland Empire',148,425,6],['Orange County',134,430,5],['San Joaquin Valley',90,250,15],
   ['Carrizo Plain',82,310,6],['Gold Country',92,135,5],['Pinnacles',72,265,4],
   ['Downtown San Francisco',53,219,2],['Lake Merritt',65,218,2],['Lake Merced',50,224,2],
-  ['Stow Lake',50,220,1],['Pillar Point Harbor',44,233,2],['Pigeon Point',42,240,2],
-  ['Montara',46,226,2],['Fitzgerald Marine Reserve',45,230,2],
-  ['Big Basin',48,248,3],['Purisima Creek Redwoods',48,232,3],
-  ['Año Nuevo',42,247,3],['Elkhorn Slough',58,262,3],
+  ['Stow Lake',50,220,1],['Pillar Point Harbor',46,233,2],['Pigeon Point',47,240,2],
+  ['Montara',46,226,2],['Fitzgerald Marine Reserve',46,230,2],
+  ['Big Basin',50,248,3],['Purisima Creek Redwoods',48,232,3],
+  ['Año Nuevo',50,247,3],['Elkhorn Slough',58,262,3],
   ['Baylands Nature Preserve',54,231,2],['Henry W. Coe State Park',66,234,4],
   ['Briones Regional Park',68,212,3],['McNears Brickyard',55,208,2],
   ['Sacramento River',82,140,5],['American River',86,138,4],['Mokelumne River',88,165,4],
