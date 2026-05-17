@@ -399,13 +399,24 @@ export default function GameHUD({
   const isMobile = useIsMobile()
   // D-pad hold handling — press and hold to repeat movement
   const dpadIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const dpadInputActiveRef = useRef(false)
+  const lastDpadStartRef = useRef(0)
+  const suppressNextDpadClickRef = useRef(false)
   const startMove = (dx: number, dy: number) => {
     if (!onMove) return
     onMove(dx, dy)
     if (dpadIntervalRef.current) clearInterval(dpadIntervalRef.current)
     dpadIntervalRef.current = setInterval(() => onMove(dx, dy), 150)
   }
+  const beginDpadMove = (dx: number, dy: number) => {
+    const now = Date.now()
+    if (dpadInputActiveRef.current && now - lastDpadStartRef.current < 80) return
+    dpadInputActiveRef.current = true
+    lastDpadStartRef.current = now
+    startMove(dx, dy)
+  }
   const stopMove = () => {
+    dpadInputActiveRef.current = false
     if (dpadIntervalRef.current) { clearInterval(dpadIntervalRef.current); dpadIntervalRef.current = null }
   }
   useEffect(() => {
@@ -1034,24 +1045,70 @@ export default function GameHUD({
               background: 'rgba(0,0,0,0.45)',
               backdropFilter: 'blur(6px)',
               border: '1px solid rgba(255,255,255,0.1)',
+              touchAction: 'none',
+              userSelect: 'none',
             }
-            const mkHandlers = (dx: number, dy: number) => ({
-              onPointerDown: (e: React.PointerEvent) => { e.preventDefault(); startMove(dx, dy) },
-              onPointerUp: stopMove,
+            const mkHandlers = (dx: number, dy: number, label: string) => ({
+              'aria-label': label,
+              type: 'button' as const,
+              onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
+                e.preventDefault()
+                e.stopPropagation()
+                suppressNextDpadClickRef.current = true
+                e.currentTarget.setPointerCapture?.(e.pointerId)
+                beginDpadMove(dx, dy)
+              },
+              onPointerUp: (e: React.PointerEvent<HTMLButtonElement>) => {
+                e.preventDefault()
+                e.stopPropagation()
+                stopMove()
+              },
               onPointerLeave: stopMove,
               onPointerCancel: stopMove,
-              onClick: () => { if (onMove) onMove(dx, dy) },
+              onMouseDown: (e: React.MouseEvent<HTMLButtonElement>) => {
+                e.preventDefault()
+                e.stopPropagation()
+                suppressNextDpadClickRef.current = true
+                beginDpadMove(dx, dy)
+              },
+              onMouseUp: (e: React.MouseEvent<HTMLButtonElement>) => {
+                e.preventDefault()
+                e.stopPropagation()
+                stopMove()
+              },
+              onTouchStart: (e: React.TouchEvent<HTMLButtonElement>) => {
+                e.preventDefault()
+                e.stopPropagation()
+                suppressNextDpadClickRef.current = true
+                beginDpadMove(dx, dy)
+              },
+              onTouchEnd: (e: React.TouchEvent<HTMLButtonElement>) => {
+                e.preventDefault()
+                e.stopPropagation()
+                stopMove()
+              },
+              onTouchCancel: stopMove,
+              onContextMenu: (e: React.MouseEvent<HTMLButtonElement>) => e.preventDefault(),
+              onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+                e.preventDefault()
+                e.stopPropagation()
+                if (suppressNextDpadClickRef.current) {
+                  suppressNextDpadClickRef.current = false
+                  return
+                }
+                onMove?.(dx, dy)
+              },
             })
             return (
               <>
                 <div />
-                <button data-dir="up" className={btnClass} style={btnStyle} {...mkHandlers(0, -1)}>▲</button>
+                <button data-dir="up" className={btnClass} style={btnStyle} {...mkHandlers(0, -1, 'Move up')}>▲</button>
                 <div />
-                <button data-dir="left" className={btnClass} style={btnStyle} {...mkHandlers(-1, 0)}>◀</button>
+                <button data-dir="left" className={btnClass} style={btnStyle} {...mkHandlers(-1, 0, 'Move left')}>◀</button>
                 <div />
-                <button data-dir="right" className={btnClass} style={btnStyle} {...mkHandlers(1, 0)}>▶</button>
+                <button data-dir="right" className={btnClass} style={btnStyle} {...mkHandlers(1, 0, 'Move right')}>▶</button>
                 <div />
-                <button data-dir="down" className={btnClass} style={btnStyle} {...mkHandlers(0, 1)}>▼</button>
+                <button data-dir="down" className={btnClass} style={btnStyle} {...mkHandlers(0, 1, 'Move down')}>▼</button>
                 <div />
               </>
             )

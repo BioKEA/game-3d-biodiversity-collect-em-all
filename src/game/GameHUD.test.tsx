@@ -120,4 +120,51 @@ describe('GameHUD', () => {
     const dpad = container.querySelector('#dpad')
     expect(dpad).toBeInTheDocument()
   })
+
+  it('moves from D-pad pointer input without requiring a click', () => {
+    const onMove = vi.fn()
+    render(<GameHUD {...defaultProps} onMove={onMove} />)
+
+    fireEvent.pointerDown(screen.getByRole('button', { name: 'Move up' }), { pointerId: 1 })
+    fireEvent.pointerUp(window, { pointerId: 1 })
+
+    expect(onMove).toHaveBeenCalledTimes(1)
+    expect(onMove).toHaveBeenCalledWith(0, -1)
+  })
+
+  it('keeps the D-pad click fallback for keyboard and older touch paths', () => {
+    const onMove = vi.fn()
+    render(<GameHUD {...defaultProps} onMove={onMove} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Move right' }))
+
+    expect(onMove).toHaveBeenCalledTimes(1)
+    expect(onMove).toHaveBeenCalledWith(1, 0)
+  })
+
+  it('moves from the D-pad touch fallback', () => {
+    const onMove = vi.fn()
+    render(<GameHUD {...defaultProps} onMove={onMove} />)
+
+    const button = screen.getByRole('button', { name: 'Move down' })
+    fireEvent.touchStart(button)
+    fireEvent.touchEnd(button)
+
+    expect(onMove).toHaveBeenCalledTimes(1)
+    expect(onMove).toHaveBeenCalledWith(0, 1)
+  })
+
+  it('does not double-step when a pointer press is followed by a synthetic click', () => {
+    const onMove = vi.fn()
+    const right = 'Move right'
+    render(<GameHUD {...defaultProps} onMove={onMove} />)
+
+    const button = screen.getByRole('button', { name: right })
+    fireEvent.pointerDown(button, { pointerId: 1 })
+    fireEvent.pointerUp(button, { pointerId: 1 })
+    fireEvent.click(button)
+
+    expect(onMove).toHaveBeenCalledTimes(1)
+    expect(onMove).toHaveBeenCalledWith(1, 0)
+  })
 })
