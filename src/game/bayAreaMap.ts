@@ -32,6 +32,10 @@ const EAST_BORDER: [number, number][] = [
   [260,158],[290,168],[330,178],[370,185],[400,190],[430,194],[460,196],[500,196],
 ]
 
+const SOUTH_BORDER: [number, number][] = [
+  [142,492],[196,492],
+]
+
 const SIERRA_W: [number, number][] = [
   [100,92],[130,96],[160,100],[190,105],[220,108],[250,112],[280,110],[310,107],[340,102],
 ]
@@ -84,19 +88,21 @@ const PENINSULAR_E: [number, number][] = [
 
 function coastAt(y: number): number { return interpX(y, COASTLINE) }
 function eastAt(y: number): number { return interpX(y, EAST_BORDER) }
+function southAt(x: number): number { return interpX(x, SOUTH_BORDER) }
 
 // California's land borders with neighboring states
 // North: Oregon (y < ~3 is "past the border")
 // East: Nevada for most of the length, Arizona at the far southeast
+// South: Mexico, drawn separately so the Colorado River side can remain Arizona
 // The actual border buffer is 3 tiles wide to give visual continuity
 const CA_NORTH_BORDER = 3
 function getBorderState(x: number, y: number): string | null {
   const c = coastAt(y)
   if (x < c) return null // Pacific Ocean — not a state border
   if (y < CA_NORTH_BORDER) return 'Oregon'
+  if (x >= SOUTH_BORDER[0][0] && y >= southAt(x)) return 'Mexico'
   const eb = eastAt(y)
   if (x > eb) {
-    if (y >= 460) return 'Mexico'
     if (y >= 420) return 'Arizona'
     return 'Nevada'
   }
@@ -858,8 +864,10 @@ export const BORDER_SIGNPOSTS: BorderSignpost[] = [
   { x: 181, y: 350, state: 'Nevada', message: 'California / Nevada border', fact: 'The Mojave Desert extends into both states.' },
   // Arizona border
   { x: 194, y: 430, state: 'Arizona', message: 'California / Arizona State Line', fact: 'The Colorado River forms most of the CA-AZ border.' },
+  { x: 196, y: 470, state: 'Arizona', message: 'Lower Colorado River border', fact: 'California meets Arizona along the Colorado River before reaching Mexico.' },
   // Mexico border
-  { x: 196, y: 470, state: 'Mexico', message: 'U.S. / Mexico International Border', fact: 'The CA-Mexico border is 140 miles long.' },
+  { x: 145, y: 491, state: 'Mexico', message: 'San Diego / Tijuana international border', fact: 'San Ysidro is one of the busiest land border crossings in the world.' },
+  { x: 176, y: 491, state: 'Mexico', message: 'California / Mexico border', fact: 'The CA-Mexico border runs from the Pacific coast to the Colorado River.' },
 ]
 
 const SIGNPOST_MAP = new Map<string, BorderSignpost>()

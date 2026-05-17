@@ -30,4 +30,22 @@ describe('California map shape', () => {
     expect(WATERLIKE_BIOMES.has(map[268][60].biome)).toBe(false)
     expect(map[268][60].isWalkable).toBe(true)
   })
+
+  it('marks the southern edge as Mexico while leaving San Diego inside California', () => {
+    for (const x of [145, 160, 176, 190]) {
+      expect(map[491][x].borderState).toBeUndefined()
+      expect(map[491][x].isWalkable).toBe(true)
+      expect(map[492][x].borderState).toBe('Mexico')
+      expect(map[492][x].isWalkable).toBe(false)
+    }
+  })
+
+  it('keeps the southeast Colorado River edge as Arizona until the Mexico border', () => {
+    expect(map[470][196].borderState).toBeUndefined()
+    expect(map[470][196].isWalkable).toBe(true)
+    expect(map[470][197].borderState).toBe('Arizona')
+    expect(map[470][197].isWalkable).toBe(false)
+    expect(map[493][197].borderState).toBe('Mexico')
+    expect(map[493][197].isWalkable).toBe(false)
+  })
 })
