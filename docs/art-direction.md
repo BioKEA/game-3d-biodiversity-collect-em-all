@@ -59,8 +59,10 @@ The user-approved improvement program is now tracked in `src/game/overhaulRoadma
 - `PixelCreatureSprite` is the procedural creature silhouette layer that replaces emoji inside creature tokens.
 - `creatureArt.ts` owns body-plan inference, palette resolution, evolution stage, adaptation slots, readable anatomy profiles, and evolution art previews.
 - `CreatureCard`, `BayDex`, and `CartographerPanel` should surface Adaptive Anatomy labels so the player can understand which traits are visible now and which traits a future evolution can exaggerate.
+- `BattleCreaturePose` is the encounter-scale creature primitive. It renders the same procedural species silhouette on a larger pixel pedestal instead of simply enlarging the HUD token.
 - Larger battle poses should build on the same `creatureArt.ts` spec so small and large creature art evolve together.
 - `PixelLandmarkIcon` and `landmarkArt.ts` provide the matching modular landmark language for map labels, fast travel, and Field Journal discovery.
+- `californiaMapOverlays.ts` owns route/terrain overlay lines for roads, rail, ferries, rivers, coast, and mountain ranges on the expanded map.
 - Ambient effects should use CSS/canvas pixel particles instead of emoji leaves, droplets, or weather symbols.
 - `CartographerPanel` is the shared in-game survey layer for the ten-track overhaul: it exposes current tile data, local relief, creature adaptations, nearby landmarks, route signals, and QA stats.
 - The expanded `Minimap` now has biome, height, and routes layers plus tile hover details, so geography and traversal can be audited directly inside the game.
@@ -68,9 +70,8 @@ The user-approved improvement program is now tracked in `src/game/overhaulRoadma
 
 ## Open Art Backlog
 
-- Add curated hand-authored specs for marquee species and starters.
-- Add curated hand-authored landmark specs for marquee locations once the procedural landmark system has covered all surfaces.
-- Add map tile overlays for roads, BART/ferries, mountain ranges, rivers, and major coastlines.
-- Add larger battle-scale creature poses after the small token silhouette system is stable.
+- Expand the curated hand-authored specs beyond the current starter, evolution-chain, and marquee landmark set.
+- Add more tile-level overlays for secondary roads, park trails, BART branches, and ferry terminals after the primary state routes are stable.
+- Add battle-scale pose variants for attack, hurt, and idle states.
 - Add curated evolution deltas for marquee chains where the procedural anatomy preview is too generic.
 - Sweep remaining feature-specific minigames and modal copy for direct emoji text once their local art primitives exist.

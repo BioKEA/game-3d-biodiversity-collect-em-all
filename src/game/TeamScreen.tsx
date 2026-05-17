@@ -197,7 +197,7 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
                     const label = getHappinessLabel(h)
                     return (
                       <div className="flex items-center gap-1.5 mt-1">
-                        <span className="text-[9px]">{label.emoji}</span>
+                        <PixelIcon icon={label.emoji} size={14} variant="nature" selected={h >= 70} />
                         <div className="flex-1 h-1 bg-black/40 rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all"
@@ -237,7 +237,7 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
                     const ready = creature.level >= evo.level
                     return (
                       <div className={`flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[8px] ${ready ? 'bg-amber-500/10 text-amber-300' : 'bg-white/[0.02] text-white/30'}`}>
-                        {ready ? <PixelIcon icon="✨" size={16} variant="gold" /> : <span>→</span>}
+                        {ready ? <PixelIcon icon="✨" size={16} variant="gold" /> : <PixelIcon icon="🔄" size={14} variant="mystic" />}
                         <span>{ready ? `Ready → ${target.name}` : `Lv.${evo.level} → ${target.name}`}</span>
                         <PixelCreatureToken creature={target} size={18} selected={ready} />
                         {ready && onEvolve && (

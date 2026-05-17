@@ -2,6 +2,11 @@ import { useRef, useEffect, useState, useCallback, memo, useMemo } from 'react'
 import type { MapTile, JournalEntry, TimeOfDay, WeatherType } from '@/types/game'
 import type { WorldEvent } from './WorldEvents'
 import { BIOME_COLORS, MAP_WIDTH, MAP_HEIGHT } from './bayAreaMap'
+import {
+  CALIFORNIA_MAP_OVERLAY_LEGEND,
+  CALIFORNIA_MAP_OVERLAYS,
+  type CaliforniaMapOverlay,
+} from './californiaMapOverlays'
 import { getRegionLayerColor } from './californiaRegions'
 import { LANDMARKS } from './landmarks'
 import { drawPixelGlyphOnCanvas, type PixelGlyphKind } from './pixelGlyphArt'
@@ -50,6 +55,43 @@ const TIME_THEME: Record<TimeOfDay, { bg: string; fogColor: string; exploredBoos
   day:   { bg: '#060e1e', fogColor: '#030510', exploredBoost: 1.0,  playerColor: '#4ade80' },
   dusk:  { bg: '#1a0a20', fogColor: '#0f0618', exploredBoost: 0.8,  playerColor: '#f97316' },
   night: { bg: '#030618', fogColor: '#01030c', exploredBoost: 0.65, playerColor: '#93c5fd' },
+}
+
+function drawOverlayPath(
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  overlay: CaliforniaMapOverlay,
+  pw: number,
+  ph: number,
+  expanded: boolean,
+) {
+  if (overlay.points.length < 2) return
+  ctx.save()
+  ctx.lineCap = overlay.kind === 'ferry' ? 'round' : 'square'
+  ctx.lineJoin = 'round'
+  ctx.strokeStyle = overlay.color
+  ctx.globalAlpha = overlay.alpha
+  ctx.lineWidth = Math.max(expanded ? 0.9 : 0.55, overlay.width)
+  if (overlay.kind === 'ferry') ctx.setLineDash([4, 4])
+  if (overlay.kind === 'rail') ctx.setLineDash([2, 2])
+  if (overlay.kind === 'range') ctx.setLineDash([5, 2])
+  ctx.beginPath()
+  overlay.points.forEach((point, index) => {
+    const x = point.x * pw + pw / 2
+    const y = point.y * ph + ph / 2
+    if (index === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  })
+  ctx.stroke()
+
+  if (expanded) {
+    const midpoint = overlay.points[Math.floor(overlay.points.length / 2)]
+    const mx = midpoint.x * pw + pw / 2
+    const my = midpoint.y * ph + ph / 2
+    ctx.globalAlpha = Math.min(0.9, overlay.alpha + 0.18)
+    ctx.fillStyle = overlay.color
+    ctx.fillRect(mx - 1.5, my - 1.5, 3, 3)
+  }
+  ctx.restore()
 }
 
 const Minimap = memo(function Minimap({ map, playerX, playerY, journal, exploredTiles, rangers, onFastTravel, timeOfDay = 'day', weather = 'clear', activeEvent }: Props) {
@@ -164,6 +206,12 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
       }
     }
     ctx.globalAlpha = 1
+
+    if (mapLayer === 'routes') {
+      for (const overlay of CALIFORNIA_MAP_OVERLAYS) {
+        drawOverlayPath(ctx, overlay, pw, ph, expanded)
+      }
+    }
 
     // Coastline and major water edges, so the California silhouette reads even before full exploration.
     ctx.save()
@@ -781,6 +829,27 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
           )}
         </div>
       </div>
+      {expanded && (
+        <div className="mx-1.5 mb-1 flex flex-wrap gap-1 rounded-md border px-2 py-1 sm:mx-3"
+          style={{
+            background: 'rgba(255,255,255,0.035)',
+            borderColor: 'rgba(255,255,255,0.08)',
+          }}
+        >
+          {(Object.entries(CALIFORNIA_MAP_OVERLAY_LEGEND) as [keyof typeof CALIFORNIA_MAP_OVERLAY_LEGEND, typeof CALIFORNIA_MAP_OVERLAY_LEGEND[keyof typeof CALIFORNIA_MAP_OVERLAY_LEGEND]][]).map(([kind, entry]) => (
+            <span key={kind} className="inline-flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-white/38">
+              <span
+                className="inline-block h-1.5 w-4 rounded-full"
+                style={{
+                  background: entry.color,
+                  boxShadow: `0 0 6px ${entry.color}55`,
+                }}
+              />
+              {entry.label}
+            </span>
+          ))}
+        </div>
+      )}
       {expanded && hoveredTile && (
         <div className="mx-1.5 mb-1 rounded-md border px-2 py-1 text-[9px] sm:mx-3"
           style={{

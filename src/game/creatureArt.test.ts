@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { ALL_CREATURES } from './creatures'
 import {
   compareCreatureArtEvolution,
+  CURATED_CREATURE_ART_IDS,
   getActiveCreatureAdaptations,
   getCreatureArtProfile,
   getCreatureArtSpec,
+  hasCuratedCreatureArtSpec,
 } from './creatureArt'
 
 describe('creature art specs', () => {
@@ -48,5 +50,26 @@ describe('creature art specs', () => {
       ...preview.intensifiedAdaptations,
       ...getActiveCreatureAdaptations(to!),
     ].length).toBeGreaterThan(0)
+  })
+
+  it('keeps marquee starters and evolution chains on curated art specs', () => {
+    const starterIds = [
+      'pacific-tree-frog',
+      'gray-fox',
+      'scrub-jay',
+      'mission-blue-butterfly',
+      'harbor-seal',
+      'bay-wisp',
+    ]
+
+    for (const id of starterIds) {
+      expect(hasCuratedCreatureArtSpec(id)).toBe(true)
+    }
+    expect(CURATED_CREATURE_ART_IDS.length).toBeGreaterThanOrEqual(12)
+
+    const monarch = getCreatureArtSpec({ id: 'monarch-butterfly', name: 'Monarch Butterfly', type: 'insect' })
+    expect(monarch.bodyPlan).toBe('insect')
+    expect(monarch.adaptations.wings).toBe(1)
+    expect(monarch.adaptations.stripes).toBeGreaterThan(0.5)
   })
 })

@@ -13,6 +13,7 @@ import { rollHappinessCrit } from './happiness'
 import { getEffectiveStats, getHeldItem } from './heldItems'
 import { SFX } from './sounds'
 import BattleBiomeBackground from './BattleBiomeBackground'
+import BattleCreaturePose from './BattleCreaturePose'
 import { TypeMatchupBadge } from './TypeChart'
 import PixelCreatureToken from './PixelCreatureToken'
 import PixelIcon from './PixelIcon'
@@ -1088,8 +1089,8 @@ export default function BattleScreen({
 
         {/* Weather indicator */}
         {weather !== 'clear' && (
-          <div className="absolute top-2 right-2 bg-black/40 backdrop-blur-sm rounded-lg px-2 py-1 border border-white/10 z-10">
-            <span className="text-sm">{weatherInfo.icon}</span>
+          <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-lg px-2 py-1 border border-white/10 z-10">
+            <PixelIcon icon={weatherInfo.icon} size={18} variant={weather === 'rain' || weather === 'thunderstorm' ? 'water' : 'mystic'} selected />
             <span className="text-white/40 text-[9px] ml-1">{weatherInfo.description}</span>
           </div>
         )}
@@ -1213,7 +1214,12 @@ export default function BattleScreen({
               transition: 'filter 0.15s, transform 0.1s',
               animation: enemyHp > 0 ? 'creature-float 4s ease-in-out infinite, creature-breathe 3s ease-in-out infinite, creature-blink 5s ease-in-out infinite' : 'none',
             }}>
-              <PixelCreatureToken creature={wildCreature} size={68} selected={wildCreature.rarity === 'rare' || wildCreature.rarity === 'legendary'} />
+              <BattleCreaturePose
+                creature={wildCreature}
+                size={76}
+                selected={wildCreature.rarity === 'rare' || wildCreature.rarity === 'legendary' || wildCreature.isAlpha || wildCreature.isShiny}
+                stance="wild"
+              />
             </div>
             {/* Ground shadow with breathing sync */}
             <div className="mx-auto -mt-1 mb-2" style={{
@@ -1402,14 +1408,14 @@ export default function BattleScreen({
                   : 'drop-shadow(0 0 8px rgba(74,222,128,0.2))',
                 animation: 'creature-blink 5s ease-in-out infinite 1s',
               }}>
-                <PixelCreatureToken creature={playerCreature} size={60} selected flipped />
+                <BattleCreaturePose creature={playerCreature} size={70} selected flipped stance="ally" />
                 {getHeldItem(playerCreature) && (
                   <span
-                    className="absolute -bottom-0.5 -right-0.5 text-base"
+                    className="absolute -bottom-0.5 -right-0.5"
                     title={getHeldItem(playerCreature)?.name}
                     style={{ transform: 'scaleX(-1)', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.7))' }}
                   >
-                    {getHeldItem(playerCreature)?.sprite}
+                    <PixelIcon icon={getHeldItem(playerCreature)?.sprite} size={18} variant="item" selected />
                   </span>
                 )}
               </div>

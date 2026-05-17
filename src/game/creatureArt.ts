@@ -81,6 +81,14 @@ export interface CreatureArtEvolutionPreview {
   silhouetteShift: 'steady' | 'noticeable' | 'dramatic'
 }
 
+interface CreatureArtOverride {
+  bodyPlan?: CreatureBodyPlan
+  stage?: CreatureArtSpec['stage']
+  scale?: number
+  adaptations?: Partial<CreatureAdaptations>
+  palette?: Partial<CreatureArtPalette>
+}
+
 const ZERO_ADAPTATIONS: CreatureAdaptations = {
   wings: 0,
   fins: 0,
@@ -128,6 +136,119 @@ const CREATURE_STAGE_LABELS: Record<CreatureArtSpec['stage'], string> = {
   0: 'Base silhouette',
   1: 'Adapted silhouette',
   2: 'Apex silhouette',
+}
+
+export const CURATED_CREATURE_ART_IDS = [
+  'pacific-tree-frog',
+  'california-newt',
+  'giant-salamander',
+  'gray-fox',
+  'mountain-lion',
+  'scrub-jay',
+  'golden-eagle',
+  'mission-blue-butterfly',
+  'monarch-butterfly',
+  'harbor-seal',
+  'bay-wisp',
+  'fog-serpent',
+  'redwood-guardian',
+  'california-poppy-sprite',
+  'manzanita-sprite',
+  'sequoia-guardian',
+] as const
+
+const CURATED_CREATURE_ART: Record<string, CreatureArtOverride> = {
+  'pacific-tree-frog': {
+    bodyPlan: 'amphibian',
+    scale: 0.94,
+    adaptations: { legs: 0.82, tail: 0.25, spots: 0.62, glow: 0.18 },
+  },
+  'california-newt': {
+    bodyPlan: 'amphibian',
+    scale: 1.05,
+    adaptations: { legs: 0.9, tail: 0.9, spots: 0.7, glow: 0.38, crest: 0.35 },
+  },
+  'giant-salamander': {
+    bodyPlan: 'amphibian',
+    stage: 2,
+    scale: 1.16,
+    adaptations: { legs: 1, tail: 1, spots: 0.78, spikes: 0.44, glow: 0.45 },
+  },
+  'gray-fox': {
+    bodyPlan: 'quadruped',
+    scale: 0.96,
+    adaptations: { legs: 0.78, tail: 0.92, spots: 0.42, stripes: 0.38 },
+  },
+  'mountain-lion': {
+    bodyPlan: 'quadruped',
+    stage: 2,
+    scale: 1.16,
+    adaptations: { legs: 1, tail: 0.88, crest: 0.42, spots: 0.28 },
+  },
+  'scrub-jay': {
+    bodyPlan: 'avian',
+    scale: 0.96,
+    adaptations: { wings: 0.86, tail: 0.65, crest: 0.72, stripes: 0.36 },
+  },
+  'golden-eagle': {
+    bodyPlan: 'avian',
+    stage: 2,
+    scale: 1.18,
+    adaptations: { wings: 1, tail: 0.86, crest: 0.8, spots: 0.42 },
+  },
+  'mission-blue-butterfly': {
+    bodyPlan: 'insect',
+    scale: 0.92,
+    adaptations: { wings: 0.88, antennae: 0.76, spots: 0.72, glow: 0.28 },
+  },
+  'monarch-butterfly': {
+    bodyPlan: 'insect',
+    scale: 0.98,
+    adaptations: { wings: 1, antennae: 0.82, spots: 0.88, stripes: 0.65 },
+  },
+  'harbor-seal': {
+    bodyPlan: 'fish',
+    scale: 0.96,
+    adaptations: { fins: 0.74, tail: 0.66, spots: 0.62, shell: 0.18 },
+  },
+  'bay-wisp': {
+    bodyPlan: 'spirit',
+    scale: 0.94,
+    adaptations: { glow: 0.9, tail: 0.42, crest: 0.35 },
+  },
+  'fog-serpent': {
+    bodyPlan: 'serpentine',
+    stage: 1,
+    scale: 1.08,
+    adaptations: { tail: 1, glow: 0.82, stripes: 0.64, crest: 0.44 },
+  },
+  'redwood-guardian': {
+    bodyPlan: 'plant',
+    stage: 2,
+    scale: 1.18,
+    adaptations: { bloom: 0.86, shell: 0.6, spikes: 0.55, glow: 0.66, crest: 0.48 },
+  },
+  'california-poppy-sprite': {
+    bodyPlan: 'plant',
+    scale: 0.94,
+    adaptations: { bloom: 0.94, glow: 0.38, antennae: 0.2 },
+  },
+  'manzanita-sprite': {
+    bodyPlan: 'plant',
+    stage: 1,
+    scale: 1.04,
+    adaptations: { bloom: 0.8, spikes: 0.48, glow: 0.5, shell: 0.32 },
+  },
+  'sequoia-guardian': {
+    bodyPlan: 'plant',
+    stage: 2,
+    scale: 1.2,
+    adaptations: { bloom: 0.7, shell: 0.78, spikes: 0.64, glow: 0.72, crest: 0.62 },
+  },
+}
+
+export function hasCuratedCreatureArtSpec(id?: string): boolean {
+  return !!id && id in CURATED_CREATURE_ART
 }
 
 function shade(hex: string, amount: number): string {
@@ -291,15 +412,22 @@ export function compareCreatureArtEvolution(
 
 export function getCreatureArtSpec(creature: CreatureArtInput): CreatureArtSpec {
   const seed = hashString(`${creature.id ?? ''}:${creature.name ?? ''}:${creature.sprite ?? ''}:${creature.type ?? ''}`)
-  const bodyPlan = inferBodyPlan(creature)
-  const stage = getEvolutionStage(creature.id)
-  const adaptations = inferAdaptations(creature, bodyPlan, stage, seed)
+  const override = creature.id ? CURATED_CREATURE_ART[creature.id] : undefined
+  const bodyPlan = override?.bodyPlan ?? inferBodyPlan(creature)
+  const stage = override?.stage ?? getEvolutionStage(creature.id)
+  const adaptations = {
+    ...inferAdaptations(creature, bodyPlan, stage, seed),
+    ...(override?.adaptations ?? {}),
+  }
   return {
     bodyPlan,
-    palette: makePalette(creature),
+    palette: {
+      ...makePalette(creature),
+      ...(override?.palette ?? {}),
+    },
     adaptations,
     stage,
     seed,
-    scale: 0.92 + stage * 0.08 + (creature.isAlpha ? 0.08 : 0),
+    scale: override?.scale ?? (0.92 + stage * 0.08 + (creature.isAlpha ? 0.08 : 0)),
   }
 }
