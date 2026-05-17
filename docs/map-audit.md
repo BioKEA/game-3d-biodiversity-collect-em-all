@@ -6,6 +6,8 @@
 - Monterey and Lake Tahoe expanded rangers now stand on walkable California tiles near their named locations.
 - Alcatraz Island, Ghirardelli Square, and Getty Center landmarks now sit on walkable map tiles.
 - The minimap now draws a subtle coastline/water-edge trace and reports explored progress against explorable California tiles, not the full 200x500 grid including ocean and neighboring states.
+- The in-game Cartographer survey exposes the live tile coordinate, biome, subregion, elevation, bridge, walkability, nearby landmarks, local creatures, and neighborhood QA stats.
+- The expanded field map now includes biome, height, and routes layers, with hover details for tile-level map audits.
 
 ## Questions To Settle Next
 

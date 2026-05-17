@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback, memo, useMemo } from 'react'
 import type { MapTile, JournalEntry, TimeOfDay, WeatherType } from '@/types/game'
 import type { WorldEvent } from './WorldEvents'
 import { BIOME_COLORS, MAP_WIDTH, MAP_HEIGHT } from './bayAreaMap'
+import { LANDMARKS } from './landmarks'
 import { drawPixelGlyphOnCanvas, type PixelGlyphKind } from './pixelGlyphArt'
 
 interface Props {
@@ -22,6 +23,7 @@ const SM_W = 96
 const SM_H = 240
 const LG_W = 384
 const MAP_ASPECT = MAP_HEIGHT / MAP_WIDTH
+type MapLayer = 'biome' | 'height' | 'routes'
 
 function isWaterlikeBiome(tile?: MapTile): boolean {
   return tile?.biome === 'water' || tile?.biome === 'kelp_forest'
@@ -52,7 +54,9 @@ const TIME_THEME: Record<TimeOfDay, { bg: string; fogColor: string; exploredBoos
 const Minimap = memo(function Minimap({ map, playerX, playerY, journal, exploredTiles, rangers, onFastTravel, timeOfDay = 'day', weather = 'clear', activeEvent }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [expanded, setExpanded] = useState(false)
+  const [mapLayer, setMapLayer] = useState<MapLayer>('biome')
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null)
+  const [hoveredTile, setHoveredTile] = useState<MapTile | null>(null)
   const frameRef = useRef(0)
   const tickRef = useRef(0)
   const labelPositionsRef = useRef<{ x: number; y: number; tileX: number; tileY: number; name: string }[]>([])
@@ -65,6 +69,7 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
   const tileCanvasRef = useRef<OffscreenCanvas | HTMLCanvasElement | null>(null)
   const lastExploredSizeRef = useRef(-1)
   const lastTimeOfDayRef = useRef(timeOfDay)
+  const lastMapLayerRef = useRef<MapLayer>(mapLayer)
 
   const playerHeading = useRef(0)
   if (playerX !== prevPlayerPos.current.x || playerY !== prevPlayerPos.current.y) {
@@ -83,7 +88,7 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
   const w = expanded ? lgW : smW
   const h = expanded ? lgH : smH
   const maxExpandedPanelH = Math.max(260, window.innerHeight - (isMobile ? 16 : 132))
-  const expandedControlsH = isMobile ? 86 : 38
+  const expandedControlsH = isMobile ? 148 : 104
   const mapViewportH = expanded ? Math.min(h, Math.max(180, maxExpandedPanelH - expandedControlsH)) : h
   const mapNeedsScroll = expanded && h > mapViewportH
   const totalExplorableTiles = useMemo(() => {
@@ -124,8 +129,27 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
         if (!tile) continue
         const isExplored = exploredTiles?.has(`${x},${y}`) ?? false
         const colors = BIOME_COLORS[tile.biome]
+        const surveyVisible = expanded && mapLayer !== 'biome'
 
-        if (isExplored) {
+        if (mapLayer === 'height') {
+          const t = Math.max(0, Math.min(1, tile.elevation / 10.5))
+          const hue = 190 - t * 155
+          const lightness = 24 + t * 48
+          ctx.fillStyle = tile.borderState
+            ? '#3f3f46'
+            : isWaterlikeBiome(tile)
+              ? '#256d8a'
+              : `hsl(${hue} 74% ${lightness}%)`
+          ctx.globalAlpha = tile.borderState ? 0.28 : (isExplored || surveyVisible ? 0.86 : 0.12)
+        } else if (mapLayer === 'routes') {
+          if (tile.bridge) ctx.fillStyle = '#fbbf24'
+          else if (tile.boatDock) ctx.fillStyle = '#f59e0b'
+          else if (tile.borderState) ctx.fillStyle = '#4b5563'
+          else if (isWaterlikeBiome(tile)) ctx.fillStyle = '#256d8a'
+          else if (!tile.isWalkable) ctx.fillStyle = '#7f1d1d'
+          else ctx.fillStyle = colors.top
+          ctx.globalAlpha = tile.bridge || tile.boatDock ? 0.92 : tile.borderState ? 0.4 : (isExplored || surveyVisible ? 0.78 : 0.12)
+        } else if (isExplored) {
           ctx.fillStyle = tile.borderState ? '#6b7280' : colors.top
           ctx.globalAlpha = (tile.borderState ? 0.4 : isWaterlikeBiome(tile) ? 0.52 : 0.82) * theme.exploredBoost
         } else {
@@ -214,11 +238,32 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
       }
     }
 
+    if (expanded) {
+      for (const landmark of LANDMARKS) {
+        const key = `${landmark.x},${landmark.y}`
+        if (mapLayer === 'biome' && !exploredTiles?.has(key)) continue
+        const lx = landmark.x * pw + pw / 2
+        const ly = landmark.y * ph + ph / 2
+        ctx.save()
+        ctx.globalAlpha = mapLayer === 'biome' ? 0.66 : 0.9
+        ctx.fillStyle = landmark.glow
+        ctx.beginPath()
+        ctx.arc(lx, ly, 2.5, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = landmark.color
+        ctx.fillRect(lx - 1.5, ly - 3.5, 3, 5)
+        ctx.fillStyle = landmark.accent
+        ctx.fillRect(lx - 2, ly - 4.5, 4, 1.5)
+        ctx.restore()
+      }
+    }
+
     tileCanvasRef.current = offscreen
     lastExploredSizeRef.current = exploredTiles?.size ?? 0
     lastTimeOfDayRef.current = timeOfDay
+    lastMapLayerRef.current = mapLayer
     return offscreen
-  }, [map, exploredTiles, w, h, timeOfDay])
+  }, [map, exploredTiles, w, h, timeOfDay, expanded, mapLayer])
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current
@@ -241,7 +286,7 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
 
     // Rebuild tile layer if dirty
     const currentSize = exploredTiles?.size ?? 0
-    if (!tileCanvasRef.current || currentSize !== lastExploredSizeRef.current || timeOfDay !== lastTimeOfDayRef.current) {
+    if (!tileCanvasRef.current || currentSize !== lastExploredSizeRef.current || timeOfDay !== lastTimeOfDayRef.current || mapLayer !== lastMapLayerRef.current) {
       buildTileLayer()
     }
 
@@ -550,13 +595,13 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
     ctx.fillText(`${pct}%`, 3, 3)
 
     frameRef.current = requestAnimationFrame(draw)
-  }, [map, playerX, playerY, journal, exploredTiles, rangers, w, h, expanded, hoveredRegion, onFastTravel, timeOfDay, weather, activeEvent, buildTileLayer, totalExplorableTiles])
+  }, [map, playerX, playerY, journal, exploredTiles, rangers, w, h, expanded, hoveredRegion, onFastTravel, timeOfDay, weather, activeEvent, buildTileLayer, totalExplorableTiles, mapLayer])
 
   useEffect(() => {
     // Invalidate tile cache on size change
     lastExploredSizeRef.current = -1
     tileCanvasRef.current = null
-  }, [w, h])
+  }, [w, h, mapLayer])
 
   useEffect(() => {
     frameRef.current = requestAnimationFrame(draw)
@@ -590,14 +635,24 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
   }, [expanded, onFastTravel])
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!expanded || !onFastTravel) {
+    if (!expanded) {
       setHoveredRegion(null)
+      setHoveredTile(null)
       return
     }
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) return
     const mx = e.clientX - rect.left
     const my = e.clientY - rect.top
+    const tx = Math.max(0, Math.min(MAP_WIDTH - 1, Math.floor((mx / w) * MAP_WIDTH)))
+    const ty = Math.max(0, Math.min(MAP_HEIGHT - 1, Math.floor((my / h) * MAP_HEIGHT)))
+    setHoveredTile(map[ty]?.[tx] ?? null)
+
+    if (!onFastTravel) {
+      setHoveredRegion(null)
+      return
+    }
+
     let found: string | null = null
     for (const label of labelPositionsRef.current) {
       const labelW = label.name.length * 3.5 + 4
@@ -613,7 +668,7 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
       }
     }
     setHoveredRegion(found)
-  }, [expanded, onFastTravel])
+  }, [expanded, onFastTravel, map, w, h])
 
   return (
     <div
@@ -639,7 +694,7 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
         }}
         onClick={handleCanvasClick}
         onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoveredRegion(null)}
+        onMouseLeave={() => { setHoveredRegion(null); setHoveredTile(null) }}
         title={expanded ? (onFastTravel ? 'Click a region label to fast-travel' : 'Scroll the map') : 'Click to expand'}
       >
         <canvas
@@ -648,6 +703,29 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
           style={{ width: w, height: h, imageRendering: 'pixelated' }}
         />
       </div>
+      {expanded && (
+        <div className="flex items-center gap-1 px-1.5 pt-1 sm:px-3">
+          {([
+            ['biome', 'Biome'],
+            ['height', 'Height'],
+            ['routes', 'Routes'],
+          ] as const).map(([layer, label]) => (
+            <button
+              key={layer}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setMapLayer(layer) }}
+              className="flex-1 rounded-md border px-2 py-1 text-[9px] font-black uppercase tracking-wider transition-colors"
+              style={{
+                background: mapLayer === layer ? 'rgba(74,222,128,0.13)' : 'rgba(255,255,255,0.035)',
+                borderColor: mapLayer === layer ? 'rgba(74,222,128,0.32)' : 'rgba(255,255,255,0.08)',
+                color: mapLayer === layer ? '#a7f3d0' : 'rgba(255,255,255,0.42)',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       <div className={`flex items-center justify-between px-1.5 sm:px-3 py-0.5 sm:py-1 ${expanded && isMobile ? 'flex-wrap gap-1' : ''}`}>
         <button
           type="button"
@@ -698,6 +776,26 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
           )}
         </div>
       </div>
+      {expanded && hoveredTile && (
+        <div className="mx-1.5 mb-1 rounded-md border px-2 py-1 text-[9px] sm:mx-3"
+          style={{
+            background: 'rgba(255,255,255,0.035)',
+            borderColor: 'rgba(255,255,255,0.08)',
+          }}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="min-w-0 truncate font-bold text-white/70">{hoveredTile.subregion}</span>
+            <span className="shrink-0 font-mono text-white/35">x{hoveredTile.x} y{hoveredTile.y}</span>
+          </div>
+          <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 text-white/35">
+            <span>{hoveredTile.biome.replace(/_/g, ' ')}</span>
+            <span>elev {hoveredTile.elevation.toFixed(2)}</span>
+            <span>{hoveredTile.isWalkable ? 'walkable' : 'blocked'}</span>
+            {hoveredTile.bridge && <span>{hoveredTile.bridge}</span>}
+            {hoveredTile.borderState && <span>{hoveredTile.borderState}</span>}
+          </div>
+        </div>
+      )}
       {expanded && isMobile && (
         <button
           className="w-full py-2 text-white/50 text-xs font-medium tracking-wider uppercase hover:text-white/80 transition-colors"

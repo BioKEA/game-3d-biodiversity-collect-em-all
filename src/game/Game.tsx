@@ -111,6 +111,7 @@ import LunarBossPopup from './LunarBossPopup'
 import ShadowBossPopup from './ShadowBossPopup'
 import BossTrophyRoom from './BossTrophyRoom'
 import ConservationPrompt from './ConservationPrompt'
+import CartographerPanel from './CartographerPanel'
 
 type RendererMode = 'canvas' | 'voxel'
 
@@ -254,6 +255,7 @@ export default function Game() {
   const [showMigrationCalendar, setShowMigrationCalendar] = useState(false)
   const [showFieldNotes, setShowFieldNotes] = useState(false)
   const [showTrophyRoom, setShowTrophyRoom] = useState(false)
+  const [showCartographer, setShowCartographer] = useState(false)
   const [showHotkeys, setShowHotkeys] = useState(false)
   const [showFastTravel, setShowFastTravel] = useState(false)
   const [borderMessage, setBorderMessage] = useState<string | null>(null)
@@ -741,6 +743,8 @@ export default function Game() {
   const atSteamerLane = gameState.screen === 'world' &&
     gameState.player.x === 8 && gameState.player.y === 57
 
+  const activeQuestCount = RANGERS.reduce((n, r) => n + r.quests.filter(q => gameState.questProgress[q.id]?.status === 'active').length, 0)
+
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -785,6 +789,8 @@ export default function Game() {
           Music.toggle(); break
         case 'v': case 'V':
           toggleRendererMode(); break
+        case 'x': case 'X':
+          setShowCartographer(v => !v); break
         case 'r': case 'R':
           setGameState(prev => ({ ...prev, screen: 'crafting' })); break
         case 'h': case 'H':
@@ -2139,6 +2145,20 @@ export default function Game() {
       )}
       <TutorialTip tip={tutorialTip} onDismiss={() => setTutorialTip(null)} />
       <Minimap map={memoizedMap} playerX={gameState.player.x} playerY={gameState.player.y} journal={gameState.player.journal} exploredTiles={exploredTiles} rangers={rangerPositions} onFastTravel={handleFastTravel} timeOfDay={gameState.timeOfDay} weather={gameState.weather} activeEvent={worldEvents.activeEvent} />
+      {gameState.screen === 'world' && showCartographer && (
+        <CartographerPanel
+          map={memoizedMap}
+          player={gameState.player}
+          timeOfDay={gameState.timeOfDay}
+          weather={gameState.weather}
+          currentBiome={gameState.currentBiome}
+          currentSubregion={gameState.currentSubregion}
+          exploredTiles={exploredTiles}
+          visitedLandmarks={gameState.visitedLandmarks}
+          activeQuestCount={activeQuestCount}
+          onClose={() => setShowCartographer(false)}
+        />
+      )}
 
       {gameState.screen === 'world' && (
         <button
@@ -2162,6 +2182,31 @@ export default function Game() {
           }}
         >
           <span className="mr-1.5">▣</span>{rendererMode === 'voxel' ? 'Voxel' : 'Canvas'}
+        </button>
+      )}
+
+      {gameState.screen === 'world' && (
+        <button
+          type="button"
+          onClick={() => setShowCartographer(v => !v)}
+          aria-label="Toggle cartographer survey"
+          title="Cartographer survey (X)"
+          className="absolute left-2 bottom-[118px] sm:left-4 sm:bottom-[136px] z-40 pointer-events-auto rounded-lg px-2.5 py-2 text-[10px] sm:text-xs font-bold tracking-wide transition-all active:scale-95"
+          style={{
+            background: showCartographer
+              ? 'linear-gradient(135deg, rgba(94,234,212,0.18), rgba(56,189,248,0.14))'
+              : 'rgba(0,0,0,0.5)',
+            border: showCartographer
+              ? '1px solid rgba(94,234,212,0.38)'
+              : '1px solid rgba(255,255,255,0.12)',
+            color: showCartographer ? '#ccfbf1' : 'rgba(255,255,255,0.62)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: showCartographer
+              ? '0 4px 18px rgba(0,0,0,0.28), 0 0 20px rgba(94,234,212,0.12), inset 0 1px 0 rgba(255,255,255,0.06)'
+              : '0 4px 14px rgba(0,0,0,0.25)',
+          }}
+        >
+          <span className="mr-1.5">+</span>Survey
         </button>
       )}
 
@@ -2211,7 +2256,7 @@ export default function Game() {
         dailyClaimable={getClaimableCount(dailyState)}
         achievementCount={unlockedAchievements.length}
         totalAchievements={20}
-        activeQuestCount={RANGERS.reduce((n, r) => n + r.quests.filter(q => gameState.questProgress[q.id]?.status === 'active').length, 0)}
+        activeQuestCount={activeQuestCount}
         onToggleFastTravel={() => { setShowFastTravel(v => !v); setShowHotkeys(false) }}
         onToggleHotkeys={() => { setShowHotkeys(v => !v); setShowFastTravel(false) }}
         showFastTravel={showFastTravel}
@@ -2708,6 +2753,7 @@ export default function Game() {
                   { keys: ['R'], label: 'Craft' },
                   { keys: ['H'], label: 'Habitats' },
                   { keys: ['L'], label: 'Ranks' },
+                  { keys: ['X'], label: 'Survey' },
                   { keys: ['M'], label: 'Music toggle' },
                   { keys: ['Esc'], label: 'Back / Close' },
                 ].map(row => (

@@ -34,6 +34,21 @@ This lets future evolutions add visible traits without replacing every asset at 
 4. Battle scenes: layered parallax pixel-art scenes for each biome.
 5. UI: convert remaining emoji controls and reward icons into pixel tokens.
 
+## Ten-Track Overhaul Program
+
+The user-approved improvement program is now tracked in `src/game/overhaulRoadmap.ts` and surfaced in the in-game Cartographer HUD.
+
+1. Map accuracy: coordinates, biome, water, elevation, walkability, bridges, docks, borders, and landmarks must be inspectable in-game.
+2. Regional identity: each California province needs a clear terrain language and height profile.
+3. Creature art: local species should render through modular pixel creatures with evolution-ready adaptation slots.
+4. Encounter presentation: arenas should inherit biome, weather, time, and local identity.
+5. Field guide: discovery progress should connect creatures to places, habitats, and notes.
+6. Landmarks and traversal: major places should anchor routes, bridges, ferries, and fast-travel memory.
+7. Map interaction: the expanded field map should support atlas layers and tile inspection.
+8. Progression loop: level, quests, regional mastery, and collection should reinforce each other.
+9. Animation and juice: subtle motion should support the field-guide fantasy without becoming noisy.
+10. Quality/regression: every geography-sensitive change should get a durable check.
+
 ## Implementation Foundation
 
 - `src/game/artDirection.ts` is the shared source for palette, lighting, biome, icon, and entity tokens.
@@ -46,6 +61,8 @@ This lets future evolutions add visible traits without replacing every asset at 
 - Larger battle poses should build on the same `creatureArt.ts` spec so small and large creature art evolve together.
 - `PixelLandmarkIcon` and `landmarkArt.ts` provide the matching modular landmark language for map labels, fast travel, and Field Journal discovery.
 - Ambient effects should use CSS/canvas pixel particles instead of emoji leaves, droplets, or weather symbols.
+- `CartographerPanel` is the shared in-game survey layer for the ten-track overhaul: it exposes current tile data, local relief, creature adaptations, nearby landmarks, route signals, and QA stats.
+- The expanded `Minimap` now has biome, height, and routes layers plus tile hover details, so geography and traversal can be audited directly inside the game.
 
 ## Open Art Backlog
 
