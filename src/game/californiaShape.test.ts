@@ -48,6 +48,31 @@ describe('California map shape', () => {
     expect(map[170][88].isWalkable).toBe(true)
   })
 
+  it('keeps San Francisco downtown on the mainland while Bay water starts east of the waterfront', () => {
+    const mainlandTiles = [
+      map[219][53], // Financial District
+      map[221][53], // SoMa / Oracle Park
+      map[218][52], // North Beach
+      map[217][53], // Fishermans Wharf
+      map[222][54], // Mission Bay
+      map[217][50], // Presidio
+      map[220][50], // Golden Gate Park
+    ]
+
+    for (const tile of mainlandTiles) {
+      expect(WATERLIKE_BIOMES.has(tile.biome)).toBe(false)
+      expect(tile.isWalkable).toBe(true)
+    }
+
+    expect(map[221][51].biome).toBe('mountain')
+    expect(map[218][52].bridge).toBeUndefined()
+    expect(map[219][54].bridge).toBe('Bay Bridge')
+    expect(WATERLIKE_BIOMES.has(map[220][55].biome)).toBe(true)
+    expect(map[220][55].isWalkable).toBe(false)
+    expect(WATERLIKE_BIOMES.has(map[220][58].biome)).toBe(true)
+    expect(map[220][58].isWalkable).toBe(false)
+  })
+
   it('marks the southern edge as Mexico while leaving San Diego inside California', () => {
     for (const x of [145, 160, 176, 190]) {
       expect(map[491][x].borderState).toBeUndefined()

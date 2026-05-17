@@ -305,6 +305,18 @@ const SF_BAY: [number, number][] = [
   [51,218],[52,215],[53,211],
 ]
 
+const SF_MAINLAND_EAST_SHORE: [number, number][] = [
+  [216,52],[217,53],[218,53],[219,54],[220,54],[221,54],
+  [222,55],[224,55],[226,56],
+]
+
+function isSanFranciscoMainland(x: number, y: number): boolean {
+  if (y < SF_MAINLAND_EAST_SHORE[0][0] || y > SF_MAINLAND_EAST_SHORE[SF_MAINLAND_EAST_SHORE.length - 1][0]) return false
+  const west = Math.floor(coastAt(y))
+  const east = Math.round(interpX(y, SF_MAINLAND_EAST_SHORE))
+  return x >= west && x <= east
+}
+
 interface EstuaryBayDef { name: string; cx: number; cy: number; rx: number; ry: number }
 const BAY_DELTA_OPEN_WATER: EstuaryBayDef[] = [
   { name: 'San Pablo Bay', cx: 58, cy: 199, rx: 8, ry: 9 },
@@ -331,6 +343,7 @@ function isBayDeltaCityCore(x: number, y: number): boolean {
 }
 
 function getBayDeltaWaterName(x: number, y: number): string | null {
+  if (isSanFranciscoMainland(x, y)) return null
   if (pointInPoly(x, y, SF_BAY)) {
     if (y < 213) return 'San Pablo Bay'
     if (y > 226) return 'South Bay'
@@ -380,6 +393,7 @@ const LAKES: LakeDef[] = [
 ]
 
 function isGGStrait(x: number, y: number): boolean {
+  if (isSanFranciscoMainland(x, y)) return false
   return y >= 214 && y <= 217 && x >= 49 && x <= 52
 }
 
@@ -388,6 +402,14 @@ function getBayAreaBiome(x: number, y: number): BiomeType | null {
 
   if (isGGStrait(x, y)) return null
   if (getBayDeltaWaterName(x, y)) return null
+
+  // San Francisco mainland: keep the city west of the Embarcadero/Bay shoreline.
+  if (isSanFranciscoMainland(x, y)) {
+    if (inEllipse(x, y, 51, 221, 1.25, 1.25)) return 'mountain'
+    if (inEllipse(x, y, 50, 217, 2, 2)) return 'forest'
+    if (inEllipse(x, y, 50, 220, 2, 2)) return 'forest'
+    return 'urban'
+  }
 
   // Marin / North Bay
   if (y < 216 && x < 58) {
@@ -861,7 +883,7 @@ function genBridgeTiles(x1: number, y1: number, x2: number, y2: number): [number
 
 const BRIDGES: BridgeDef[] = [
   { name: 'Golden Gate Bridge', tiles: genBridgeTiles(49, 213, 49, 218) },
-  { name: 'Bay Bridge', tiles: [...genBridgeTiles(50, 218, 57, 218), ...genBridgeTiles(57, 218, 64, 218)] },
+  { name: 'Bay Bridge', tiles: [...genBridgeTiles(54, 219, 58, 218), ...genBridgeTiles(58, 218, 64, 218)] },
   { name: 'Richmond-San Rafael Bridge', tiles: genBridgeTiles(55, 210, 62, 210) },
   { name: 'Petaluma River Bridge', tiles: genBridgeTiles(45, 189, 50, 189) },
   { name: 'Lakeville Bridge', tiles: genBridgeTiles(48, 194, 52, 194) },
