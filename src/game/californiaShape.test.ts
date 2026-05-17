@@ -7,6 +7,15 @@ const WATERLIKE_BIOMES = new Set<BiomeType>(['water', 'kelp_forest'])
 describe('California map shape', () => {
   const map = generateMap()
 
+  it('limits inaccessible northwest Pacific water to a narrow edge buffer', () => {
+    for (let y = 5; y <= 60; y++) {
+      const leadingWaterTiles = map[y].findIndex(tile => !WATERLIKE_BIOMES.has(tile.biome))
+      expect(leadingWaterTiles).toBeGreaterThanOrEqual(0)
+      expect(leadingWaterTiles).toBeLessThanOrEqual(5)
+      expect(map[y][5].isWalkable).toBe(true)
+    }
+  })
+
   it('keeps the Pacific cut into the north side of Monterey Bay', () => {
     for (let y = 245; y <= 250; y++) {
       for (let x = 42; x <= 48; x++) {
