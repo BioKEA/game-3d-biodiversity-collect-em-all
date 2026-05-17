@@ -89,13 +89,13 @@ export default function VoxelTerrain({ map, playerX, playerY }: Props) {
   return (
     <>
       {/* Land tiles */}
-      <instancedMesh ref={landRef} args={[undefined, undefined, maxTiles]}>
+      <instancedMesh ref={landRef} args={[undefined, undefined, maxTiles]} frustumCulled={false}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial color="#ffffff" roughness={FIELD_GUIDE_PIXEL_BOX_STYLE.materialRoughness} flatShading />
       </instancedMesh>
 
       {/* Water tiles */}
-      <instancedMesh ref={waterRef} args={[undefined, undefined, maxTiles]}>
+      <instancedMesh ref={waterRef} args={[undefined, undefined, maxTiles]} frustumCulled={false}>
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial
           color="#ffffff"

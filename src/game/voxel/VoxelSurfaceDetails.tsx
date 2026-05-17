@@ -126,7 +126,7 @@ export default function VoxelSurfaceDetails({ map, playerX, playerY }: Props) {
   }, [instances])
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, 5200]}>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, 5200]} frustumCulled={false}>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color="#ffffff" flatShading roughness={0.96} />
     </instancedMesh>

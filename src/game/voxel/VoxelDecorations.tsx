@@ -118,7 +118,7 @@ export default function VoxelDecorations({ map, playerX, playerY }: Props) {
   }, [instances])
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, 3000]}>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, 3000]} frustumCulled={false}>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color="#ffffff" flatShading roughness={0.9} />
     </instancedMesh>

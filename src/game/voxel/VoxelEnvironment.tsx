@@ -47,7 +47,7 @@ function RainEffect() {
   })
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, count]} frustumCulled={false}>
       <boxGeometry args={[1, 1, 1]} />
       <meshBasicMaterial color="#aaccff" transparent opacity={0.4} />
     </instancedMesh>

@@ -67,7 +67,7 @@ function CreatureMarkers({ map, playerX, playerY }: Omit<Props, 'rangers'>) {
   })
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, 200]}>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, 200]} frustumCulled={false}>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial
         color="#ffffff"
