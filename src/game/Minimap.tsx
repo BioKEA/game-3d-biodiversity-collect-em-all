@@ -35,6 +35,13 @@ function isWaterlikeBiome(tile?: MapTile): boolean {
   return tile?.biome === 'water' || tile?.biome === 'kelp_forest'
 }
 
+function getBridgeMapColor(tile: MapTile, isExplored: boolean): string {
+  if (tile.bridge === 'Golden Gate Bridge') {
+    return isExplored ? 'rgba(220,38,38,0.9)' : 'rgba(220,38,38,0.38)'
+  }
+  return isExplored ? 'rgba(251,191,36,0.85)' : 'rgba(251,191,36,0.28)'
+}
+
 const WEATHER_INFO: Record<WeatherType, { glyph: PixelGlyphKind; color: string; dark: string }> = {
   clear: { glyph: 'sun', color: '#fbbf24', dark: '#7c4d12' },
   sunny: { glyph: 'sun', color: '#f59e0b', dark: '#7c2d12' },
@@ -188,7 +195,7 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
               : `hsl(${hue} 74% ${lightness}%)`
           ctx.globalAlpha = tile.borderState ? 0.28 : (isExplored || surveyVisible ? 0.86 : 0.12)
         } else if (mapLayer === 'routes') {
-          if (tile.bridge) ctx.fillStyle = '#fbbf24'
+          if (tile.bridge) ctx.fillStyle = tile.bridge === 'Golden Gate Bridge' ? '#dc2626' : '#fbbf24'
           else if (tile.boatDock) ctx.fillStyle = '#f59e0b'
           else if (tile.borderState) ctx.fillStyle = '#4b5563'
           else if (isWaterlikeBiome(tile)) ctx.fillStyle = '#256d8a'
@@ -279,7 +286,7 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
         if (!tile) continue
         const isExplored = exploredTiles?.has(`${x},${y}`) ?? false
         if (tile.bridge) {
-          ctx.fillStyle = isExplored ? 'rgba(251,191,36,0.85)' : 'rgba(251,191,36,0.28)'
+          ctx.fillStyle = getBridgeMapColor(tile, isExplored)
           ctx.fillRect(x * pw, y * ph, Math.max(1, pw - 0.5), Math.max(1, ph - 0.5))
         } else if (tile.boatDock && isExplored) {
           ctx.fillStyle = 'rgba(251,191,36,0.7)'

@@ -885,7 +885,7 @@ function genBridgeTiles(x1: number, y1: number, x2: number, y2: number): [number
 }
 
 const BRIDGES: BridgeDef[] = [
-  { name: 'Golden Gate Bridge', tiles: [[48,214],[49,214],[49,215],[50,215],[50,216],[51,216],[51,217],[52,217]] },
+  { name: 'Golden Gate Bridge', tiles: [[48,215],[49,215],[50,215],[51,215],[52,215],[52,216],[52,217]] },
   { name: 'Bay Bridge', tiles: [...genBridgeTiles(54, 219, 58, 218), ...genBridgeTiles(58, 218, 64, 218)] },
   { name: 'Richmond-San Rafael Bridge', tiles: genBridgeTiles(55, 210, 62, 210) },
   { name: 'Petaluma River Bridge', tiles: genBridgeTiles(45, 189, 50, 189) },

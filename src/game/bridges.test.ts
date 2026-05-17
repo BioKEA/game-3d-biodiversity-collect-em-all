@@ -2,16 +2,15 @@ import { describe, it, expect } from 'vitest'
 import { generateMap, getBridgeAt } from './bayAreaMap'
 
 describe('Bay Area Bridges', () => {
-  it('draws the Golden Gate Bridge as a one-tile crossing through the strait', () => {
+  it('draws the Golden Gate Bridge as a red span flanked by strait water', () => {
     const map = generateMap()
     const expectedBridgeTiles = [
-      '48,214',
-      '49,214',
+      '48,215',
       '49,215',
       '50,215',
-      '50,216',
-      '51,216',
-      '51,217',
+      '51,215',
+      '52,215',
+      '52,216',
       '52,217',
     ]
     const foundBridgeTiles: string[] = []
@@ -30,13 +29,20 @@ describe('Bay Area Bridges', () => {
       expect(map[y][x].isWalkable).toBe(true)
     }
 
-    for (const [x, y] of [[50,214], [51,214], [52,215], [49,216], [52,216]]) {
+    for (const [x, y] of [[49,214], [50,214], [51,214], [49,216], [50,216], [51,216]]) {
       expect(map[y][x].biome).toBe('water')
       expect(map[y][x].isWalkable).toBe(false)
       expect(map[y][x].bridge).toBeUndefined()
     }
 
-    expect(map[214][47].isWalkable).toBe(true)
+    const bridgeSpanOverWater = [[49,215], [50,215], [51,215]]
+    for (const [x, y] of bridgeSpanOverWater) {
+      expect(map[y][x].bridge).toBe('Golden Gate Bridge')
+      expect(map[y - 1][x].biome).toBe('water')
+      expect(map[y + 1][x].biome).toBe('water')
+    }
+
+    expect(map[215][47].isWalkable).toBe(true)
     expect(map[217][53].isWalkable).toBe(true)
   })
 
