@@ -1,38 +1,52 @@
 # WildCal Art Direction
 
-## Target Style
+## North Star
 
-The chosen direction is a **California field-guide pixel-box diorama**: high-quality isometric/orthographic terrain made from crisp three-dimensional pixel boxes, with naturalistic California habitat colors and a grounded ecology mood.
+WildCal is a polished pixel-art field guide: bright, collectible, readable at small sizes, and grounded in real California geography. The UI remains dark, glassy, and game-like, while creatures, terrain, landmarks, and encounter scenes move toward custom pixel art.
 
-This is not a candy-bright arcade look. It should feel like a living field notebook translated into voxel/pixel form: readable, tactile, calm, and collectible.
+## Style Rules
 
-## Visual Principles
+- Use bright collectathon color, closer to modern creature-collecting games than muted simulation.
+- Keep shapes readable at HUD scale first, then add detail for large battle and journal views.
+- Prefer crisp blocky silhouettes, stepped highlights, and subtle drop shadows over smooth illustration.
+- Use subtle shimmer, bobbing, glow, particles, and parallax. Avoid noisy animation.
+- Keep UI controls in the 3D pixel-box/token language so the interface feels coherent.
+- Keep maps geographically accurate. If the current map cannot support a real location, remake the map data rather than hiding the issue with vague labels.
 
-- Terrain is built from visible box geometry: square tile tops, darker sides, stacked elevation, crisp block silhouettes.
-- The palette is natural, sun-faded, and specific to California habitats: sage, redwood green, coastal blue, dry grass, granite, sandstone, marsh olive.
-- Lighting should make cubes feel premium: soft ambient occlusion, clean rim light, modest atmospheric depth, no glossy plastic.
-- Creature hints should be subtle specimen markers, footprints, or tiny boxed silhouettes instead of floating magical orbs by default.
-- Landmarks can remain iconic, but they should be simplified into blocky, readable miniatures rather than emoji-first symbols.
-- UI overlays should remain legible, but the world art should carry more of the sense of place.
+## Creature Art System
 
-## Implementation Direction
+Creature art should not be emoji-first. Emoji can remain as legacy metadata, but on-screen creature art should render through modular pixel creatures.
 
-The existing `src/game/voxel` renderer is the best foundation for the universal upgrade. It already has instanced box terrain, blocky player/ranger entities, landmarks, weather, and camera-follow behavior.
+Each creature should resolve to:
 
-Recommended path:
+- Body plan: quadruped, avian, fish, serpentine, amphibian, insect, plant, or spirit.
+- Palette: type color plus species color override where available.
+- Adaptation slots: wings, fins, tail, horns, spikes, shell, antennae, bloom, glow, spots, stripes, or crest.
+- Evolution stage: base, middle, or final. Later stages can scale the silhouette, add appendages, and intensify highlights.
 
-1. Make the voxel renderer previewable alongside the current canvas renderer.
-2. Bring all biome, entity, landmark, water, and weather styling through `src/game/artDirection.ts`.
-3. Replace sphere/glow encounter markers with boxed field-guide markers, footprints, or creature silhouettes.
-4. Upgrade decorations biome by biome: redwoods, oak woodland, marsh reeds, tidepools, chaparral scrub, dunes, alpine rock, city blocks.
-5. Move creatures from emoji/HUD-only representation toward reusable pixel-box creature models or sprite cards.
-6. Once the voxel renderer is visually complete and performant, switch it on universally.
+This lets future evolutions add visible traits without replacing every asset at once.
 
-## Current Prep
+## Priority Order
 
-- Shared field-guide palette and lighting tokens live in `src/game/artDirection.ts`.
-- Voxel renderer constants consume those tokens.
-- Current biome color exports are aligned to the same palette so old and new renderer work can converge.
-- Voxel mode is the default renderer, with the legacy canvas renderer kept as an in-game fallback toggle.
-- Terrain has a deterministic surface-detail layer for field-guide texture without needing hand-authored tile art.
-- `PixelCreatureToken` is the transitional UI primitive for replacing raw emoji creature art with reusable pixel-box tokens.
+1. Creatures: replace emoji tokens with custom pixel silhouettes everywhere `PixelCreatureToken` is used.
+2. Map: make California accurate, wide enough to inspect, and visually legible by terrain/region.
+3. Landmarks and terrain: replace emoji markers with custom pixel structures, natural icons, and geography-specific terrain treatment.
+4. Battle scenes: layered parallax pixel-art scenes for each biome.
+5. UI: convert remaining emoji controls and reward icons into pixel tokens.
+
+## Implementation Foundation
+
+- `src/game/artDirection.ts` is the shared source for palette, lighting, biome, icon, and entity tokens.
+- The voxel renderer remains the main world-art foundation for three-dimensional pixel boxes.
+- `PixelIcon` is the UI primitive for non-creature pixel-box controls and items.
+- `PixelCreatureToken` is the small-surface creature frame used across HUD, battle, catalog, fusion, title, trade, and notifications.
+- `PixelCreatureSprite` is the procedural creature silhouette layer that replaces emoji inside creature tokens.
+- `creatureArt.ts` owns body-plan inference, palette resolution, evolution stage, and adaptation slots.
+- Larger battle poses should build on the same `creatureArt.ts` spec so small and large creature art evolve together.
+
+## Open Art Backlog
+
+- Add curated hand-authored specs for marquee species and starters.
+- Add landmark art specs for bridges, mountains, piers, towers, trees, missions, observatories, and desert features.
+- Add map tile overlays for roads, BART/ferries, mountain ranges, rivers, and major coastlines.
+- Add larger battle-scale creature poses after the small token silhouette system is stable.

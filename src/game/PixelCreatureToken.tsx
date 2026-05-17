@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { CreatureType } from '@/types/game'
 import { FIELD_GUIDE_CREATURE_TYPE_COLORS } from './artDirection'
+import PixelCreatureSprite from './PixelCreatureSprite'
 
 interface CreatureTokenLike {
   sprite: string
@@ -85,12 +86,12 @@ export default function PixelCreatureToken({ creature, size = 48, selected = fal
       <span
         className="relative z-10 leading-none"
         style={{
-          fontSize: size * 0.48,
-          textShadow: '0 2px 0 rgba(0,0,0,0.28)',
-          transform: `translateY(-4%)${flipped ? ' scaleX(-1)' : ''}`,
+          width: size * 0.68,
+          height: size * 0.68,
+          transform: 'translateY(-4%)',
         }}
       >
-        {creature.sprite}
+        <PixelCreatureSprite creature={creature} size={size * 0.68} flipped={flipped} />
       </span>
       {creature.isAlpha && (
         <span className="absolute -right-0.5 -top-1 z-20 leading-none" style={{ fontSize: size * 0.22 }}>⭐</span>

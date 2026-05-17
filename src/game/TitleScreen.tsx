@@ -16,14 +16,14 @@ interface Props {
 const TITLE = 'WildCal'
 
 const CREATURES = [
-  { emoji: '🦅', x: 8, y: 52, size: 36, delay: 1.2, from: 'left' as const },
-  { emoji: '🦊', x: 82, y: 58, size: 30, delay: 1.8, from: 'right' as const },
-  { emoji: '🦋', x: 60, y: 38, size: 22, delay: 2.4, from: 'right' as const },
-  { emoji: '🦭', x: 20, y: 72, size: 28, delay: 2.0, from: 'left' as const },
-  { emoji: '🐸', x: 45, y: 68, size: 20, delay: 2.8, from: 'left' as const },
-  { emoji: '🐉', x: 72, y: 30, size: 26, delay: 3.2, from: 'right' as const },
-  { emoji: '🦝', x: 15, y: 35, size: 18, delay: 3.6, from: 'left' as const },
-  { emoji: '🌊', x: 90, y: 75, size: 20, delay: 3.0, from: 'right' as const },
+  { creatureId: 'golden-eagle', x: 8, y: 52, size: 42, delay: 1.2, from: 'left' as const },
+  { creatureId: 'gray-fox', x: 82, y: 58, size: 36, delay: 1.8, from: 'right' as const },
+  { creatureId: 'mission-blue-butterfly', x: 60, y: 38, size: 30, delay: 2.4, from: 'right' as const },
+  { creatureId: 'harbor-seal', x: 20, y: 72, size: 34, delay: 2.0, from: 'left' as const },
+  { creatureId: 'pacific-tree-frog', x: 45, y: 68, size: 30, delay: 2.8, from: 'left' as const },
+  { creatureId: 'fog-serpent', x: 72, y: 30, size: 36, delay: 3.2, from: 'right' as const },
+  { creatureId: 'raccoon', x: 15, y: 35, size: 28, delay: 3.6, from: 'left' as const },
+  { creatureId: 'wave-spirit', x: 90, y: 75, size: 30, delay: 3.0, from: 'right' as const },
 ]
 
 const FOG_LAYERS = [
@@ -349,14 +349,17 @@ export default function TitleScreen({ onLoadSlot, onNewGame, onDeleteSlot }: Pro
       {/* Floating creatures */}
       {CREATURES.map((c, i) => (
         <div key={i} className="absolute pointer-events-none" style={{
-          left: `${c.x}%`, top: `${c.y}%`, fontSize: c.size,
+          left: `${c.x}%`, top: `${c.y}%`,
           opacity: phase >= 3 ? 1 : 0,
           animation: phase >= 3
             ? `${c.from === 'left' ? 'creature-enter-left' : 'creature-enter-right'} 0.8s ease-out ${c.delay - 1.6}s both, creature-idle ${3 + (i % 2)}s ease-in-out ${c.delay}s infinite`
             : 'none',
           filter: `drop-shadow(0 0 12px rgba(34,211,238,0.15))`,
         }}>
-          {c.emoji}
+          {(() => {
+            const creature = ALL_CREATURES.find(candidate => candidate.id === c.creatureId)
+            return creature ? <PixelCreatureToken creature={creature} size={c.size} selected title={creature.name} /> : null
+          })()}
         </div>
       ))}
 
