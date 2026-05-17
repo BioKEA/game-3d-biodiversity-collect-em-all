@@ -38,7 +38,7 @@ describe('California map shape', () => {
     expect(map[191][78].subregion).toBe('Suisun Bay')
     expect(map[151][80].biome).toBe('water')
     expect(map[151][80].subregion).toBe('Sacramento River')
-    expect(map[178][82].biome).toBe('marsh')
+    expect(map[177][82].biome).toBe('marsh')
   })
 
   it('keeps Sacramento and Stockton playable beside the delta waterways', () => {

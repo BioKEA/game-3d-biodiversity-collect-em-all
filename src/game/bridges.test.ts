@@ -56,16 +56,34 @@ describe('Bay Area Bridges', () => {
 
   it('North Bay and Delta crossing tiles exist', () => {
     expect(getBridgeAt(47, 189)).toBe('Petaluma River Bridge')
+    expect(getBridgeAt(50, 194)).toBe('Lakeville Bridge')
     expect(getBridgeAt(57, 178)).toBe('Napa River Bridge')
+    expect(getBridgeAt(57, 190)).toBe('Mare Island Causeway')
     expect(getBridgeAt(67, 198)).toBe('Carquinez Bridge')
     expect(getBridgeAt(75, 193)).toBe('Benicia-Martinez Bridge')
     expect(getBridgeAt(80, 187)).toBe('Rio Vista Bridge')
     expect(getBridgeAt(85, 182)).toBe('Antioch Bridge')
+    expect(getBridgeAt(80, 158)).toBe('Clarksburg Bridge')
+    expect(getBridgeAt(79, 170)).toBe('Walnut Grove Bridge')
+    expect(getBridgeAt(79, 178)).toBe('Isleton Bridge')
+    expect(getBridgeAt(84, 178)).toBe('Middle River Bridge')
     expect(getBridgeAt(86, 167)).toBe('Mokelumne River Bridge')
     expect(getBridgeAt(85, 172)).toBe('Stockton Channel Bridge')
     expect(getBridgeAt(79, 150)).toBe('Freeport Bridge')
     expect(getBridgeAt(80, 140)).toBe('Tower Bridge')
     expect(getBridgeAt(87, 137)).toBe('Guy West Bridge')
+  })
+
+  it('keeps Delta bridge spacing dense enough to avoid long detours', () => {
+    const sacramentoRiverCrossingYs = [140, 150, 158, 170, 178, 187]
+    const sanJoaquinDeltaCrossingYs = [167, 172, 178, 182, 187]
+
+    for (let i = 1; i < sacramentoRiverCrossingYs.length; i++) {
+      expect(sacramentoRiverCrossingYs[i] - sacramentoRiverCrossingYs[i - 1]).toBeLessThanOrEqual(12)
+    }
+    for (let i = 1; i < sanJoaquinDeltaCrossingYs.length; i++) {
+      expect(sanJoaquinDeltaCrossingYs[i] - sanJoaquinDeltaCrossingYs[i - 1]).toBeLessThanOrEqual(8)
+    }
   })
 
   it('bridge tiles are walkable and not water', () => {
@@ -81,7 +99,7 @@ describe('Bay Area Bridges', () => {
         }
       }
     }
-    expect(bridgeCount).toBeGreaterThan(50)
+    expect(bridgeCount).toBeGreaterThan(90)
   })
 
   it('bridge tiles have elevation 1', () => {
