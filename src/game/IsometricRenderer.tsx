@@ -116,6 +116,11 @@ function lerpLighting(minutes: number): LightKeyframe {
 const TILE_WIDTH = 56
 const TILE_HEIGHT = 28
 const TILE_DEPTH = 14
+const OCCLUDING_BIOMES = new Set<BiomeType>(['mountain', 'alpine', 'snow', 'volcanic', 'canyon'])
+
+function clamp(n: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, n))
+}
 
 // Seeded pseudo-random for deterministic decorations per tile
 function seededRand(x: number, y: number, seed: number = 0): number {
@@ -127,6 +132,56 @@ function toIso(x: number, y: number, elevation: number = 0): [number, number] {
   const isoX = (x - y) * (TILE_WIDTH / 2)
   const isoY = (x + y) * (TILE_HEIGHT / 2) - elevation * TILE_DEPTH
   return [isoX, isoY]
+}
+
+function isOccludingTerrain(tile: MapTile): boolean {
+  return tile.elevation >= 2.2 || OCCLUDING_BIOMES.has(tile.biome)
+}
+
+function terrainOcclusionAlpha(tile: MapTile, tileX: number, tileY: number, playerX: number, playerY: number): number {
+  if (!isOccludingTerrain(tile)) return 1
+
+  // In this isometric camera, tiles with a larger x+y depth are foreground.
+  // Fade tall foreground terrain when it sits between the player and camera.
+  const foregroundDelta = (tileX + tileY) - (playerX + playerY)
+  if (foregroundDelta <= 0.35 || foregroundDelta > 7) return 1
+
+  const lateralDelta = Math.abs((tileX - tileY) - (playerX - playerY))
+  if (lateralDelta > 4.25) return 1
+
+  const screenOverlap = 1 - clamp(lateralDelta / 4.25, 0, 1)
+  const depthOverlap = 1 - clamp((foregroundDelta - 0.35) / 6.65, 0, 1)
+  const heightFactor = clamp((tile.elevation - 2.2) / 3.4, 0, 1)
+  const fade = (0.42 + heightFactor * 0.32) * screenOverlap * depthOverlap
+  return clamp(1 - fade, 0.28, 1)
+}
+
+function drawTerrainGhostRim(
+  ctx: CanvasRenderingContext2D,
+  screenX: number,
+  screenY: number,
+  elevation: number,
+  alpha: number,
+) {
+  if (alpha >= 0.98) return
+  const hw = TILE_WIDTH / 2
+  const hh = TILE_HEIGHT / 2
+  const depth = Math.max(elevation * TILE_DEPTH, 2)
+  ctx.save()
+  ctx.globalAlpha *= 0.35 + (1 - alpha) * 0.35
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)'
+  ctx.lineWidth = 1
+  ctx.setLineDash([3, 3])
+  ctx.beginPath()
+  ctx.moveTo(screenX, screenY - hh)
+  ctx.lineTo(screenX + hw, screenY)
+  ctx.lineTo(screenX + hw, screenY + depth)
+  ctx.lineTo(screenX, screenY + hh + depth)
+  ctx.lineTo(screenX - hw, screenY + depth)
+  ctx.lineTo(screenX - hw, screenY)
+  ctx.closePath()
+  ctx.stroke()
+  ctx.restore()
 }
 
 function drawBridge(
@@ -2256,10 +2311,10 @@ const IsometricRenderer = memo(function IsometricRenderer({ map, playerX, player
 
       // Viewport culling bounds (in pre-zoom CSS coordinate space)
       const zI = 1 / zoom
-      const cullL = w * (1 - zI) / 2 - 80
-      const cullR = w * (1 + zI) / 2 + 80
-      const cullT = h * (1 - zI) / 2 - 120
-      const cullB = h * (1 + zI) / 2 + 60
+      const cullL = w * (1 - zI) / 2 - 120
+      const cullR = w * (1 + zI) / 2 + 120
+      const cullT = h * (1 - zI) / 2 - 260
+      const cullB = h * (1 + zI) / 2 + 160
 
       const shadowDirX = timeOfDay === 'dawn' ? -1 : timeOfDay === 'dusk' ? 1 : 0
       const shadowDirY = timeOfDay === 'night' ? 0 : 1
@@ -2287,7 +2342,8 @@ const IsometricRenderer = memo(function IsometricRenderer({ map, playerX, player
 
           const normDist = dist / viewRadius
           const fog = Math.max(0, Math.pow(1 - normDist, 1.6))
-          dc.globalAlpha = fog
+          const occlusionAlpha = terrainOcclusionAlpha(tile, x, y, smoothX, smoothY)
+          dc.globalAlpha = fog * occlusionAlpha
 
           const neighbors = {
             n: map[y - 1]?.[x]?.biome,
@@ -2297,10 +2353,11 @@ const IsometricRenderer = memo(function IsometricRenderer({ map, playerX, player
           }
 
           drawTile(dc, screenX, screenY, tile.biome, tile.elevation, tile.hasCreature, x, y, timeRef.current, timeOfDay, neighbors)
+          drawTerrainGhostRim(dc, screenX, screenY, tile.elevation, occlusionAlpha)
 
           // Desaturate border-state tiles
           if (tile.borderState) {
-            dc.globalAlpha = 0.35
+            dc.globalAlpha = 0.35 * fog * occlusionAlpha
             dc.fillStyle = '#8b8b8b'
             const bw = TILE_WIDTH / 2, bh = TILE_HEIGHT / 2
             dc.beginPath()
@@ -2310,7 +2367,7 @@ const IsometricRenderer = memo(function IsometricRenderer({ map, playerX, player
             dc.lineTo(screenX - bw, screenY)
             dc.closePath()
             dc.fill()
-            dc.globalAlpha = 1
+            dc.globalAlpha = fog * occlusionAlpha
           }
 
           if (shadowStrength > 0 && tile.biome !== 'water') {
@@ -2493,7 +2550,7 @@ const IsometricRenderer = memo(function IsometricRenderer({ map, playerX, player
 
           if (dist > viewRadius * 0.45) {
             const fogIntensity = (dist - viewRadius * 0.45) / (viewRadius * 0.55)
-            dc.globalAlpha = fogIntensity * 0.35
+            dc.globalAlpha = fogIntensity * 0.35 * occlusionAlpha
             dc.fillStyle = BIOME_COLORS[tile.biome].dark
             const fhw = TILE_WIDTH / 2
             const fhh = TILE_HEIGHT / 2

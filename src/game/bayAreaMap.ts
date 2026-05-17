@@ -88,6 +88,41 @@ function hash(x: number, y: number): number {
   return h - Math.floor(h)
 }
 
+function clamp(n: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, n))
+}
+
+function smoothstep(edge0: number, edge1: number, n: number): number {
+  const t = clamp((n - edge0) / (edge1 - edge0), 0, 1)
+  return t * t * (3 - 2 * t)
+}
+
+function ellipseInfluence(x: number, y: number, cx: number, cy: number, rx: number, ry: number): number {
+  const dx = (x - cx) / rx
+  const dy = (y - cy) / ry
+  const d = dx * dx + dy * dy
+  if (d >= 1) return 0
+  return 1 - smoothstep(0.2, 1, d)
+}
+
+function rangeBandInfluence(x: number, y: number, westPts: [number, number][], eastPts: [number, number][]): number {
+  const minY = Math.max(westPts[0][0], eastPts[0][0])
+  const maxY = Math.min(westPts[westPts.length - 1][0], eastPts[eastPts.length - 1][0])
+  if (y < minY || y > maxY) return 0
+
+  const west = interpX(y, westPts)
+  const east = interpX(y, eastPts)
+  const width = east - west
+  if (width <= 0) return 0
+
+  const t = (x - west) / width
+  if (t < 0 || t > 1) return 0
+
+  const crossRange = Math.sin(Math.PI * t)
+  const endFalloff = smoothstep(minY, minY + 22, y) * (1 - smoothstep(maxY - 22, maxY, y))
+  return clamp(crossRange * endFalloff, 0, 1)
+}
+
 const SF_BAY: [number, number][] = [
   [54,208],[62,208],[64,212],[65,216],[66,220],[65,225],
   [63,230],[60,234],[57,233],[54,229],[52,225],[51,221],
@@ -380,20 +415,77 @@ function getBiome(x: number, y: number): BiomeType {
   return 'grassland'
 }
 
-function getElevation(_x: number, _y: number, biome: BiomeType): number {
+function getElevation(x: number, y: number, biome: BiomeType): number {
   if (biome === 'water' || biome === 'kelp_forest') return 0
-  if (biome === 'tidepool') return 0.2
-  if (biome === 'beach' || biome === 'marsh' || biome === 'lakeshore') return 0.3
-  if (biome === 'dunes' || biome === 'desert' || biome === 'valley') return 0.5
-  if (biome === 'grassland' || biome === 'scrubland') return 0.8 + hash(_x, _y) * 0.4
-  if (biome === 'urban') return 1.0
-  if (biome === 'forest' || biome === 'chaparral' || biome === 'oak_woodland') return 1.4
-  if (biome === 'redwood' || biome === 'old_growth') return 1.8
-  if (biome === 'mountain' || biome === 'volcanic' || biome === 'canyon') return 2.5
-  if (biome === 'alpine') return 3.0
-  if (biome === 'snow') return 3.5
-  if (biome === 'rocky_beach') return 0.5
-  return 1.0
+
+  const n = hash(x * 1.73, y * 0.91) - 0.5
+  let elevation = 0.9
+
+  if (biome === 'tidepool') elevation = 0.2
+  else if (biome === 'beach' || biome === 'marsh' || biome === 'lakeshore') elevation = 0.3
+  else if (biome === 'dunes' || biome === 'desert') elevation = 0.55
+  else if (biome === 'valley') elevation = 0.42
+  else if (biome === 'grassland' || biome === 'scrubland') elevation = 0.8 + hash(x, y) * 0.35
+  else if (biome === 'urban') elevation = 0.9
+  else if (biome === 'forest' || biome === 'chaparral' || biome === 'oak_woodland') elevation = 1.2 + hash(x, y) * 0.35
+  else if (biome === 'redwood' || biome === 'old_growth') elevation = 1.55 + hash(x, y) * 0.35
+  else if (biome === 'mountain' || biome === 'volcanic' || biome === 'canyon') elevation = 2.45 + hash(x, y) * 0.55
+  else if (biome === 'alpine') elevation = 3.15 + hash(x, y) * 0.45
+  else if (biome === 'snow') elevation = 3.8 + hash(x, y) * 0.45
+  else if (biome === 'rocky_beach') elevation = 0.55
+
+  // California's main physical structure: low Central Valley, high Sierra Nevada.
+  const valleyFloor = rangeBandInfluence(x, y, VALLEY_W, VALLEY_E)
+  if (valleyFloor > 0) {
+    elevation = Math.min(elevation, 0.38 + hash(x + 9, y + 3) * 0.18)
+  }
+
+  const sierra = rangeBandInfluence(x, y, SIERRA_W, SIERRA_E)
+  if (sierra > 0) {
+    elevation = Math.max(elevation, 1.15 + sierra * 4.35 + n * 0.45)
+  }
+
+  // Coastal ranges: lower than the Sierra, but visible as long north/south ridges.
+  const coast = coastAt(y)
+  if (x >= coast + 3 && x <= coast + 18 && y >= 25 && y <= 380) {
+    const t = (x - (coast + 3)) / 15
+    const ridge = Math.sin(Math.PI * clamp(t, 0, 1))
+    elevation = Math.max(elevation, 0.9 + ridge * 1.7 + n * 0.25)
+  }
+
+  // Named high points and volcanic/cascade terrain.
+  const highPoints = [
+    { cx: 78, cy: 35, rx: 16, ry: 18, peak: 5.4 },  // Mt. Shasta / Castle Crags
+    { cx: 85, cy: 78, rx: 18, ry: 20, peak: 4.9 },  // Lassen Volcanic
+    { cx: 130, cy: 156, rx: 14, ry: 24, peak: 4.9 }, // Tahoe crest
+    { cx: 115, cy: 200, rx: 16, ry: 22, peak: 5.2 }, // Yosemite high country
+    { cx: 118, cy: 255, rx: 18, ry: 24, peak: 5.15 }, // Sequoia / Kings Canyon
+    { cx: 49, cy: 210, rx: 8, ry: 8, peak: 3.35 },  // Mt. Tamalpais
+    { cx: 74, cy: 220, rx: 9, ry: 9, peak: 3.9 },   // Mt. Diablo
+    { cx: 56, cy: 245, rx: 13, ry: 18, peak: 3.1 }, // Santa Cruz Mountains
+    { cx: 126, cy: 418, rx: 24, ry: 18, peak: 3.8 }, // Transverse ranges north of LA
+    { cx: 144, cy: 475, rx: 18, ry: 22, peak: 3.25 }, // Peninsular ranges
+    { cx: 165, cy: 438, rx: 18, ry: 22, peak: 2.8 }, // Joshua Tree uplands
+  ]
+  for (const hp of highPoints) {
+    const influence = ellipseInfluence(x, y, hp.cx, hp.cy, hp.rx, hp.ry)
+    if (influence > 0) elevation = Math.max(elevation, 1 + influence * (hp.peak - 1) + n * 0.25)
+  }
+
+  // Death Valley is a low basin tucked beside high desert mountains.
+  const deathValleyBasin = ellipseInfluence(x, y, 165, 295, 9, 25)
+  if (deathValleyBasin > 0) {
+    elevation = Math.min(elevation, 0.18 + (1 - deathValleyBasin) * 0.6)
+  }
+  const deathValleyRanges = Math.max(
+    ellipseInfluence(x, y, 154, 292, 10, 28),
+    ellipseInfluence(x, y, 176, 292, 10, 28),
+  )
+  if (deathValleyRanges > 0) {
+    elevation = Math.max(elevation, 1.2 + deathValleyRanges * 2.4)
+  }
+
+  return Math.round(clamp(elevation, 0.15, 5.8) * 100) / 100
 }
 
 // Subregion centers: [name, cx, cy, radius]
