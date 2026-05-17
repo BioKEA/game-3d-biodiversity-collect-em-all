@@ -1,7 +1,7 @@
 import { useRef, useMemo, useEffect } from 'react'
 import * as THREE from 'three'
 import type { MapTile } from '@/types/game'
-import { TILE_SIZE, TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS, seededRand } from './constants'
+import { TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS, gridToWorldX, gridToWorldZ, seededRand } from './constants'
 
 interface Props {
   map: MapTile[][]
@@ -22,8 +22,8 @@ function getDecorations(tile: MapTile): DecoInstance[] {
   const r = seededRand(tile.x, tile.y)
   const r2 = seededRand(tile.x, tile.y, 1)
   const groundY = TILE_BASE_HEIGHT + tile.elevation * ELEVATION_SCALE
-  const wx = tile.x * TILE_SIZE
-  const wz = -tile.y * TILE_SIZE
+  const wx = gridToWorldX(tile.x)
+  const wz = gridToWorldZ(tile.y)
   const decos: DecoInstance[] = []
   const biome = tile.biome
 

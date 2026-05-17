@@ -7,6 +7,8 @@ export const TILE_SIZE = FIELD_GUIDE_PIXEL_BOX_STYLE.tileSize
 export const TILE_BASE_HEIGHT = FIELD_GUIDE_PIXEL_BOX_STYLE.tileBaseHeight
 export const ELEVATION_SCALE = FIELD_GUIDE_PIXEL_BOX_STYLE.elevationScale
 export const VIEW_RADIUS = FIELD_GUIDE_PIXEL_BOX_STYLE.viewRadius
+export const WORLD_X_SIGN = -1
+export const WORLD_Z_SIGN = -1
 
 // Camera sits south of the north-facing player so forward/north reads upward.
 export const CAMERA_OFFSET = new THREE.Vector3(12, 12, -12)
@@ -56,6 +58,14 @@ export function seededRand(x: number, y: number, seed: number = 0): number {
 }
 
 // Convert grid coords to world position
+export function gridToWorldX(gx: number): number {
+  return WORLD_X_SIGN * gx * TILE_SIZE
+}
+
+export function gridToWorldZ(gy: number): number {
+  return WORLD_Z_SIGN * gy * TILE_SIZE
+}
+
 export function gridToWorld(gx: number, gy: number, elevation: number = 0): [number, number, number] {
-  return [gx * TILE_SIZE, elevation * ELEVATION_SCALE, -gy * TILE_SIZE]
+  return [gridToWorldX(gx), elevation * ELEVATION_SCALE, gridToWorldZ(gy)]
 }

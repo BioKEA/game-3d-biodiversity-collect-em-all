@@ -2,7 +2,7 @@ import { useRef, useMemo, useEffect } from 'react'
 import * as THREE from 'three'
 import type { MapTile } from '@/types/game'
 import { FIELD_GUIDE_PIXEL_BOX_STYLE } from '../artDirection'
-import { TILE_SIZE, TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS, getBiomeColor, seededRand } from './constants'
+import { TILE_SIZE, TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS, getBiomeColor, gridToWorldX, gridToWorldZ, seededRand } from './constants'
 
 interface Props {
   map: MapTile[][]
@@ -49,7 +49,7 @@ export default function VoxelTerrain({ map, playerX, playerY }: Props) {
     if (!mesh) return
     landTiles.forEach((tile, i) => {
       const h = TILE_BASE_HEIGHT + tile.elevation * ELEVATION_SCALE
-      _dummy.position.set(tile.x * TILE_SIZE, h / 2, -tile.y * TILE_SIZE)
+      _dummy.position.set(gridToWorldX(tile.x), h / 2, gridToWorldZ(tile.y))
       _dummy.scale.set(TILE_SIZE, h, TILE_SIZE)
       _dummy.updateMatrix()
       mesh.setMatrixAt(i, _dummy.matrix)
@@ -72,7 +72,7 @@ export default function VoxelTerrain({ map, playerX, playerY }: Props) {
     if (!mesh) return
     waterTiles.forEach((tile, i) => {
       const h = TILE_BASE_HEIGHT * 0.5
-      _dummy.position.set(tile.x * TILE_SIZE, h / 2, -tile.y * TILE_SIZE)
+      _dummy.position.set(gridToWorldX(tile.x), h / 2, gridToWorldZ(tile.y))
       _dummy.scale.set(TILE_SIZE, h, TILE_SIZE)
       _dummy.updateMatrix()
       mesh.setMatrixAt(i, _dummy.matrix)

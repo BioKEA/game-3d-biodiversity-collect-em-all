@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { TILE_SIZE, TILE_BASE_HEIGHT, ELEVATION_SCALE } from './constants'
+import { TILE_BASE_HEIGHT, ELEVATION_SCALE, gridToWorldX, gridToWorldZ } from './constants'
 import { FIELD_GUIDE_ENTITY_COLORS } from '../artDirection'
 import type { MapTile } from '@/types/game'
 
@@ -14,13 +14,13 @@ interface Props {
 export default function VoxelPlayer({ x, y, map }: Props) {
   const groupRef = useRef<THREE.Group>(null)
   const targetPos = useRef(new THREE.Vector3())
-  const currentPos = useRef(new THREE.Vector3(x, 0, -y))
+  const currentPos = useRef(new THREE.Vector3(gridToWorldX(x), 0, gridToWorldZ(y)))
 
   // Calculate target position based on tile elevation
   const tile = map[y]?.[x]
   const elevation = tile?.elevation ?? 0
   const groundY = TILE_BASE_HEIGHT + elevation * ELEVATION_SCALE
-  targetPos.current.set(x * TILE_SIZE, groundY, -y * TILE_SIZE)
+  targetPos.current.set(gridToWorldX(x), groundY, gridToWorldZ(y))
 
   // Smooth movement interpolation
   useFrame((_state, delta) => {

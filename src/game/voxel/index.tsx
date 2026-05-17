@@ -2,7 +2,7 @@ import { useRef, useCallback, memo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { MapTile, TimeOfDay, WeatherType } from '@/types/game'
-import { TILE_SIZE, CAMERA_ZOOM, CAMERA_OFFSET, TILE_BASE_HEIGHT, ELEVATION_SCALE } from './constants'
+import { CAMERA_ZOOM, CAMERA_OFFSET, TILE_BASE_HEIGHT, ELEVATION_SCALE, gridToWorldX, gridToWorldZ } from './constants'
 import VoxelTerrain from './VoxelTerrain'
 import VoxelPlayer from './VoxelPlayer'
 import VoxelLandmarks from './VoxelLandmarks'
@@ -42,8 +42,8 @@ function CameraController({ playerX, playerY, map }: { playerX: number; playerY:
     const groundY = TILE_BASE_HEIGHT + elevation * ELEVATION_SCALE
 
     // Player world position
-    const px = playerX * TILE_SIZE
-    const pz = -playerY * TILE_SIZE
+    const px = gridToWorldX(playerX)
+    const pz = gridToWorldZ(playerY)
 
     // Crossy Road camera: orthographic, 35° elevation, 45° azimuth
     targetPos.current.set(px + CAMERA_OFFSET.x, groundY + CAMERA_OFFSET.y, pz + CAMERA_OFFSET.z)

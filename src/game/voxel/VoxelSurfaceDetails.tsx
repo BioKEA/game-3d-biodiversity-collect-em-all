@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import type { MapTile } from '@/types/game'
 import { FIELD_GUIDE_BIOME_COLORS } from '../artDirection'
-import { TILE_SIZE, TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS, seededRand } from './constants'
+import { TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS, gridToWorldX, gridToWorldZ, seededRand } from './constants'
 
 interface Props {
   map: MapTile[][]
@@ -33,8 +33,8 @@ function getSurfaceDetails(tile: MapTile): DetailInstance[] {
   const topY = (biome === 'water' || biome === 'kelp_forest')
     ? TILE_BASE_HEIGHT * 0.5
     : TILE_BASE_HEIGHT + tile.elevation * ELEVATION_SCALE
-  const wx = tile.x * TILE_SIZE
-  const wz = -tile.y * TILE_SIZE
+  const wx = gridToWorldX(tile.x)
+  const wz = gridToWorldZ(tile.y)
   const instances: DetailInstance[] = []
 
   if (biome === 'water' || biome === 'kelp_forest') {

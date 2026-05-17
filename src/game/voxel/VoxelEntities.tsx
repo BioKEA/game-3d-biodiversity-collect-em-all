@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { MapTile } from '@/types/game'
 import { FIELD_GUIDE_ENTITY_COLORS } from '../artDirection'
-import { TILE_SIZE, TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS, seededRand } from './constants'
+import { TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS, gridToWorldX, gridToWorldZ, seededRand } from './constants'
 
 interface RangerPosition {
   x: number
@@ -53,7 +53,7 @@ function CreatureMarkers({ map, playerX, playerY }: Omit<Props, 'rangers'>) {
       const elevation = tile.elevation ?? 0
       const groundY = TILE_BASE_HEIGHT + elevation * ELEVATION_SCALE
       const bob = Math.sin(t * 2 + seededRand(tile.x, tile.y) * 6.28) * 0.08
-      _dummy.position.set(tile.x * TILE_SIZE, groundY + 0.3 + bob, -tile.y * TILE_SIZE)
+      _dummy.position.set(gridToWorldX(tile.x), groundY + 0.3 + bob, gridToWorldZ(tile.y))
       const pulse = Math.sin(t * 3 + i) * 0.015
       _dummy.scale.set(0.12 + pulse, 0.18 + pulse, 0.12 + pulse)
       _dummy.updateMatrix()
@@ -95,7 +95,7 @@ function Rangers({ rangers = [], map }: { rangers: RangerPosition[]; map: MapTil
         return (
           <group
             key={i}
-            position={[ranger.x * TILE_SIZE, groundY, -ranger.y * TILE_SIZE]}
+            position={[gridToWorldX(ranger.x), groundY, gridToWorldZ(ranger.y)]}
           >
             {/* Body */}
             <mesh position={[0, s * 3.5, 0]}>

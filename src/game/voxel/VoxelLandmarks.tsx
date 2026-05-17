@@ -4,7 +4,7 @@ import { LANDMARKS } from '../landmarks'
 import { FIELD_GUIDE_ENTITY_COLORS } from '../artDirection'
 import PixelLandmarkIcon from '../PixelLandmarkIcon'
 import type { MapTile } from '@/types/game'
-import { TILE_SIZE, TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS } from './constants'
+import { TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS, gridToWorldX, gridToWorldZ } from './constants'
 
 interface Props {
   playerX: number
@@ -46,8 +46,8 @@ export default function VoxelLandmarks({ playerX, playerY, map }: Props) {
         const groundY = TILE_BASE_HEIGHT + elevation * ELEVATION_SCALE
         const buildingH = lm.height * 0.04
         const buildingW = lm.width * 0.06
-        const wx = lm.x * TILE_SIZE
-        const wz = -lm.y * TILE_SIZE
+        const wx = gridToWorldX(lm.x)
+        const wz = gridToWorldZ(lm.y)
         const labelRadius = PRIORITY_LABELS.has(lm.name) ? 13 : 8
         const showLabel = dx * dx + dy * dy <= labelRadius * labelRadius
 
