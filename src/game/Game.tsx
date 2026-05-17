@@ -40,6 +40,7 @@ import TeamScreen, { getHealAmount } from './TeamScreen'
 import TitleScreen from './TitleScreen'
 import StarterSelect from './StarterSelect'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelLandmarkIcon from './PixelLandmarkIcon'
 import GameHUD from './GameHUD'
 import Minimap from './Minimap'
 import FieldJournal from './FieldJournal'
@@ -2724,7 +2725,7 @@ export default function Game() {
                       title={unlocked ? `Travel to ${dest.name} — ${dest.description}` : `🔒 Visit this place first to unlock`}
                     >
                       <div className="flex items-start gap-2">
-                        <span className="text-base leading-none mt-0.5">{unlocked ? dest.emoji : '🔒'}</span>
+                        <PixelLandmarkIcon landmark={dest} size={24} undiscovered={!unlocked} title={unlocked ? dest.name : 'Locked destination'} />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-baseline justify-between gap-1">
                             <div className="text-[10px] text-white/80 font-medium truncate">{dest.name}</div>
@@ -2753,7 +2754,7 @@ export default function Game() {
           <div className="absolute top-32 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
             <div className="bg-black/70 backdrop-blur-md rounded-2xl px-8 py-6 border border-white/10 shadow-xl max-w-[560px]">
               <div className="flex items-center gap-4 mb-3">
-                <span className="text-3xl">{lm?.emoji}</span>
+                <PixelLandmarkIcon landmark={lm ?? { name: currentLandmark }} size={54} selected />
                 <h3 className="text-white font-bold text-xl">{currentLandmark}</h3>
               </div>
               <p className="text-white/50 text-lg leading-relaxed mb-4">{info.description}</p>

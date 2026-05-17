@@ -6,6 +6,7 @@ import { LANDMARKS, LANDMARK_INFO, LANDMARK_REGIONS } from './landmarks'
 import type { LandmarkRegion, LandmarkDef } from './landmarks'
 import FloatingPanel from './FloatingPanel'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelLandmarkIcon from './PixelLandmarkIcon'
 
 interface Props {
   journal: Record<string, JournalEntry>
@@ -363,7 +364,7 @@ function LandmarkGuideTab({ visitedLandmarks }: { visitedLandmarks: string[] }) 
           ← Back to {selectedRegion ?? 'regions'}
         </button>
         <div className="flex items-center gap-3">
-          <span className="text-3xl">{selectedLandmark.emoji ?? '📍'}</span>
+          <PixelLandmarkIcon landmark={selectedLandmark} size={48} selected={isFound} undiscovered={!isFound} />
           <div>
             <h3 className="text-sm font-bold text-white">{isFound ? selectedLandmark.name : '???'}</h3>
             <span className="text-[9px] px-1.5 py-0.5 rounded" style={{
@@ -426,7 +427,7 @@ function LandmarkGuideTab({ visitedLandmarks }: { visitedLandmarks: string[] }) 
                 className="w-full flex items-center gap-2 p-2 rounded-lg text-left transition-all hover:bg-white/5"
                 style={{ background: isFound ? 'rgba(255,255,255,0.03)' : 'transparent' }}
               >
-                <span className="text-lg w-7 text-center">{isFound ? (lm.emoji ?? '📍') : '❓'}</span>
+                <PixelLandmarkIcon landmark={lm} size={28} selected={isFound} undiscovered={!isFound} />
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] font-medium truncate" style={{ color: isFound ? '#e2e8f0' : 'rgba(255,255,255,0.25)' }}>
                     {isFound ? lm.name : '???'}

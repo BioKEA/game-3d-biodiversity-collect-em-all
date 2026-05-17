@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Html } from '@react-three/drei'
 import { LANDMARKS } from '../landmarks'
 import { FIELD_GUIDE_ENTITY_COLORS } from '../artDirection'
+import PixelLandmarkIcon from '../PixelLandmarkIcon'
 import type { MapTile } from '@/types/game'
 import { TILE_SIZE, TILE_BASE_HEIGHT, ELEVATION_SCALE, VIEW_RADIUS } from './constants'
 
@@ -92,7 +93,7 @@ export default function VoxelLandmarks({ playerX, playerY, map }: Props) {
                   fontFamily: 'system-ui',
                   border: '1px solid rgba(243, 236, 215, 0.16)',
                 }}>
-                  {lm.emoji && <span style={{ marginRight: 3 }}>{lm.emoji}</span>}
+                  <PixelLandmarkIcon landmark={lm} size={16} selected style={{ marginRight: 4, verticalAlign: -4 }} />
                   {lm.label}
                 </div>
               </Html>

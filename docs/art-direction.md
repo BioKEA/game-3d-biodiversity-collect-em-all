@@ -43,10 +43,11 @@ This lets future evolutions add visible traits without replacing every asset at 
 - `PixelCreatureSprite` is the procedural creature silhouette layer that replaces emoji inside creature tokens.
 - `creatureArt.ts` owns body-plan inference, palette resolution, evolution stage, and adaptation slots.
 - Larger battle poses should build on the same `creatureArt.ts` spec so small and large creature art evolve together.
+- `PixelLandmarkIcon` and `landmarkArt.ts` provide the matching modular landmark language for map labels, fast travel, and Field Journal discovery.
 
 ## Open Art Backlog
 
 - Add curated hand-authored specs for marquee species and starters.
-- Add landmark art specs for bridges, mountains, piers, towers, trees, missions, observatories, and desert features.
+- Add curated hand-authored landmark specs for marquee locations once the procedural landmark system has covered all surfaces.
 - Add map tile overlays for roads, BART/ferries, mountain ranges, rivers, and major coastlines.
 - Add larger battle-scale creature poses after the small token silhouette system is stable.
