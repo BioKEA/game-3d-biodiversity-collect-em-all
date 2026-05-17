@@ -3,11 +3,13 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { TILE_BASE_HEIGHT, ELEVATION_SCALE, gridToWorldX, gridToWorldZ } from './constants'
 import { FIELD_GUIDE_ENTITY_COLORS } from '../artDirection'
+import type { FacingDirection } from '../controls'
 import type { MapTile } from '@/types/game'
 
 interface Props {
   x: number
   y: number
+  facing?: FacingDirection
   map: MapTile[][]
 }
 
@@ -15,24 +17,21 @@ function shortestAngleDelta(from: number, to: number): number {
   return Math.atan2(Math.sin(to - from), Math.cos(to - from))
 }
 
-export default function VoxelPlayer({ x, y, map }: Props) {
+function yawForFacing(facing: FacingDirection): number {
+  const dx = facing === 'east' ? 1 : facing === 'west' ? -1 : 0
+  const dy = facing === 'south' ? 1 : facing === 'north' ? -1 : 0
+  return Math.atan2(gridToWorldX(dx), gridToWorldZ(dy))
+}
+
+export default function VoxelPlayer({ x, y, facing = 'north', map }: Props) {
   const groupRef = useRef<THREE.Group>(null)
   const targetPos = useRef(new THREE.Vector3())
   const currentPos = useRef(new THREE.Vector3(gridToWorldX(x), 0, gridToWorldZ(y)))
-  const previousGridPos = useRef({ x, y })
-  const targetYaw = useRef(0)
+  const targetYaw = useRef(yawForFacing(facing))
 
   useEffect(() => {
-    const previous = previousGridPos.current
-    if (previous.x === x && previous.y === y) return
-
-    const dx = gridToWorldX(x) - gridToWorldX(previous.x)
-    const dz = gridToWorldZ(y) - gridToWorldZ(previous.y)
-    if (dx !== 0 || dz !== 0) {
-      targetYaw.current = Math.atan2(dx, dz)
-    }
-    previousGridPos.current = { x, y }
-  }, [x, y])
+    targetYaw.current = yawForFacing(facing)
+  }, [facing])
 
   // Calculate target position based on tile elevation
   const tile = map[y]?.[x]

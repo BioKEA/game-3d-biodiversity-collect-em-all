@@ -6,6 +6,7 @@ import { getTimeLabel, getTimeSky, getWeatherInfo, getWeatherForecast } from './
 import { Music } from './sounds'
 import PixelCreatureToken from './PixelCreatureToken'
 import PixelIcon from './PixelIcon'
+import type { ControlMode } from './controls'
 
 interface Props {
   player: PlayerState
@@ -46,6 +47,8 @@ interface Props {
   showFastTravel?: boolean
   showHotkeys?: boolean
   onMove?: (dx: number, dy: number) => void
+  controlMode?: ControlMode
+  onToggleControlMode?: () => void
 }
 
 const BIOME_NAMES: Record<BiomeType, string> = {
@@ -395,6 +398,7 @@ export default function GameHUD({
   onOpenCatalog, onOpenTeam, onOpenJournal, onOpenTrade, onOpenBayDex, onOpenBreeding, onOpenQuestLog, onOpenCrafting, onOpenAchievements, onOpenHabitatMap, onOpenAdoption, onOpenLeaderboard, onOpenFusion, onOpenDiving, onOpenShop, onOpenDailyChallenges, onOpenArena, onOpenMoveTutor, onOpenMigrationCalendar, onOpenFieldNotes, onOpenTrophyRoom, dailyClaimable,
   achievementCount, totalAchievements: _totalAchievements, bayDexNewCount = 0, activeQuestCount = 0,
   onToggleFastTravel, onToggleHotkeys, showFastTravel: _showFastTravel, showHotkeys: _showHotkeys, onMove,
+  controlMode = 'map', onToggleControlMode,
 }: Props) {
   const isMobile = useIsMobile()
   // D-pad hold handling — press and hold to repeat movement
@@ -1023,6 +1027,30 @@ export default function GameHUD({
                 }}
               >
                 <PixelIcon icon="🗺️" size={isMobile ? 18 : 24} variant="travel" title="Fast travel" />
+              </button>
+            )}
+            {onToggleControlMode && (
+              <button
+                onClick={onToggleControlMode}
+                title={controlMode === 'map' ? 'Controls: map locked' : 'Controls: perspective locked'}
+                aria-label={controlMode === 'map' ? 'Controls: map locked' : 'Controls: perspective locked'}
+                className="w-6 h-6 sm:w-8 sm:h-8 rounded-md flex items-center justify-center active:scale-90 transition-all"
+                style={{
+                  background: controlMode === 'perspective'
+                    ? 'linear-gradient(135deg, rgba(34,211,238,0.2), rgba(14,165,233,0.1))'
+                    : 'rgba(0,0,0,0.5)',
+                  border: controlMode === 'perspective'
+                    ? '1px solid rgba(125,211,252,0.35)'
+                    : '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                <PixelIcon
+                  icon={controlMode === 'map' ? '🧭' : '👁️'}
+                  size={isMobile ? 18 : 24}
+                  variant={controlMode === 'map' ? 'travel' : 'water'}
+                  selected={controlMode === 'perspective'}
+                  title={controlMode === 'map' ? 'Controls: map locked' : 'Controls: perspective locked'}
+                />
               </button>
             )}
             {onToggleHotkeys && (

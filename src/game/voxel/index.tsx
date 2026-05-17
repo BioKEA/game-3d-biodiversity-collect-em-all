@@ -2,6 +2,7 @@ import { useRef, useCallback, memo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { MapTile, TimeOfDay, WeatherType } from '@/types/game'
+import type { FacingDirection } from '../controls'
 import { CAMERA_ZOOM, CAMERA_OFFSET, TILE_BASE_HEIGHT, ELEVATION_SCALE, gridToWorldX, gridToWorldZ } from './constants'
 import VoxelTerrain from './VoxelTerrain'
 import VoxelPlayer from './VoxelPlayer'
@@ -21,6 +22,7 @@ interface Props {
   map: MapTile[][]
   playerX: number
   playerY: number
+  playerFacing?: FacingDirection
   viewRadius?: number
   onTileClick?: (x: number, y: number) => void
   rangers?: RangerPosition[]
@@ -66,7 +68,7 @@ function CameraController({ playerX, playerY, map }: { playerX: number; playerY:
   return null
 }
 
-function Scene({ map, playerX, playerY, rangers, timeOfDay = 'day', weather = 'clear' }: Props) {
+function Scene({ map, playerX, playerY, playerFacing = 'north', rangers, timeOfDay = 'day', weather = 'clear' }: Props) {
   return (
     <>
       <CameraController playerX={playerX} playerY={playerY} map={map} />
@@ -75,7 +77,7 @@ function Scene({ map, playerX, playerY, rangers, timeOfDay = 'day', weather = 'c
       <VoxelSurfaceDetails map={map} playerX={playerX} playerY={playerY} />
       <VoxelDecorations map={map} playerX={playerX} playerY={playerY} />
       <VoxelLandmarks playerX={playerX} playerY={playerY} map={map} />
-      <VoxelPlayer x={playerX} y={playerY} map={map} />
+      <VoxelPlayer x={playerX} y={playerY} facing={playerFacing} map={map} />
       <VoxelEntities map={map} playerX={playerX} playerY={playerY} rangers={rangers} />
     </>
   )

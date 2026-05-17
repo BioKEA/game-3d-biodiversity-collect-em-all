@@ -167,4 +167,19 @@ describe('GameHUD', () => {
     expect(onMove).toHaveBeenCalledTimes(1)
     expect(onMove).toHaveBeenCalledWith(1, 0)
   })
+
+  it('offers a control-mode toggle in the HUD', () => {
+    const onToggleControlMode = vi.fn()
+    render(
+      <GameHUD
+        {...defaultProps}
+        controlMode="map"
+        onToggleControlMode={onToggleControlMode}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Controls: map locked' }))
+
+    expect(onToggleControlMode).toHaveBeenCalledTimes(1)
+  })
 })

@@ -45,6 +45,15 @@ import PixelIcon from './PixelIcon'
 import GameHUD from './GameHUD'
 import Minimap from './Minimap'
 import FieldJournal from './FieldJournal'
+import {
+  CONTROL_MODE_KEY,
+  facingFromDelta,
+  loadControlMode,
+  resolveControlMove,
+  toggleControlModeValue,
+  type ControlMode,
+  type FacingDirection,
+} from './controls'
 import RangerDialog from './RangerDialog'
 import TradeCenter from './TradeCenter'
 import EvolutionScreen from './EvolutionScreen'
@@ -160,11 +169,22 @@ export default function Game() {
   const [playerName, setPlayerName] = useState<string>(() => loadPlayerName())
   const [bayDexAck, setBayDexAck] = useState<string[]>([])
   const [rendererMode, setRendererMode] = useState<RendererMode>(() => loadRendererMode())
+  const [controlMode, setControlMode] = useState<ControlMode>(() => loadControlMode())
+  const [playerFacing, setPlayerFacingState] = useState<FacingDirection>('north')
+  const playerFacingRef = useRef<FacingDirection>('north')
 
   const toggleRendererMode = useCallback(() => {
     setRendererMode(prev => {
       const next = prev === 'canvas' ? 'voxel' : 'canvas'
       try { localStorage.setItem(RENDERER_MODE_KEY, next) } catch { /* ignore */ }
+      return next
+    })
+  }, [])
+
+  const toggleControlMode = useCallback(() => {
+    setControlMode(prev => {
+      const next = toggleControlModeValue(prev)
+      try { localStorage.setItem(CONTROL_MODE_KEY, next) } catch { /* ignore */ }
       return next
     })
   }, [])
@@ -289,6 +309,12 @@ export default function Game() {
   const lastMoveTime = useRef(0)
   const pendingEvolutionRef = useRef<typeof pendingEvolution>(null)
   const lastWeatherChange = useRef(gameState.gameMinutes)
+  const updatePlayerFacing = useCallback((dx: number, dy: number) => {
+    const nextFacing = facingFromDelta(dx, dy)
+    if (!nextFacing) return
+    playerFacingRef.current = nextFacing
+    setPlayerFacingState(nextFacing)
+  }, [])
 
   // Auto-save to active slot
   useEffect(() => {
@@ -401,6 +427,7 @@ export default function Game() {
           setBorderPeek({ state: tile.borderState, stepsLeft: MAX_BORDER_STEPS - 1, returnX: prev.player.x, returnY: prev.player.y })
           setBorderMessage(`Entering ${tile.borderState}... ${MAX_BORDER_STEPS - 1} steps before you turn back.`)
           setTimeout(() => setBorderMessage(null), 2500)
+          updatePlayerFacing(dx, dy)
           return { ...prev, player: { ...prev.player, x: newX, y: newY } }
         } else if (borderPeek.stepsLeft > 0) {
           // Still have steps left
@@ -409,6 +436,7 @@ export default function Game() {
             ? `Last step in ${borderPeek.state}! Turning back...`
             : `${borderPeek.stepsLeft - 1} step${borderPeek.stepsLeft - 1 !== 1 ? 's' : ''} left in ${borderPeek.state}.`)
           setTimeout(() => setBorderMessage(null), 2000)
+          updatePlayerFacing(dx, dy)
           return { ...prev, player: { ...prev.player, x: newX, y: newY } }
         } else {
           // Out of steps — teleport back to California
@@ -426,6 +454,7 @@ export default function Game() {
       }
 
       if (!tile.isWalkable) return prev
+      updatePlayerFacing(dx, dy)
 
       // Track step stats & daily challenges
       setDailyState(ds => updateChallengeProgress(ds, 'steps'))
@@ -650,7 +679,12 @@ export default function Game() {
 
       return newState
     })
-  }, [map, updateJournal, defeatedTrainers, triggerTutorial])
+  }, [map, updateJournal, defeatedTrainers, triggerTutorial, updatePlayerFacing])
+
+  const moveFromInput = useCallback((inputDx: number, inputDy: number) => {
+    const nextMove = resolveControlMove(inputDx, inputDy, playerFacingRef.current, controlMode)
+    movePlayer(nextMove.dx, nextMove.dy)
+  }, [controlMode, movePlayer])
 
   // When encounter starts, roll mood and encounter type
   useEffect(() => {
@@ -728,13 +762,13 @@ export default function Game() {
 
       switch (e.key) {
         case 'ArrowUp': case 'w': case 'W':
-          e.preventDefault(); movePlayer(0, -1); break
+          e.preventDefault(); moveFromInput(0, -1); break
         case 'ArrowDown': case 's': case 'S':
-          e.preventDefault(); movePlayer(0, 1); break
+          e.preventDefault(); moveFromInput(0, 1); break
         case 'ArrowLeft': case 'a': case 'A':
-          e.preventDefault(); movePlayer(-1, 0); break
+          e.preventDefault(); moveFromInput(-1, 0); break
         case 'ArrowRight': case 'd': case 'D':
-          e.preventDefault(); movePlayer(1, 0); break
+          e.preventDefault(); moveFromInput(1, 0); break
         case 'c': case 'C':
           setGameState(prev => ({ ...prev, screen: 'catalog' })); break
         case 'b': case 'B':
@@ -802,7 +836,7 @@ export default function Game() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [gameState.screen, gameState.battle.active, movePlayer, nearbyRangerId, nearbyBartStation, atSteamerLane, atBoardwalk, nearbyDock, boatAnimating, handleBoatTravel, toggleRendererMode])
+  }, [gameState.screen, gameState.battle.active, moveFromInput, nearbyRangerId, nearbyBartStation, atSteamerLane, atBoardwalk, nearbyDock, boatAnimating, handleBoatTravel, toggleRendererMode])
 
 
   // Hold-to-move for keyboard
@@ -812,10 +846,10 @@ export default function Game() {
     const keysDown = new Set<string>()
 
     const process = () => {
-      if (keysDown.has('ArrowUp') || keysDown.has('w')) movePlayer(0, -1)
-      else if (keysDown.has('ArrowDown') || keysDown.has('s')) movePlayer(0, 1)
-      else if (keysDown.has('ArrowLeft') || keysDown.has('a')) movePlayer(-1, 0)
-      else if (keysDown.has('ArrowRight') || keysDown.has('d')) movePlayer(1, 0)
+      if (keysDown.has('ArrowUp') || keysDown.has('w')) moveFromInput(0, -1)
+      else if (keysDown.has('ArrowDown') || keysDown.has('s')) moveFromInput(0, 1)
+      else if (keysDown.has('ArrowLeft') || keysDown.has('a')) moveFromInput(-1, 0)
+      else if (keysDown.has('ArrowRight') || keysDown.has('d')) moveFromInput(1, 0)
 
       if (keysDown.size > 0) moveTimeout.current = setTimeout(process, 130)
     }
@@ -845,7 +879,7 @@ export default function Game() {
       window.removeEventListener('keyup', handleUp)
       if (moveTimeout.current) clearTimeout(moveTimeout.current)
     }
-  }, [gameState.screen, gameState.battle.active, movePlayer])
+  }, [gameState.screen, gameState.battle.active, moveFromInput])
 
   const handleBattleWin = useCallback((xpGained: number) => {
     SFX.victory()
@@ -2057,6 +2091,7 @@ export default function Game() {
           map={memoizedMap}
           playerX={gameState.player.x}
           playerY={gameState.player.y}
+          playerFacing={playerFacing}
           rangers={rangerPositions}
           timeOfDay={gameState.timeOfDay}
           weather={gameState.weather}
@@ -2151,7 +2186,9 @@ export default function Game() {
         }}
         onOpenBreeding={() => setGameState(prev => ({ ...prev, screen: 'breeding' }))}
         onOpenQuestLog={() => setGameState(prev => ({ ...prev, screen: 'questlog' }))}
-        onMove={movePlayer}
+        onMove={moveFromInput}
+        controlMode={controlMode}
+        onToggleControlMode={toggleControlMode}
         onOpenCrafting={() => setGameState(prev => ({ ...prev, screen: 'crafting' }))}
         onOpenAchievements={() => setGameState(prev => ({ ...prev, screen: 'achievements' }))}
         onOpenHabitatMap={() => setGameState(prev => ({ ...prev, screen: 'habitat_map' }))}
