@@ -2,6 +2,11 @@ import { useState, useMemo } from 'react'
 import type { CapturedCreature } from '@/types/game'
 import { ALL_CREATURES } from './creatures'
 import { getEvolutionTarget, getPreEvolution } from './evolutions'
+import {
+  compareCreatureArtEvolution,
+  getCreatureArtProfile,
+  type ActiveCreatureAdaptation,
+} from './creatureArt'
 import FloatingPanel from './FloatingPanel'
 import TypeChart from './TypeChart'
 import CreatureCard from './CreatureCard'
@@ -46,6 +51,30 @@ const BIOME_ICONS: Record<string, string> = {
 
 const TIME_ICONS: Record<string, string> = {
   dawn: '🌅', day: '☀️', dusk: '🌇', night: '🌙',
+}
+
+const ADAPTATION_COLORS: Record<ActiveCreatureAdaptation['intensityLabel'], string> = {
+  subtle: '#67e8f9',
+  strong: '#c084fc',
+  major: '#fbbf24',
+}
+
+function MiniAdaptationChip({ adaptation }: { adaptation: ActiveCreatureAdaptation }) {
+  const color = ADAPTATION_COLORS[adaptation.intensityLabel]
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[8px] font-semibold"
+      style={{
+        background: `${color}12`,
+        border: `1px solid ${color}2f`,
+        color,
+      }}
+      title={`${adaptation.label}: ${Math.round(adaptation.intensity * 100)}% intensity`}
+    >
+      <span className="h-1.5 w-1.5 rounded-sm" style={{ background: color, boxShadow: `0 0 5px ${color}66` }} />
+      {adaptation.label}
+    </span>
+  )
 }
 
 // IUCN-style conservation status display
@@ -198,10 +227,11 @@ function CreatureGrid({ creatures, catalogSeen, catalogCaptured, selectedId, onS
             {/* Evolution marker */}
             {canEvolve && (
               <span
-                className="absolute bottom-2.5 left-0.5 text-[9px] leading-none"
-                style={{ filter: 'drop-shadow(0 0 3px rgba(192,132,252,0.8))' }}
+                className="absolute bottom-2 left-0.5 leading-none"
                 title="Can evolve"
-              >✨</span>
+              >
+                <PixelIcon icon="✨" size={14} variant="mystic" selected title="Can evolve" />
+              </span>
             )}
             {/* Sprite */}
             <div className="mt-1" style={{ filter: seen ? 'none' : 'grayscale(1) brightness(0.3)' }}>
@@ -292,14 +322,17 @@ function CreatureList({ creatures, catalogSeen, catalogCaptured, selectedId, onS
                 )}
                 {seen && getEvolutionTarget(creature.id) && (
                   <span
-                    className="text-[8px] px-1.5 py-px rounded-full border"
+                    className="inline-flex items-center gap-1 text-[8px] px-1.5 py-px rounded-full border"
                     style={{
                       background: 'rgba(192,132,252,0.1)',
                       color: '#c084fc',
                       borderColor: 'rgba(192,132,252,0.3)',
                     }}
                     title="Can evolve"
-                  >✨ evolves</span>
+                  >
+                    <PixelIcon icon="✨" size={12} variant="mystic" selected />
+                    evolves
+                  </span>
                 )}
               </div>
             </div>
@@ -323,6 +356,11 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
   const preEvo = getPreEvolution(creature.id)
   const evoTargetCreature = evoTarget ? ALL_CREATURES.find(c => c.id === evoTarget.toId) : null
   const preEvoCreature = preEvo ? ALL_CREATURES.find(c => c.id === preEvo.fromId) : null
+  const artProfile = getCreatureArtProfile(creature)
+  const evoArtPreview = evoTargetCreature ? compareCreatureArtEvolution(creature, evoTargetCreature) : null
+  const nextFormAdaptations = evoArtPreview
+    ? [...evoArtPreview.gainedAdaptations, ...evoArtPreview.intensifiedAdaptations].slice(0, 4)
+    : []
 
   if (!seen) {
     return (
@@ -378,8 +416,13 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
                     background: `${catchColor}12`,
                     color: catchColor,
                     border: `1px solid ${catchColor}30`,
-                  }}
-                >🎯 {pct}%</span>
+                }}
+              >
+                <span className="inline-flex items-center gap-1">
+                  <PixelIcon icon="🎯" size={13} variant="danger" selected />
+                  {pct}%
+                </span>
+              </span>
               )
             })()}
             {creature.conservationStatus && CONSERVATION_INFO[creature.conservationStatus] && (
@@ -397,7 +440,10 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
             )}
             {creature.isEndemic && (
               <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20" title="Found nowhere else on Earth">
-                ⭐ Endemic
+                <span className="inline-flex items-center gap-1">
+                  <PixelIcon icon="⭐" size={13} variant="gold" selected />
+                  Endemic
+                </span>
               </span>
             )}
             {creature.isNative === false && !creature.isFantasy && (
@@ -408,7 +454,12 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
             {creature.isFantasy && (
               <span className="text-[9px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">fantasy</span>
             )}
-            {caught && <span className="text-[9px] text-emerald-400 font-medium">✓ Caught</span>}
+            {caught && (
+              <span className="inline-flex items-center gap-1 text-[9px] text-emerald-400 font-medium">
+                <PixelIcon icon="✓" size={12} variant="nature" selected />
+                Caught
+              </span>
+            )}
           </div>
           {seen && (
             <button
@@ -419,7 +470,12 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
                 color: '#c084fc',
                 border: '1px solid rgba(192,132,252,0.25)',
               }}
-            >🃏 View Card</button>
+            >
+              <span className="inline-flex items-center gap-1">
+                <PixelIcon icon="📖" size={13} variant="mystic" selected />
+                View Card
+              </span>
+            </button>
           )}
         </div>
       </div>
@@ -436,10 +492,12 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
             border: `1px solid rgba(192,132,252,${ready ? 0.4 : 0.18})`,
             boxShadow: ready ? '0 0 16px rgba(192,132,252,0.2)' : 'none',
           }}>
-            <span className="text-2xl shrink-0" style={{
+            <span className="shrink-0" style={{
               filter: ready ? 'drop-shadow(0 0 6px rgba(192,132,252,0.8))' : 'none',
               animation: ready ? 'pulse 2s ease-in-out infinite' : 'none',
-            }}>✨</span>
+            }}>
+              <PixelIcon icon="✨" size={34} variant="mystic" selected={ready} />
+            </span>
             <div className="flex-1 min-w-0">
               <p className="text-purple-300 text-[10px] font-bold uppercase tracking-wider">
                 {ready ? 'Ready to Evolve!' : 'Evolve Next'}
@@ -463,6 +521,46 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
           </div>
         )
       })()}
+
+      {/* Adaptive anatomy */}
+      <div className="p-2.5 rounded-lg" style={{
+        background: 'linear-gradient(135deg, rgba(34,211,238,0.045), rgba(192,132,252,0.045))',
+        border: '1px solid rgba(34,211,238,0.12)',
+      }}>
+        <div className="flex items-start justify-between gap-2 mb-1.5">
+          <div>
+            <h4 className="text-cyan-300/70 text-[9px] font-semibold uppercase tracking-wider">Adaptive Anatomy</h4>
+            <p className="text-[9px] text-white/38 mt-0.5">{artProfile.bodyPlanLabel} · {artProfile.stageLabel}</p>
+          </div>
+          <span className="rounded-md px-1.5 py-0.5 text-[8px] font-mono text-white/45" style={{ background: 'rgba(0,0,0,0.24)' }}>
+            {artProfile.scaleLabel}
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-1">
+          {artProfile.dominantAdaptations.length > 0
+            ? artProfile.dominantAdaptations.map(adaptation => <MiniAdaptationChip key={adaptation.key} adaptation={adaptation} />)
+            : <span className="text-[8px] text-white/28">Clean base silhouette</span>}
+        </div>
+        {evoTargetCreature && evoArtPreview && (
+          <div className="mt-2 rounded-md p-2" style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.055)' }}>
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-1.5">
+                <PixelCreatureToken creature={evoTargetCreature} size={24} />
+                <div className="min-w-0">
+                  <p className="truncate text-[9px] font-semibold text-purple-200">Next: {evoTargetCreature.name}</p>
+                  <p className="text-[7px] uppercase tracking-wider text-purple-300/45">{evoArtPreview.silhouetteShift} silhouette shift</p>
+                </div>
+              </div>
+              <span className="text-[8px] text-purple-300/60">Lv.{evoTarget!.level}</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {nextFormAdaptations.length > 0
+                ? nextFormAdaptations.map(adaptation => <MiniAdaptationChip key={adaptation.key} adaptation={adaptation} />)
+                : <span className="text-[8px] text-white/28">Refines the same core silhouette</span>}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Conservation status detail */}
       {caught && creature.conservationStatus && CONSERVATION_INFO[creature.conservationStatus] && (
@@ -773,14 +871,14 @@ export default function BayDex({ catalogSeen, catalogCaptured, onClose, defaultS
         {/* Filters */}
         <div className="flex gap-1 flex-1 flex-wrap">
           {([
-            ['all', 'All', null],
-            ['caught', 'Caught', null],
-            ['seen', 'Seen', null],
-            ['unknown', '???', null],
-            ['evolves', '✨ Evolves', 'purple'],
-            ['team', '👥 My Team', 'amber'],
-            ['border', '🗺️ Border', 'red'],
-          ] as const).map(([key, label, accent]) => {
+            ['all', 'All', null, null],
+            ['caught', 'Caught', null, '✓'],
+            ['seen', 'Seen', null, '👁️'],
+            ['unknown', '???', null, null],
+            ['evolves', 'Evolves', 'purple', '✨'],
+            ['team', 'My Team', 'amber', '🤝'],
+            ['border', 'Border', 'red', '🗺️'],
+          ] as const).map(([key, label, accent, icon]) => {
             const active = filter === key
             const accentColor = accent === 'purple' ? '192,132,252' : accent === 'amber' ? '251,191,36' : accent === 'red' ? '239,68,68' : '34,211,238'
             const textColor = accent === 'purple' ? '#c084fc' : accent === 'amber' ? '#fbbf24' : accent === 'red' ? '#ef4444' : '#22d3ee'
@@ -796,7 +894,10 @@ export default function BayDex({ catalogSeen, catalogCaptured, onClose, defaultS
                   border: `1px solid ${active ? `rgba(${accentColor},0.25)` : 'rgba(255,255,255,0.06)'}`,
                 }}
               >
-                {label}
+                <span className="inline-flex items-center gap-1">
+                  {icon && <PixelIcon icon={icon} size={12} variant={accent === 'purple' ? 'mystic' : accent === 'amber' ? 'gold' : accent === 'red' ? 'danger' : 'neutral'} selected={active} />}
+                  {label}
+                </span>
               </button>
             )
           })}
@@ -817,7 +918,7 @@ export default function BayDex({ catalogSeen, catalogCaptured, onClose, defaultS
           <option value="type">Type</option>
           <option value="rarity">Rarity</option>
           <option value="recent">Status</option>
-          <option value="evolve">✨ Evolve soon</option>
+          <option value="evolve">Evolve soon</option>
         </select>
 
         {/* View toggle */}
@@ -860,7 +961,12 @@ export default function BayDex({ catalogSeen, catalogCaptured, onClose, defaultS
             />
             <div className="flex-1 min-w-0">
               <div className="text-[11px] font-semibold" style={{ color: allCaught ? '#4ade80' : '#ef4444' }}>
-                {allCaught ? '🏆 Border Species Complete!' : `Border Species: ${caughtBorder}/${total}`}
+                {allCaught ? (
+                  <span className="inline-flex items-center gap-1">
+                    <PixelIcon icon="🏆" size={16} variant="gold" selected />
+                    Border Species Complete!
+                  </span>
+                ) : `Border Species: ${caughtBorder}/${total}`}
               </div>
               <div className="text-[9px] text-white/30 mt-0.5">
                 {seenBorder} seen · Rare creatures found near California&apos;s borders with Oregon, Nevada, Arizona &amp; Mexico

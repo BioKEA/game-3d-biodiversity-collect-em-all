@@ -12,7 +12,11 @@ import {
   getCaliforniaRegionForTile,
   getRegionCompletion,
 } from './californiaRegions'
-import { getCreatureArtSpec } from './creatureArt'
+import {
+  getActiveCreatureAdaptations,
+  getCreatureArtProfile,
+  type ActiveCreatureAdaptation,
+} from './creatureArt'
 import { getLandmarkAt, getLandmarkRegion, LANDMARKS } from './landmarks'
 import { WILDCAL_OVERHAUL_TRACKS } from './overhaulRoadmap'
 
@@ -108,14 +112,22 @@ export default function CartographerPanel({
   }, [currentBiome, currentSubregion])
 
   const creatureAdaptations = useMemo(() => {
-    const slots = new Set<string>()
+    const slots = new Map<string, ActiveCreatureAdaptation>()
     for (const creature of localCreatures.slice(0, 4)) {
-      const spec = getCreatureArtSpec(creature)
-      for (const [name, value] of Object.entries(spec.adaptations)) {
-        if (value >= 0.45) slots.add(name)
+      for (const adaptation of getActiveCreatureAdaptations(creature, 0.45)) {
+        const existing = slots.get(adaptation.key)
+        if (!existing || existing.intensity < adaptation.intensity) {
+          slots.set(adaptation.key, adaptation)
+        }
       }
     }
-    return [...slots].slice(0, 6)
+    return [...slots.values()]
+      .sort((a, b) => b.intensity - a.intensity || a.label.localeCompare(b.label))
+      .slice(0, 6)
+  }, [localCreatures])
+  const creatureBodyPlans = useMemo(() => {
+    return [...new Set(localCreatures.slice(0, 6).map(creature => getCreatureArtProfile(creature).bodyPlanLabel))]
+      .slice(0, 3)
   }, [localCreatures])
 
   const explorableTiles = useMemo(() => {
@@ -153,7 +165,9 @@ export default function CartographerPanel({
     },
     'creature-art': {
       signal: `${localCreatures.length} local`,
-      detail: creatureAdaptations.length > 0 ? creatureAdaptations.join(', ') : 'base silhouettes',
+      detail: creatureAdaptations.length > 0
+        ? creatureAdaptations.map(adaptation => adaptation.label).join(', ')
+        : 'base silhouettes',
     },
     'encounter-presentation': {
       signal: weather,
@@ -335,6 +349,37 @@ export default function CartographerPanel({
                   />
                 ))}
               </div>
+              {(creatureAdaptations.length > 0 || creatureBodyPlans.length > 0) && (
+                <div className="mt-2 space-y-1.5">
+                  {creatureBodyPlans.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {creatureBodyPlans.map(bodyPlan => (
+                        <span
+                          key={bodyPlan}
+                          className="rounded-md px-1.5 py-0.5 text-[8px] font-semibold text-cyan-200/75"
+                          style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.16)' }}
+                        >
+                          {bodyPlan}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {creatureAdaptations.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {creatureAdaptations.map(adaptation => (
+                        <span
+                          key={adaptation.key}
+                          className="rounded-md px-1.5 py-0.5 text-[8px] font-semibold text-purple-200/75"
+                          style={{ background: 'rgba(192,132,252,0.08)', border: '1px solid rgba(192,132,252,0.16)' }}
+                          title={`${adaptation.label}: ${Math.round(adaptation.intensity * 100)}% intensity`}
+                        >
+                          {adaptation.label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

@@ -56,6 +56,31 @@ export interface CreatureArtSpec {
   scale: number
 }
 
+export type CreatureAdaptationKey = keyof CreatureAdaptations
+
+export interface ActiveCreatureAdaptation {
+  key: CreatureAdaptationKey
+  label: string
+  intensity: number
+  intensityLabel: 'subtle' | 'strong' | 'major'
+}
+
+export interface CreatureArtProfile {
+  bodyPlanLabel: string
+  stageLabel: string
+  scaleLabel: string
+  activeAdaptations: ActiveCreatureAdaptation[]
+  dominantAdaptations: ActiveCreatureAdaptation[]
+}
+
+export interface CreatureArtEvolutionPreview {
+  fromProfile: CreatureArtProfile
+  toProfile: CreatureArtProfile
+  gainedAdaptations: ActiveCreatureAdaptation[]
+  intensifiedAdaptations: ActiveCreatureAdaptation[]
+  silhouetteShift: 'steady' | 'noticeable' | 'dramatic'
+}
+
 const ZERO_ADAPTATIONS: CreatureAdaptations = {
   wings: 0,
   fins: 0,
@@ -70,6 +95,39 @@ const ZERO_ADAPTATIONS: CreatureAdaptations = {
   spots: 0,
   stripes: 0,
   crest: 0,
+}
+
+export const CREATURE_BODY_PLAN_LABELS: Record<CreatureBodyPlan, string> = {
+  quadruped: 'Ground runner',
+  avian: 'Flight form',
+  fish: 'Aquatic form',
+  serpentine: 'Serpentine form',
+  amphibian: 'Amphibious form',
+  insect: 'Winged invertebrate',
+  plant: 'Rooted botanical',
+  spirit: 'Mystic apparition',
+}
+
+export const CREATURE_ADAPTATION_LABELS: Record<CreatureAdaptationKey, string> = {
+  wings: 'Wings',
+  fins: 'Fins',
+  legs: 'Legs',
+  tail: 'Tail',
+  horns: 'Horns',
+  spikes: 'Spines',
+  shell: 'Shell',
+  antennae: 'Antennae',
+  bloom: 'Bloom',
+  glow: 'Glow',
+  spots: 'Pattern spots',
+  stripes: 'Stripe bands',
+  crest: 'Crest',
+}
+
+const CREATURE_STAGE_LABELS: Record<CreatureArtSpec['stage'], string> = {
+  0: 'Base silhouette',
+  1: 'Adapted silhouette',
+  2: 'Apex silhouette',
 }
 
 function shade(hex: string, amount: number): string {
@@ -158,6 +216,77 @@ function inferAdaptations(creature: CreatureArtInput, bodyPlan: CreatureBodyPlan
   if (/(jay|quail|heron|egret|condor|lion|phantom|guardian|boss|alpha)/.test(label) || creature.isAlpha) a.crest = clamp01(0.35 + stageBoost)
 
   return a
+}
+
+function isCreatureArtSpec(value: CreatureArtInput | CreatureArtSpec): value is CreatureArtSpec {
+  return 'adaptations' in value && 'bodyPlan' in value && 'stage' in value
+}
+
+function toSpec(value: CreatureArtInput | CreatureArtSpec): CreatureArtSpec {
+  return isCreatureArtSpec(value) ? value : getCreatureArtSpec(value)
+}
+
+function getIntensityLabel(value: number): ActiveCreatureAdaptation['intensityLabel'] {
+  if (value >= 0.85) return 'major'
+  if (value >= 0.6) return 'strong'
+  return 'subtle'
+}
+
+export function getActiveCreatureAdaptations(
+  creatureOrSpec: CreatureArtInput | CreatureArtSpec,
+  threshold = 0.35,
+): ActiveCreatureAdaptation[] {
+  const spec = toSpec(creatureOrSpec)
+  return (Object.entries(spec.adaptations) as [CreatureAdaptationKey, number][])
+    .filter(([, intensity]) => intensity >= threshold)
+    .map(([key, intensity]) => ({
+      key,
+      label: CREATURE_ADAPTATION_LABELS[key],
+      intensity,
+      intensityLabel: getIntensityLabel(intensity),
+    }))
+    .sort((a, b) => b.intensity - a.intensity || a.label.localeCompare(b.label))
+}
+
+export function getCreatureArtProfile(creatureOrSpec: CreatureArtInput | CreatureArtSpec): CreatureArtProfile {
+  const spec = toSpec(creatureOrSpec)
+  const activeAdaptations = getActiveCreatureAdaptations(spec)
+  return {
+    bodyPlanLabel: CREATURE_BODY_PLAN_LABELS[spec.bodyPlan],
+    stageLabel: CREATURE_STAGE_LABELS[spec.stage],
+    scaleLabel: `${Math.round(spec.scale * 100)}%`,
+    activeAdaptations,
+    dominantAdaptations: activeAdaptations.slice(0, 4),
+  }
+}
+
+export function compareCreatureArtEvolution(
+  from: CreatureArtInput | CreatureArtSpec,
+  to: CreatureArtInput | CreatureArtSpec,
+): CreatureArtEvolutionPreview {
+  const fromSpec = toSpec(from)
+  const toSpecResult = toSpec(to)
+  const fromProfile = getCreatureArtProfile(fromSpec)
+  const toProfile = getCreatureArtProfile(toSpecResult)
+
+  const gainedAdaptations = getActiveCreatureAdaptations(toSpecResult)
+    .filter(adaptation => fromSpec.adaptations[adaptation.key] < 0.35)
+  const intensifiedAdaptations = getActiveCreatureAdaptations(toSpecResult, 0.2)
+    .filter(adaptation => {
+      const fromIntensity = fromSpec.adaptations[adaptation.key]
+      return fromIntensity >= 0.35 && adaptation.intensity - fromIntensity >= 0.2
+    })
+    .slice(0, 4)
+  const rawShift = Math.abs(toSpecResult.scale - fromSpec.scale) + (toSpecResult.stage - fromSpec.stage) * 0.18
+  const silhouetteShift = rawShift >= 0.38 ? 'dramatic' : rawShift >= 0.18 ? 'noticeable' : 'steady'
+
+  return {
+    fromProfile,
+    toProfile,
+    gainedAdaptations,
+    intensifiedAdaptations,
+    silhouetteShift,
+  }
 }
 
 export function getCreatureArtSpec(creature: CreatureArtInput): CreatureArtSpec {

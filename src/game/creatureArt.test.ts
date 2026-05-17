@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { ALL_CREATURES } from './creatures'
-import { getCreatureArtSpec } from './creatureArt'
+import {
+  compareCreatureArtEvolution,
+  getActiveCreatureAdaptations,
+  getCreatureArtProfile,
+  getCreatureArtSpec,
+} from './creatureArt'
 
 describe('creature art specs', () => {
   it('resolves every creature to a custom pixel-art body plan', () => {
@@ -17,5 +22,31 @@ describe('creature art specs', () => {
   it('marks known evolved species as later-stage silhouettes', () => {
     expect(getCreatureArtSpec({ id: 'pacific-tree-frog', name: 'Pacific Tree Frog', type: 'amphibian' }).stage).toBe(0)
     expect(getCreatureArtSpec({ id: 'california-newt', name: 'California Newt', type: 'amphibian' }).stage).toBeGreaterThan(0)
+  })
+
+  it('summarizes anatomy with readable labels for guide surfaces', () => {
+    const frog = ALL_CREATURES.find(creature => creature.id === 'pacific-tree-frog')
+    expect(frog).toBeTruthy()
+    const profile = getCreatureArtProfile(frog!)
+
+    expect(profile.bodyPlanLabel).toContain('Amphibious')
+    expect(profile.stageLabel).toContain('Base')
+    expect(profile.dominantAdaptations.map(adaptation => adaptation.label)).toContain('Legs')
+  })
+
+  it('previews evolution silhouette changes without losing adaptation metadata', () => {
+    const from = ALL_CREATURES.find(creature => creature.id === 'pacific-tree-frog')
+    const to = ALL_CREATURES.find(creature => creature.id === 'california-newt')
+    expect(from).toBeTruthy()
+    expect(to).toBeTruthy()
+
+    const preview = compareCreatureArtEvolution(from!, to!)
+    expect(preview.toProfile.stageLabel).not.toContain('Base')
+    expect(preview.silhouetteShift).not.toBe('steady')
+    expect([
+      ...preview.gainedAdaptations,
+      ...preview.intensifiedAdaptations,
+      ...getActiveCreatureAdaptations(to!),
+    ].length).toBeGreaterThan(0)
   })
 })

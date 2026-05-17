@@ -1,6 +1,11 @@
 import type { Creature } from '@/types/game'
 import { getEvolutionTarget, getPreEvolution } from './evolutions'
 import { ALL_CREATURES } from './creatures'
+import {
+  compareCreatureArtEvolution,
+  getCreatureArtProfile,
+  type ActiveCreatureAdaptation,
+} from './creatureArt'
 import PixelCreatureToken from './PixelCreatureToken'
 import PixelGlyph from './PixelGlyph'
 
@@ -53,6 +58,30 @@ const CONSERVATION_LABELS: Record<string, { label: string; color: string }> = {
   CR: { label: 'Critically Endangered', color: '#ef4444' },
 }
 
+const ADAPTATION_COLORS: Record<ActiveCreatureAdaptation['intensityLabel'], string> = {
+  subtle: '#67e8f9',
+  strong: '#c084fc',
+  major: '#fbbf24',
+}
+
+function AdaptationChip({ adaptation }: { adaptation: ActiveCreatureAdaptation }) {
+  const color = ADAPTATION_COLORS[adaptation.intensityLabel]
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[8px] font-semibold"
+      style={{
+        background: `${color}12`,
+        border: `1px solid ${color}2f`,
+        color,
+      }}
+      title={`${adaptation.label}: ${Math.round(adaptation.intensity * 100)}% intensity`}
+    >
+      <span className="h-1.5 w-1.5 rounded-sm" style={{ background: color, boxShadow: `0 0 5px ${color}66` }} />
+      {adaptation.label}
+    </span>
+  )
+}
+
 function StatBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   const pct = Math.min(100, (value / max) * 100)
   return (
@@ -78,6 +107,11 @@ export default function CreatureCard({ creature, caught, onClose }: Props) {
   const preEvoCreature = preEvo ? ALL_CREATURES.find(c => c.id === preEvo.fromId) : null
   const isLegendary = creature.rarity === 'legendary'
   const isRare = creature.rarity === 'rare' || isLegendary
+  const artProfile = getCreatureArtProfile(creature)
+  const evoArtPreview = evoTargetCreature ? compareCreatureArtEvolution(creature, evoTargetCreature) : null
+  const nextFormAdaptations = evoArtPreview
+    ? [...evoArtPreview.gainedAdaptations, ...evoArtPreview.intensifiedAdaptations].slice(0, 4)
+    : []
 
   const totalStats = creature.stats.maxHp + creature.stats.attack + creature.stats.defense + creature.stats.speed
 
@@ -180,15 +214,62 @@ export default function CreatureCard({ creature, caught, onClose }: Props) {
               </div>
             )}
             {creature.isEndemic && (
-              <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded-full text-[7px] font-bold"
+              <div className="absolute top-2 left-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[7px] font-bold"
                 style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.25)' }}>
-                ⭐ Endemic
+                <PixelGlyph
+                  source="⭐"
+                  size={8}
+                  palette={{ primary: '#f59e0b', accent: '#fde68a', dark: '#78350f', light: '#fff7ad' }}
+                />
+                Endemic
               </div>
             )}
           </div>
 
           {/* Description */}
           <p className="text-white/50 text-[10px] leading-relaxed mb-3">{creature.description}</p>
+
+          {/* Adaptive anatomy */}
+          <div className="rounded-lg p-3 mb-3" style={{
+            background: 'linear-gradient(135deg, rgba(34,211,238,0.045), rgba(192,132,252,0.045))',
+            border: '1px solid rgba(34,211,238,0.12)',
+          }}>
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div>
+                <h3 className="text-cyan-300/70 text-[9px] font-bold uppercase tracking-wider">Adaptive Anatomy</h3>
+                <p className="text-[9px] text-white/35 mt-0.5">{artProfile.bodyPlanLabel} · {artProfile.stageLabel}</p>
+              </div>
+              <span className="rounded-md px-1.5 py-0.5 text-[8px] font-mono text-white/45" style={{ background: 'rgba(0,0,0,0.24)' }}>
+                scale {artProfile.scaleLabel}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {artProfile.dominantAdaptations.length > 0
+                ? artProfile.dominantAdaptations.map(adaptation => <AdaptationChip key={adaptation.key} adaptation={adaptation} />)
+                : <span className="text-[8px] text-white/28">Clean base silhouette</span>}
+            </div>
+            {evoTargetCreature && evoArtPreview && (
+              <div className="mt-2 rounded-md p-2" style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.055)' }}>
+                <div className="mb-1.5 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <PixelCreatureToken creature={evoTargetCreature} size={26} />
+                    <div className="min-w-0">
+                      <p className="truncate text-[9px] font-bold text-purple-200">Next: {evoTargetCreature.name}</p>
+                      <p className="text-[7px] uppercase tracking-wider text-purple-300/45">
+                        {evoArtPreview.silhouetteShift} shift
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[8px] text-purple-300/60">Lv.{evoTarget!.level}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {nextFormAdaptations.length > 0
+                    ? nextFormAdaptations.map(adaptation => <AdaptationChip key={adaptation.key} adaptation={adaptation} />)
+                    : <span className="text-[8px] text-white/28">Refines the same core silhouette</span>}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Stats */}
           {caught && (
