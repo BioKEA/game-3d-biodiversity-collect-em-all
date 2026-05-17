@@ -8,8 +8,8 @@ export const TILE_BASE_HEIGHT = FIELD_GUIDE_PIXEL_BOX_STYLE.tileBaseHeight
 export const ELEVATION_SCALE = FIELD_GUIDE_PIXEL_BOX_STYLE.elevationScale
 export const VIEW_RADIUS = FIELD_GUIDE_PIXEL_BOX_STYLE.viewRadius
 
-// Camera offset from player (Crossy Road style: 35° elevation, 45° azimuth)
-export const CAMERA_OFFSET = new THREE.Vector3(12, 12, 12)
+// Camera sits south of the north-facing player so forward/north reads upward.
+export const CAMERA_OFFSET = new THREE.Vector3(12, 12, -12)
 export const CAMERA_ZOOM = FIELD_GUIDE_PIXEL_BOX_STYLE.cameraZoom
 
 // Biome colors mapped to Three.js Color objects
