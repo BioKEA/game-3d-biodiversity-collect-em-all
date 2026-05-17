@@ -31,6 +31,23 @@ describe('California map shape', () => {
     expect(map[268][60].isWalkable).toBe(true)
   })
 
+  it('extends North Bay water inland through Suisun and the Sacramento Delta', () => {
+    expect(map[199][58].biome).toBe('water')
+    expect(map[199][58].subregion).toBe('San Pablo Bay')
+    expect(map[191][78].biome).toBe('water')
+    expect(map[191][78].subregion).toBe('Suisun Bay')
+    expect(map[150][80].biome).toBe('water')
+    expect(map[150][80].subregion).toBe('Sacramento River')
+    expect(map[178][82].biome).toBe('marsh')
+  })
+
+  it('keeps Sacramento and Stockton playable beside the delta waterways', () => {
+    expect(map[140][82].biome).toBe('urban')
+    expect(map[140][82].isWalkable).toBe(true)
+    expect(map[170][88].biome).toBe('urban')
+    expect(map[170][88].isWalkable).toBe(true)
+  })
+
   it('marks the southern edge as Mexico while leaving San Diego inside California', () => {
     for (const x of [145, 160, 176, 190]) {
       expect(map[491][x].borderState).toBeUndefined()

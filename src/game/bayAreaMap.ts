@@ -126,6 +126,17 @@ function inEllipse(x: number, y: number, cx: number, cy: number, rx: number, ry:
   return dx * dx + dy * dy < 1
 }
 
+function distanceToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
+  const vx = x2 - x1
+  const vy = y2 - y1
+  const lenSq = vx * vx + vy * vy
+  if (lenSq === 0) return Math.hypot(px - x1, py - y1)
+  const t = clamp(((px - x1) * vx + (py - y1) * vy) / lenSq, 0, 1)
+  const sx = x1 + t * vx
+  const sy = y1 + t * vy
+  return Math.hypot(px - sx, py - sy)
+}
+
 function hash(x: number, y: number): number {
   const h = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453
   return h - Math.floor(h)
@@ -294,6 +305,64 @@ const SF_BAY: [number, number][] = [
   [51,218],[52,215],[53,211],
 ]
 
+interface EstuaryBayDef { name: string; cx: number; cy: number; rx: number; ry: number }
+const BAY_DELTA_OPEN_WATER: EstuaryBayDef[] = [
+  { name: 'San Pablo Bay', cx: 58, cy: 199, rx: 8, ry: 9 },
+  { name: 'Suisun Bay', cx: 78, cy: 191, rx: 8, ry: 5 },
+]
+
+interface WaterwayDef { name: string; x1: number; y1: number; x2: number; y2: number; radius: number }
+const BAY_DELTA_WATERWAYS: WaterwayDef[] = [
+  { name: 'Carquinez Strait', x1: 63, y1: 198, x2: 76, y2: 193, radius: 1.45 },
+  { name: 'Napa River', x1: 57, y1: 199, x2: 57, y2: 178, radius: 0.85 },
+  { name: 'Petaluma River', x1: 54, y1: 200, x2: 47, y2: 188, radius: 0.75 },
+  { name: 'Sacramento River', x1: 78, y1: 188, x2: 80, y2: 138, radius: 1.05 },
+  { name: 'San Joaquin River', x1: 80, y1: 190, x2: 86, y2: 172, radius: 1.1 },
+  { name: 'Mokelumne River', x1: 83, y1: 184, x2: 87, y2: 166, radius: 0.8 },
+  { name: 'American River', x1: 83, y1: 138, x2: 90, y2: 136, radius: 0.75 },
+]
+
+function isBayDeltaCityCore(x: number, y: number): boolean {
+  return inEllipse(x, y, 82, 140, 6, 5)
+    || inEllipse(x, y, 88, 170, 4, 3)
+    || inEllipse(x, y, 76, 140, 4, 3)
+    || inEllipse(x, y, 76, 135, 4, 3)
+    || inEllipse(x, y, 84, 150, 4, 3)
+}
+
+function getBayDeltaWaterName(x: number, y: number): string | null {
+  if (pointInPoly(x, y, SF_BAY)) {
+    if (y < 213) return 'San Pablo Bay'
+    if (y > 226) return 'South Bay'
+    return 'San Francisco Bay'
+  }
+  if (isBayDeltaCityCore(x, y)) return null
+  for (const bay of BAY_DELTA_OPEN_WATER) {
+    if (inEllipse(x, y, bay.cx, bay.cy, bay.rx, bay.ry)) return bay.name
+  }
+  for (const waterway of BAY_DELTA_WATERWAYS) {
+    if (distanceToSegment(x, y, waterway.x1, waterway.y1, waterway.x2, waterway.y2) <= waterway.radius) return waterway.name
+  }
+  return null
+}
+
+function isBayDeltaWetland(x: number, y: number): boolean {
+  if (y < 136 || y > 206) return false
+  if (x < coastAt(y) || x > 92) return false
+  if (getBayDeltaWaterName(x, y)) return false
+
+  // Keep major city centers playable while letting the surrounding lowlands read as tidal marsh.
+  if (isBayDeltaCityCore(x, y)) return false
+
+  if (inEllipse(x, y, 58, 199, 11, 11)) return true
+  if (inEllipse(x, y, 78, 190, 13, 8)) return true
+  if (inEllipse(x, y, 84, 176, 10, 11)) return true
+
+  return BAY_DELTA_WATERWAYS.some(waterway =>
+    distanceToSegment(x, y, waterway.x1, waterway.y1, waterway.x2, waterway.y2) <= waterway.radius + 2.1,
+  )
+}
+
 interface LakeDef { name: string; cx: number; cy: number; rx: number; ry: number }
 const LAKES: LakeDef[] = [
   { name:'Lake Tahoe', cx:130, cy:156, rx:4, ry:6 },
@@ -318,6 +387,7 @@ function getBayAreaBiome(x: number, y: number): BiomeType | null {
   const c = coastAt(y)
 
   if (isGGStrait(x, y)) return null
+  if (getBayDeltaWaterName(x, y)) return null
 
   // Marin / North Bay
   if (y < 216 && x < 58) {
@@ -395,11 +465,8 @@ function getBayAreaBiome(x: number, y: number): BiomeType | null {
 function getWaterName(x: number, y: number): string | null {
   if (x < coastAt(y)) return 'Pacific Ocean'
   if (isGGStrait(x, y)) return 'Golden Gate Strait'
-  if (pointInPoly(x, y, SF_BAY)) {
-    if (y < 213) return 'San Pablo Bay'
-    if (y > 226) return 'South Bay'
-    return 'San Francisco Bay'
-  }
+  const bayDeltaWaterName = getBayDeltaWaterName(x, y)
+  if (bayDeltaWaterName) return bayDeltaWaterName
   for (const l of LAKES) {
     if (inEllipse(x, y, l.cx, l.cy, l.rx, l.ry)) return l.name
   }
@@ -456,6 +523,8 @@ function getBiome(x: number, y: number): BiomeType {
 
   const nw = nearWater(x, y)
   const c = coastAt(y)
+
+  if (isBayDeltaWetland(x, y)) return 'marsh'
 
   // Coastal
   if (nw && x <= c + 2) {
@@ -794,6 +863,9 @@ const BRIDGES: BridgeDef[] = [
   { name: 'Golden Gate Bridge', tiles: genBridgeTiles(49, 213, 49, 218) },
   { name: 'Bay Bridge', tiles: [...genBridgeTiles(50, 218, 57, 218), ...genBridgeTiles(57, 218, 64, 218)] },
   { name: 'Richmond-San Rafael Bridge', tiles: genBridgeTiles(55, 210, 62, 210) },
+  { name: 'Carquinez Bridge', tiles: genBridgeTiles(66, 198, 69, 197) },
+  { name: 'Benicia-Martinez Bridge', tiles: genBridgeTiles(73, 194, 76, 192) },
+  { name: 'Antioch Bridge', tiles: genBridgeTiles(84, 183, 87, 181) },
   { name: 'San Mateo Bridge', tiles: genBridgeTiles(53, 226, 64, 226) },
   { name: 'Dumbarton Bridge', tiles: genBridgeTiles(54, 229, 63, 229) },
 ]

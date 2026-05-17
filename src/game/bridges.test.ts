@@ -54,6 +54,12 @@ describe('Bay Area Bridges', () => {
     expect(found).toBe(true)
   })
 
+  it('North Bay and Delta crossing tiles exist', () => {
+    expect(getBridgeAt(67, 198)).toBe('Carquinez Bridge')
+    expect(getBridgeAt(75, 193)).toBe('Benicia-Martinez Bridge')
+    expect(getBridgeAt(85, 182)).toBe('Antioch Bridge')
+  })
+
   it('bridge tiles are walkable and not water', () => {
     const map = generateMap()
     let bridgeCount = 0
