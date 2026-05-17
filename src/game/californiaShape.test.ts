@@ -73,6 +73,30 @@ describe('California map shape', () => {
     expect(map[220][58].isWalkable).toBe(false)
   })
 
+  it('places Alcatraz as a distinct island surrounded by San Francisco Bay water', () => {
+    const alcatrazTiles = [[54,215], [55,215], [55,216]]
+    const surroundingWaterTiles = [
+      [53,214], [54,214], [55,214], [56,214],
+      [53,215], [56,215],
+      [53,216], [54,216], [56,216],
+      [54,217], [55,217], [56,217],
+    ]
+
+    for (const [x, y] of alcatrazTiles) {
+      expect(map[y][x].subregion).toBe('Alcatraz Island')
+      expect(map[y][x].biome).toBe('urban')
+      expect(map[y][x].isWalkable).toBe(true)
+    }
+
+    for (const [x, y] of surroundingWaterTiles) {
+      expect(WATERLIKE_BIOMES.has(map[y][x].biome)).toBe(true)
+      expect(map[y][x].isWalkable).toBe(false)
+      expect(map[y][x].bridge).toBeUndefined()
+    }
+
+    expect(map[216][55].boatDock).toBe(true)
+  })
+
   it('marks the southern edge as Mexico while leaving San Diego inside California', () => {
     for (const x of [145, 160, 176, 190]) {
       expect(map[491][x].borderState).toBeUndefined()

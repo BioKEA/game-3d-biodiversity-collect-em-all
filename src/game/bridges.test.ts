@@ -2,15 +2,42 @@ import { describe, it, expect } from 'vitest'
 import { generateMap, getBridgeAt } from './bayAreaMap'
 
 describe('Bay Area Bridges', () => {
-  it('Golden Gate Bridge tiles exist', () => {
-    let found = false
-    for (let x = 48; x <= 50; x++) {
-      for (let y = 213; y <= 218; y++) {
-        if (getBridgeAt(x, y) === 'Golden Gate Bridge') { found = true; break }
+  it('draws the Golden Gate Bridge as a one-tile crossing through the strait', () => {
+    const map = generateMap()
+    const expectedBridgeTiles = [
+      '48,214',
+      '49,214',
+      '49,215',
+      '50,215',
+      '50,216',
+      '51,216',
+      '51,217',
+      '52,217',
+    ]
+    const foundBridgeTiles: string[] = []
+
+    for (let y = 213; y <= 218; y++) {
+      for (let x = 47; x <= 53; x++) {
+        if (getBridgeAt(x, y) === 'Golden Gate Bridge') foundBridgeTiles.push(`${x},${y}`)
       }
-      if (found) break
     }
-    expect(found).toBe(true)
+
+    expect(foundBridgeTiles).toEqual(expectedBridgeTiles)
+
+    for (const tileKey of expectedBridgeTiles) {
+      const [x, y] = tileKey.split(',').map(Number)
+      expect(map[y][x].bridge).toBe('Golden Gate Bridge')
+      expect(map[y][x].isWalkable).toBe(true)
+    }
+
+    for (const [x, y] of [[50,214], [51,214], [52,215], [49,216], [52,216]]) {
+      expect(map[y][x].biome).toBe('water')
+      expect(map[y][x].isWalkable).toBe(false)
+      expect(map[y][x].bridge).toBeUndefined()
+    }
+
+    expect(map[214][47].isWalkable).toBe(true)
+    expect(map[217][53].isWalkable).toBe(true)
   })
 
   it('Bay Bridge tiles exist', () => {

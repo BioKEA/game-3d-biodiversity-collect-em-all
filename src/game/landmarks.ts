@@ -53,8 +53,8 @@ export const LANDMARKS: LandmarkDef[] = [
   { x: 126, y: 418, name: 'Hollywood Sign', color: '#f5f5f5', accent: '#dc2626', label: 'Hollywood', height: 14, width: 12, glow: '#f5f5f5', emoji: '🎬' },
   { x: 115, y: 200, name: 'Half Dome', color: '#94a3b8', accent: '#e2e8f0', label: 'Half Dome', height: 30, width: 8, glow: '#94a3b8', emoji: '🏞️' },
   // Bay Area icons
-  { x: 49, y: 216, name: 'Golden Gate Bridge', color: '#cc3300', accent: '#e8a040', label: 'GG Bridge', height: 22, width: 10, glow: '#ff4400', emoji: '🌉' },
-  { x: 53, y: 213, name: 'Alcatraz Island', color: '#78716c', accent: '#94a3b8', label: 'Alcatraz', height: 12, width: 7, glow: '#94a3b8', emoji: '🏚️' },
+  { x: 50, y: 216, name: 'Golden Gate Bridge', color: '#cc3300', accent: '#e8a040', label: 'GG Bridge', height: 22, width: 10, glow: '#ff4400', emoji: '🌉' },
+  { x: 55, y: 216, name: 'Alcatraz Island', color: '#78716c', accent: '#94a3b8', label: 'Alcatraz', height: 12, width: 7, glow: '#94a3b8', emoji: '🏚️' },
   { x: 53, y: 217, name: 'Ghirardelli Square', color: '#8b4513', accent: '#dc2626', label: 'Ghirardelli', height: 10, width: 6, glow: '#dc2626', emoji: '🍫' },
   { x: 60, y: 236, name: 'Winchester Mystery House', color: '#5b3a1a', accent: '#9ca3af', label: 'Winchester', height: 16, width: 7, glow: '#9ca3af', emoji: '👻' },
   // NorCal

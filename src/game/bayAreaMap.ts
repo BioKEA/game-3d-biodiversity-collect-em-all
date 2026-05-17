@@ -393,8 +393,11 @@ const LAKES: LakeDef[] = [
 ]
 
 function isGGStrait(x: number, y: number): boolean {
-  if (isSanFranciscoMainland(x, y)) return false
-  return y >= 214 && y <= 217 && x >= 49 && x <= 52
+  if (y === 214) return x >= 49 && x <= 52
+  if (y === 215) return x >= 49 && x <= 53
+  if (y === 216) return x >= 49 && x <= 52
+  if (y === 217) return x >= 51 && x <= 52
+  return false
 }
 
 function getBayAreaBiome(x: number, y: number): BiomeType | null {
@@ -882,7 +885,7 @@ function genBridgeTiles(x1: number, y1: number, x2: number, y2: number): [number
 }
 
 const BRIDGES: BridgeDef[] = [
-  { name: 'Golden Gate Bridge', tiles: genBridgeTiles(49, 213, 49, 218) },
+  { name: 'Golden Gate Bridge', tiles: [[48,214],[49,214],[49,215],[50,215],[50,216],[51,216],[51,217],[52,217]] },
   { name: 'Bay Bridge', tiles: [...genBridgeTiles(54, 219, 58, 218), ...genBridgeTiles(58, 218, 64, 218)] },
   { name: 'Richmond-San Rafael Bridge', tiles: genBridgeTiles(55, 210, 62, 210) },
   { name: 'Petaluma River Bridge', tiles: genBridgeTiles(45, 189, 50, 189) },
@@ -917,7 +920,7 @@ export function getBridgeAt(x: number, y: number): string | undefined {
 interface IslandDef { name: string; biome: BiomeType; tiles: [number, number][] }
 
 const ISLANDS: IslandDef[] = [
-  { name: 'Alcatraz Island', biome: 'urban', tiles: [[53,212],[54,212],[53,213],[54,213]] },
+  { name: 'Alcatraz Island', biome: 'urban', tiles: [[54,215],[55,215],[55,216]] },
   { name: 'Angel Island', biome: 'forest', tiles: [[55,211],[56,211],[55,212],[56,212],[55,213],[56,213]] },
   { name: 'Treasure Island', biome: 'urban', tiles: [[57,217],[58,217],[57,218],[58,218]] },
   { name: 'Santa Cruz Island', biome: 'chaparral', tiles: [[94,401],[95,401],[96,401],[94,402],[95,402],[96,402],[95,403]] },
@@ -942,8 +945,8 @@ export const BOAT_DOCKS: BoatDock[] = [
   { name: 'Sausalito Ferry', x: 50, y: 212, destinationName: 'SF Ferry Building', destX: 51, destY: 219 },
   { name: 'SF Ferry (Oakland)', x: 52, y: 219, destinationName: 'Jack London Square', destX: 64, destY: 219 },
   { name: 'Jack London Square Ferry', x: 64, y: 219, destinationName: 'SF Ferry Building', destX: 52, destY: 219 },
-  { name: 'Alcatraz Cruises', x: 51, y: 218, destinationName: 'Alcatraz Island', destX: 53, destY: 213 },
-  { name: 'Alcatraz Dock', x: 53, y: 213, destinationName: 'Embarcadero', destX: 51, destY: 218 },
+  { name: 'Alcatraz Cruises', x: 51, y: 218, destinationName: 'Alcatraz Island', destX: 55, destY: 216 },
+  { name: 'Alcatraz Dock', x: 55, y: 216, destinationName: 'Embarcadero', destX: 51, destY: 218 },
   { name: 'Angel Island Ferry', x: 50, y: 213, destinationName: 'Angel Island', destX: 55, destY: 212 },
   { name: 'Angel Island Dock', x: 55, y: 212, destinationName: 'Sausalito', destX: 50, destY: 212 },
 ]
