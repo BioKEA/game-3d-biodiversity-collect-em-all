@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, memo } from 'react'
 import type { MapTile, BiomeType } from '@/types/game'
+import PixelGlyph from './PixelGlyph'
 
 interface Props {
   map: MapTile[][]
@@ -126,7 +127,6 @@ const CreatureFootprints = memo(function CreatureFootprints({ map, playerX, play
             style={{
               left: `${trail.x}%`,
               top: `${trail.y}%`,
-              fontSize: '10px',
               color: style.color,
               '--angle': `${trail.angle + 90}deg`,
               '--opacity': `${opacity}`,
@@ -134,7 +134,7 @@ const CreatureFootprints = memo(function CreatureFootprints({ map, playerX, play
               filter: `drop-shadow(0 0 2px ${style.color})`,
             } as React.CSSProperties}
           >
-            {style.char}
+            <PixelGlyph source={style.char} size={12} palette={{ primary: style.color, accent: style.color, dark: 'rgba(0,0,0,0.35)', light: 'rgba(255,255,255,0.65)' }} />
           </div>
         )
       })}
@@ -147,7 +147,10 @@ const CreatureFootprints = memo(function CreatureFootprints({ map, playerX, play
             color: 'rgba(74,222,128,0.8)',
             border: '1px solid rgba(74,222,128,0.15)',
           }}>
-            🐾 Fresh tracks nearby!
+            <span className="inline-flex items-center gap-1">
+              <PixelGlyph source="🐾" size={12} palette={{ primary: 'rgba(74,222,128,0.9)', accent: '#bbf7d0', dark: 'rgba(0,0,0,0.35)', light: '#ffffff' }} />
+              Fresh tracks nearby!
+            </span>
           </div>
         </div>
       )}

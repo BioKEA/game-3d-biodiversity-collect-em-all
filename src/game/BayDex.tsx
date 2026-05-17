@@ -6,6 +6,7 @@ import FloatingPanel from './FloatingPanel'
 import TypeChart from './TypeChart'
 import CreatureCard from './CreatureCard'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   catalogSeen: string[]
@@ -150,7 +151,7 @@ function StatsHeader({ catalogSeen, catalogCaptured }: { catalogSeen: string[]; 
             background: `${TYPE_COLORS[ts.type]}08`,
             border: `1px solid ${TYPE_COLORS[ts.type]}15`,
           }}>
-            <span className="text-xs">{TYPE_ICONS[ts.type]}</span>
+            <PixelIcon icon={TYPE_ICONS[ts.type]} size={20} variant="nature" className="mx-auto" />
             <div className="text-[8px] font-semibold mt-0.5" style={{ color: TYPE_COLORS[ts.type] }}>
               {ts.caught}/{ts.total}
             </div>
@@ -353,7 +354,12 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
                 color: TYPE_COLORS[creature.type],
                 border: `1px solid ${TYPE_COLORS[creature.type]}30`,
               }}
-            >{TYPE_ICONS[creature.type]} {creature.type}</span>
+            >
+              <span className="inline-flex items-center gap-1">
+                <PixelIcon icon={TYPE_ICONS[creature.type]} size={14} variant="nature" />
+                {creature.type}
+              </span>
+            </span>
             <span className="text-[9px] px-2 py-0.5 rounded-full font-medium"
               style={{
                 background: `${RARITY_COLORS[creature.rarity]}15`,
@@ -548,7 +554,10 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
               background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
               color: 'rgba(255,255,255,0.45)',
             }}>
-              {BIOME_ICONS[b] || '🌍'} {b}
+              <span className="inline-flex items-center gap-1">
+                <PixelIcon icon={BIOME_ICONS[b] || '🌍'} size={14} variant="nature" />
+                {b}
+              </span>
             </span>
           ))}
         </div>
@@ -574,7 +583,7 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
               const active = creature.activeTime?.includes(t)
               return (
                 <div key={t} className="text-center">
-                  <span className={`text-base ${active ? '' : 'opacity-15 grayscale'}`}>{TIME_ICONS[t]}</span>
+                  <PixelIcon icon={TIME_ICONS[t]} size={22} variant="mystic" selected={active} className={active ? 'mx-auto' : 'mx-auto opacity-20 grayscale'} />
                   <p className={`text-[7px] mt-0.5 ${active ? 'text-white/50' : 'text-white/10'}`}>{t}</p>
                 </div>
               )
@@ -592,7 +601,7 @@ function DetailPanel({ creature, caught, seen, catalogSeen, onSelect, teamMember
             border: '1px solid rgba(96,165,250,0.15)',
           }}>
             <div className="flex items-center gap-2">
-              <span className="text-base">📅</span>
+              <PixelIcon icon="📅" size={24} variant="water" />
               <div>
                 <p className="text-blue-300 text-[10px] font-semibold">{formatMigrationWindow(creature.migrationWindow)}</p>
                 <p className="text-white/30 text-[8px]">Only appears during these months in the Bay Area.</p>
@@ -736,7 +745,7 @@ export default function BayDex({ catalogSeen, catalogCaptured, onClose, defaultS
           background: 'rgba(255,255,255,0.04)',
           border: `1px solid ${search ? 'rgba(34,211,238,0.35)' : 'rgba(255,255,255,0.08)'}`,
         }}>
-          <span className="text-white/40 text-[11px]">🔍</span>
+          <PixelIcon icon="🔍" size={18} variant="neutral" />
           <input
             type="text"
             value={search}
@@ -913,7 +922,7 @@ export default function BayDex({ catalogSeen, catalogCaptured, onClose, defaultS
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center p-4">
-              <span className="text-3xl mb-2 opacity-20">📖</span>
+              <PixelIcon icon="📖" size={44} variant="neutral" className="mb-2 opacity-30" />
               <p className="text-white/25 text-xs">Select a creature to view details</p>
             </div>
           )}

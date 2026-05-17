@@ -3,6 +3,7 @@ import { ALL_CREATURES } from './creatures'
 import { getMonth, getMonthName, isCreatureInSeason } from './timeWeather'
 import FloatingPanel from './FloatingPanel'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   gameDay: number
@@ -61,7 +62,7 @@ export default function MigrationCalendar({ gameDay, onClose }: Props) {
           }}
         >
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-base">📅</span>
+            <PixelIcon icon="📅" size={22} variant="gold" />
             <span className="text-white/90 text-xs font-semibold">Now: {currentMonthName}</span>
           </div>
           <p className="text-white/50 text-[10px] leading-relaxed">

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import PixelIcon from './PixelIcon'
 
 export interface WorldEvent {
   id: string
@@ -223,14 +224,14 @@ export default function WorldEventBanner({ activeEvent, remainingMinutes, dismis
         }}
       >
         <div className="flex items-center gap-2 sm:gap-4 mb-1 sm:mb-2">
-          <span className="text-lg sm:text-2xl">{activeEvent.icon}</span>
+          <PixelIcon icon={activeEvent.icon} size={28} variant={activeEvent.type === 'weather_bonus' ? 'mystic' : 'gold'} selected />
           <span className="text-sm sm:text-xl font-bold uppercase tracking-wider" style={{
             color: isAtLocation ? '#4ade80' : urgency ? '#f87171' : '#fbbf24',
           }}>
             {activeEvent.title}
           </span>
           {activeEvent.creatureHint && (
-            <span className="text-lg sm:text-2xl ml-auto">{activeEvent.creatureHint}</span>
+            <PixelIcon icon={activeEvent.creatureHint} size={28} variant="nature" selected className="ml-auto" />
           )}
         </div>
         <p className="text-white/50 text-xs sm:text-lg leading-relaxed">

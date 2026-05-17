@@ -172,7 +172,7 @@ export default function CraftingScreen({ inventory, playerLevel, onCraft, onClos
               {lockedRecipes.map(recipe => (
                 <div key={recipe.id}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-white/5 bg-white/[0.01] opacity-40">
-                  <div className="text-xl w-8 h-8 flex items-center justify-center rounded-lg bg-white/5">🔒</div>
+                  <PixelIcon icon="🔒" size={32} variant="neutral" />
                   <div className="flex-1">
                     <span className="text-white/50 text-xs">{recipe.name}</span>
                     <div className="text-white/20 text-[10px]">Unlocks at level {recipe.unlockLevel}</div>

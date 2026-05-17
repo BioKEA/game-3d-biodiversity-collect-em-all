@@ -3,6 +3,7 @@ import type { BiomeType, PlayerState } from '@/types/game'
 import { ALL_CREATURES } from './creatures'
 import { BIOME_FIELD_NOTES, getBiomeCatchSpeciesCount, getTotalProgress } from './biomeFieldNotes'
 import FloatingPanel from './FloatingPanel'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   player: PlayerState
@@ -113,7 +114,7 @@ export default function BiomeFieldNotesPanel({ player, onClose }: Props) {
                   </>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <span className="text-white/25 text-[10px]">🔒</span>
+                    <PixelIcon icon="🔒" size={16} variant="neutral" />
                     <span className="text-white/30 text-[10px]">
                       Locked · catch {note.threshold} {note.threshold === 1 ? 'species' : 'species'} from this biome
                     </span>

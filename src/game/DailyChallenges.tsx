@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { DailyChallenge, DailyState } from './dailyChallengesData'
 import { getTodaysChallenges } from './dailyChallengesData'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   dailyState: DailyState
@@ -39,7 +40,7 @@ export default function DailyChallenges({ dailyState, onClaimReward, onClose }: 
         <div className="sticky top-0 z-10 px-5 pt-5 pb-3" style={{ background: 'linear-gradient(180deg, #1a1a2e 80%, transparent)' }}>
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
-              <span className="text-2xl">📋</span>
+              <PixelIcon icon="📋" size={34} variant="gold" selected />
               <h2 className="text-xl font-bold text-white">Daily Challenges</h2>
             </div>
             <button
@@ -54,7 +55,10 @@ export default function DailyChallenges({ dailyState, onClaimReward, onClose }: 
               {completedCount}/{challenges.length} completed
             </span>
             {dailyState.streak > 0 && (
-              <span className="text-orange-400 font-medium">🔥 {dailyState.streak} day streak</span>
+              <span className="text-orange-400 font-medium inline-flex items-center gap-1">
+                <PixelIcon icon="🔥" size={18} variant="danger" />
+                {dailyState.streak} day streak
+              </span>
             )}
             {claimedCount === challenges.length && (
               <span className="text-yellow-400 font-medium">All claimed!</span>
@@ -147,7 +151,7 @@ function ChallengeCard({
               : 'rgba(255,255,255,0.08)',
           }}
         >
-          {isClaimed ? '✅' : challenge.icon}
+          <PixelIcon icon={isClaimed ? '✅' : challenge.icon} size={30} variant={isClaimed ? 'nature' : 'gold'} selected={!isClaimed} />
         </div>
 
         {/* Info */}
@@ -157,7 +161,7 @@ function ChallengeCard({
               {challenge.title}
             </h3>
             <div className="flex items-center gap-1 text-yellow-400 text-xs font-medium ml-2 flex-shrink-0">
-              <span>💰</span>
+              <PixelIcon icon="💰" size={16} variant="gold" />
               <span>{challenge.reward}</span>
             </div>
           </div>
@@ -197,7 +201,12 @@ function ChallengeCard({
             boxShadow: '0 2px 8px rgba(245,158,11,0.3)',
           }}
         >
-          {justClaimed ? 'Claimed!' : `Claim ${challenge.reward} 💰`}
+          {justClaimed ? 'Claimed!' : (
+            <span className="inline-flex items-center justify-center gap-1.5">
+              Claim {challenge.reward}
+              <PixelIcon icon="💰" size={16} variant="gold" />
+            </span>
+          )}
         </button>
       )}
     </div>

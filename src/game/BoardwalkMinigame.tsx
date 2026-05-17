@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import type { InventoryItem, CapturedCreature } from '@/types/game'
+import PixelIcon from './PixelIcon'
+import { drawPixelConfettiBurst, drawPixelRingTarget, drawThrowPips } from './canvasPixelArt'
 
 // ============================================================
 // Santa Cruz Beach Boardwalk Minigame
@@ -86,18 +88,9 @@ function RingToss({ onWin, onLose }: { onWin: () => void; onLose: () => void }) 
     ctx.fillStyle = grad
     ctx.fillRect(0, 0, W, H)
 
-    // Bottle targets
+    // Bottle target
     const targetX = 140
-    ctx.fillStyle = '#d4a574'
-    ctx.fillRect(targetX - 3, H - 70, 6, 35)
-    ctx.fillStyle = '#ef4444'
-    ctx.beginPath()
-    ctx.arc(targetX, H - 75, 8, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.fillStyle = '#fff'
-    ctx.font = '8px system-ui'
-    ctx.textAlign = 'center'
-    ctx.fillText('🎯', targetX, H - 72)
+    drawPixelRingTarget(ctx, targetX, H - 75, 1.6)
 
     // Ring
     if (!throwing) {
@@ -112,9 +105,7 @@ function RingToss({ onWin, onLose }: { onWin: () => void; onLose: () => void }) 
     if (result === 'hit') {
       ctx.fillStyle = 'rgba(74,222,128,0.3)'
       ctx.fillRect(0, 0, W, H)
-      ctx.font = '24px system-ui'
-      ctx.textAlign = 'center'
-      ctx.fillText('🎉', W / 2, H / 2)
+      drawPixelConfettiBurst(ctx, W / 2, H / 2, 2)
     } else if (result === 'miss') {
       ctx.fillStyle = 'rgba(239,68,68,0.2)'
       ctx.fillRect(0, 0, W, H)
@@ -128,7 +119,8 @@ function RingToss({ onWin, onLose }: { onWin: () => void; onLose: () => void }) 
     ctx.fillStyle = '#fff'
     ctx.font = '10px system-ui'
     ctx.textAlign = 'left'
-    ctx.fillText(`Throws: ${'🔴'.repeat(throws)}`, 10, 20)
+    ctx.fillText('Throws:', 10, 20)
+    drawThrowPips(ctx, 54, 13, throws)
     ctx.fillText(`Hits: ${hits}/1`, 10, 35)
 
   }, [ringPos, throws, hits, throwing, result])
@@ -269,18 +261,19 @@ function WhackACrab({ onWin, onLose }: { onWin: () => void; onLose: () => void }
         {crabs.filter(c => c.active).map(crab => (
           <button
             key={crab.id}
+            aria-label="Whack crab"
             onClick={() => whack(crab.id)}
-            className="absolute text-2xl animate-bounce cursor-pointer active:scale-75 transition-transform"
+            className="absolute animate-bounce cursor-pointer active:scale-75 transition-transform"
             style={{ left: crab.x, top: crab.y }}
           >
-            🦀
+            <PixelIcon icon="🦀" size={30} variant="water" selected />
           </button>
         ))}
 
         {gameOver && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
             <div className="text-center">
-              <p className="text-xl mb-1">{score >= 5 ? '🎉' : '😢'}</p>
+              <PixelIcon icon={score >= 5 ? '🎉' : '⚠️'} size={34} variant={score >= 5 ? 'gold' : 'danger'} selected className="mb-1 mx-auto" />
               <p className="text-white text-sm font-bold">
                 {score >= 5 ? 'You win!' : 'Not enough crabs!'}
               </p>
@@ -357,7 +350,10 @@ export default function BoardwalkMinigame({ playerLevel, onClose, onWinPrize, on
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center" style={{
         background: 'linear-gradient(180deg, #1a0a2e 0%, #0f172a 100%)',
       }}>
-        <h2 className="text-yellow-300 font-bold text-sm mb-3">🎯 Ring Toss</h2>
+        <h2 className="text-yellow-300 font-bold text-sm mb-3 flex items-center gap-2">
+          <PixelIcon icon="🎯" size={24} variant="gold" selected />
+          Ring Toss
+        </h2>
         <RingToss onWin={handleGameWin} onLose={handleGameLose} />
         <button onClick={() => setActivity('hub')} className="mt-3 text-white/30 text-[10px] hover:text-white/60">
           Back to Boardwalk
@@ -371,7 +367,10 @@ export default function BoardwalkMinigame({ playerLevel, onClose, onWinPrize, on
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center" style={{
         background: 'linear-gradient(180deg, #1a0a2e 0%, #0f172a 100%)',
       }}>
-        <h2 className="text-yellow-300 font-bold text-sm mb-3">🦀 Whack-a-Crab</h2>
+        <h2 className="text-yellow-300 font-bold text-sm mb-3 flex items-center gap-2">
+          <PixelIcon icon="🦀" size={24} variant="water" selected />
+          Whack-a-Crab
+        </h2>
         <WhackACrab onWin={handleGameWin} onLose={handleGameLose} />
         <button onClick={() => setActivity('hub')} className="mt-3 text-white/30 text-[10px] hover:text-white/60">
           Back to Boardwalk
@@ -388,11 +387,14 @@ export default function BoardwalkMinigame({ playerLevel, onClose, onWinPrize, on
       <div className="relative px-4 pt-4 pb-3 text-center" style={{
         background: 'linear-gradient(180deg, rgba(245,158,11,0.12) 0%, transparent 100%)',
       }}>
-        <div className="text-3xl mb-1">🎡</div>
+        <PixelIcon icon="🎡" size={44} variant="gold" selected className="mb-1 mx-auto" />
         <h1 className="text-white font-black text-lg tracking-tight">Santa Cruz Boardwalk</h1>
         <p className="text-white/30 text-[10px]">Rides, games, and prizes await!</p>
         <div className="mt-2 flex items-center justify-center gap-2">
-          <span className="text-yellow-400 text-xs font-bold">🎟️ {tickets} tickets</span>
+          <span className="text-yellow-400 text-xs font-bold inline-flex items-center gap-1">
+            <PixelIcon icon="🎟️" size={18} variant="gold" />
+            {tickets} tickets
+          </span>
         </div>
         <button
           onClick={onClose}
@@ -410,7 +412,7 @@ export default function BoardwalkMinigame({ playerLevel, onClose, onWinPrize, on
         }}>
           <p className="text-[10px] text-green-400/60 uppercase tracking-wider mb-1">Prize Won!</p>
           <div className="flex items-center justify-center gap-2">
-            <span className="text-xl">{prizeWon.sprite}</span>
+            <PixelIcon icon={prizeWon.sprite} size={34} variant={prizeWon.type === 'heal' ? 'nature' : prizeWon.type === 'boost' ? 'gold' : 'item'} selected />
             <div className="text-left">
               <p className="text-green-300 text-xs font-bold">{prizeWon.name}</p>
               <p className="text-white/30 text-[9px]">{prizeWon.description}</p>
@@ -443,7 +445,7 @@ export default function BoardwalkMinigame({ playerLevel, onClose, onWinPrize, on
             opacity: tickets <= 0 ? 0.4 : 1,
           }}
         >
-          <div className="text-2xl mb-1.5">🎯</div>
+          <PixelIcon icon="🎯" size={34} variant="gold" selected className="mb-1.5 mx-auto" />
           <p className="text-white text-xs font-bold">Ring Toss</p>
           <p className="text-white/30 text-[9px] mt-0.5">Land the ring for a prize</p>
           <p className="text-yellow-400/50 text-[8px] mt-1">1 ticket</p>
@@ -465,7 +467,7 @@ export default function BoardwalkMinigame({ playerLevel, onClose, onWinPrize, on
             opacity: tickets <= 0 ? 0.4 : 1,
           }}
         >
-          <div className="text-2xl mb-1.5">🦀</div>
+          <PixelIcon icon="🦀" size={34} variant="water" selected className="mb-1.5 mx-auto" />
           <p className="text-white text-xs font-bold">Whack-a-Crab</p>
           <p className="text-white/30 text-[9px] mt-0.5">Tap 5 crabs to win</p>
           <p className="text-yellow-400/50 text-[8px] mt-1">1 ticket</p>
@@ -487,7 +489,7 @@ export default function BoardwalkMinigame({ playerLevel, onClose, onWinPrize, on
             opacity: tickets <= 0 ? 0.4 : 1,
           }}
         >
-          <div className="text-2xl mb-1.5">🎢</div>
+          <PixelIcon icon="🎢" size={34} variant="mystic" selected className="mb-1.5 mx-auto" />
           <p className="text-white text-xs font-bold">Giant Dipper</p>
           <p className="text-white/30 text-[9px] mt-0.5">Classic coaster — heals your team!</p>
           <p className="text-yellow-400/50 text-[8px] mt-1">1 ticket</p>
@@ -509,7 +511,7 @@ export default function BoardwalkMinigame({ playerLevel, onClose, onWinPrize, on
             opacity: tickets <= 0 ? 0.4 : 1,
           }}
         >
-          <div className="text-2xl mb-1.5">🔮</div>
+          <PixelIcon icon="🔮" size={34} variant="mystic" selected className="mb-1.5 mx-auto" />
           <p className="text-white text-xs font-bold">Fortune Teller</p>
           <p className="text-white/30 text-[9px] mt-0.5">Mystic hints about rare creatures</p>
           <p className="text-yellow-400/50 text-[8px] mt-1">1 ticket</p>
@@ -522,7 +524,7 @@ export default function BoardwalkMinigame({ playerLevel, onClose, onWinPrize, on
           background: 'linear-gradient(180deg, rgba(88,28,135,0.9), rgba(15,23,42,0.95))',
         }}>
           <div className="text-center">
-            <div className="text-5xl mb-4 animate-bounce">🎢</div>
+            <PixelIcon icon="🎢" size={58} variant="mystic" selected className="mb-4 animate-bounce mx-auto" />
             <p className="text-purple-300 text-sm font-bold mb-2">
               {coasterPhases[Math.min(coasterPhase, coasterPhases.length - 1)]}
             </p>
@@ -551,7 +553,7 @@ export default function BoardwalkMinigame({ playerLevel, onClose, onWinPrize, on
             border: '1px solid rgba(139,92,246,0.3)',
             boxShadow: '0 8px 32px rgba(88,28,135,0.4)',
           }}>
-            <div className="text-3xl mb-3">🔮</div>
+            <PixelIcon icon="🔮" size={44} variant="mystic" selected className="mb-3 mx-auto" />
             <p className="text-purple-200 text-sm font-medium italic leading-relaxed mb-3">
               &ldquo;{fortune}&rdquo;
             </p>

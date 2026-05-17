@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import PixelIcon from './PixelIcon'
+import { drawPixelTrain } from './canvasPixelArt'
 
 // ============================================================
 // BART Station definitions — 6 stations spanning the Bay Area
@@ -305,10 +307,7 @@ export default function BartSystem({ playerX, playerY, playerCoins, onTravel, on
         ctx.fillStyle = grad
         ctx.fillRect(tx - 24, ty - 24, 48, 48)
 
-        // Train icon
-        ctx.font = '20px system-ui'
-        ctx.textAlign = 'center'
-        ctx.fillText('🚇', tx, ty + 6)
+        drawPixelTrain(ctx, tx, ty + 2, 1.4)
       }
     }
 
@@ -423,7 +422,7 @@ export default function BartSystem({ playerX, playerY, playerCoins, onTravel, on
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <div className="flex items-center gap-2">
-          <span className="text-xl">🚇</span>
+          <PixelIcon icon="🚇" size={32} variant="travel" selected />
           <div>
             <h2 className="text-white font-bold text-sm">BART</h2>
             <p className="text-white/30 text-[9px]">Bay Area Rapid Transit</p>
@@ -512,12 +511,18 @@ export default function BartSystem({ playerX, playerY, playerCoins, onTravel, on
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
                 <span className="text-[9px] text-white/30 uppercase tracking-wider">Fare</span>
-                <span className="text-xs font-bold text-yellow-400">💰 {selectedFare}</span>
+                <span className="text-xs font-bold text-yellow-400 inline-flex items-center gap-1">
+                  <PixelIcon icon="💰" size={16} variant="gold" />
+                  {selectedFare}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[9px] text-white/30 uppercase tracking-wider">Balance</span>
                 <span className={`text-xs font-mono ${canAfford ? 'text-white/50' : 'text-red-400'}`}>
-                  💰 {playerCoins}
+                  <span className="inline-flex items-center gap-1">
+                    <PixelIcon icon="💰" size={16} variant="gold" />
+                    {playerCoins}
+                  </span>
                 </span>
               </div>
             </div>
@@ -533,10 +538,13 @@ export default function BartSystem({ playerX, playerY, playerCoins, onTravel, on
                 boxShadow: canAfford ? '0 4px 12px rgba(2,132,199,0.3)' : 'none',
               }}
             >
-              {canAfford
-                ? `🚇 Ride to ${selectedStation.name}`
-                : `Not enough coins (need 💰 ${selectedFare})`
-              }
+              <span className="inline-flex items-center justify-center gap-2">
+                <PixelIcon icon={canAfford ? '🚇' : '💰'} size={20} variant={canAfford ? 'travel' : 'gold'} />
+                {canAfford
+                  ? `Ride to ${selectedStation.name}`
+                  : `Not enough coins (need ${selectedFare})`
+                }
+              </span>
             </button>
           </div>
         ) : (

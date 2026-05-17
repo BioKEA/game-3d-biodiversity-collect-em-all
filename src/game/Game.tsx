@@ -41,6 +41,7 @@ import TitleScreen from './TitleScreen'
 import StarterSelect from './StarterSelect'
 import PixelCreatureToken from './PixelCreatureToken'
 import PixelLandmarkIcon from './PixelLandmarkIcon'
+import PixelIcon from './PixelIcon'
 import GameHUD from './GameHUD'
 import Minimap from './Minimap'
 import FieldJournal from './FieldJournal'
@@ -2204,7 +2205,10 @@ export default function Game() {
               color: '#92400e',
               animation: 'notif-enter 0.3s ease-out',
             }}>
-            🚧 {borderMessage}
+            <span className="inline-flex items-center justify-center gap-2">
+              <PixelIcon icon="⚠️" size={22} variant="gold" />
+              {borderMessage}
+            </span>
           </div>
         </div>
       )}
@@ -2219,7 +2223,10 @@ export default function Game() {
               backdropFilter: 'blur(8px)',
               color: '#dc2626',
             }}>
-            ⚠️ {borderPeek.state} — {borderPeek.stepsLeft} step{borderPeek.stepsLeft !== 1 ? 's' : ''} left
+            <span className="inline-flex items-center gap-2">
+              <PixelIcon icon="⚠️" size={18} variant="danger" />
+              {borderPeek.state} — {borderPeek.stepsLeft} step{borderPeek.stepsLeft !== 1 ? 's' : ''} left
+            </span>
           </div>
         </div>
       )}
@@ -2279,8 +2286,8 @@ export default function Game() {
                   WebkitTextFillColor: 'transparent',
                   animation: 'notif-shimmer 2s linear infinite',
                 }}>
-                  {captureNotif.creature.isShiny ? '✨ Shiny Catch!'
-                    : captureNotif.creature.isAlpha ? '⭐ Alpha Catch!'
+                  {captureNotif.creature.isShiny ? 'Shiny Catch!'
+                    : captureNotif.creature.isAlpha ? 'Alpha Catch!'
                     : 'New WildDex Entry!'}
                 </span>
               </div>
@@ -2417,8 +2424,9 @@ export default function Game() {
         return (
           <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
             <div className="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-1 border border-sky-500/20">
-              <p className="text-sky-300/60 text-[9px] font-medium whitespace-nowrap">
-                🎣 Press F to fish
+              <p className="text-sky-300/60 text-[9px] font-medium whitespace-nowrap inline-flex items-center gap-1.5">
+                <PixelIcon icon="🎣" size={18} variant="water" />
+                Press F to fish
               </p>
             </div>
           </div>
@@ -2583,8 +2591,9 @@ export default function Game() {
       {gameState.screen === 'world' && nearbyDock && !boatAnimating && (
         <div className="absolute bottom-20 sm:bottom-36 left-1/2 -translate-x-1/2 z-30 pointer-events-none max-w-[calc(100%-16px)]">
           <div className="bg-black/60 backdrop-blur-sm rounded-xl px-3 py-2 sm:px-6 sm:py-3 border border-sky-400/30 animate-pulse">
-            <p className="text-sky-300 text-sm sm:text-xl font-medium">
-              ⛴ Press Space to sail to {nearbyDock.destinationName}
+            <p className="text-sky-300 text-sm sm:text-xl font-medium inline-flex items-center gap-2">
+              <PixelIcon icon="⛴" size={26} variant="travel" selected />
+              Press Space to sail to {nearbyDock.destinationName}
             </p>
           </div>
         </div>
@@ -2593,8 +2602,9 @@ export default function Game() {
       {gameState.screen === 'world' && nearbyBartStation && !nearbyDock && (
         <div className="absolute bottom-20 sm:bottom-36 left-1/2 -translate-x-1/2 z-30 pointer-events-none max-w-[calc(100%-16px)]">
           <div className="bg-black/60 backdrop-blur-sm rounded-xl px-3 py-2 sm:px-6 sm:py-3 border border-yellow-400/30 animate-pulse">
-            <p className="text-yellow-300 text-sm sm:text-xl font-medium">
-              🚇 Press Space to enter {nearbyBartStation.name} BART Station
+            <p className="text-yellow-300 text-sm sm:text-xl font-medium inline-flex items-center gap-2">
+              <PixelIcon icon="🚇" size={26} variant="travel" selected />
+              Press Space to enter {nearbyBartStation.name} BART Station
             </p>
           </div>
         </div>
@@ -2603,8 +2613,9 @@ export default function Game() {
       {gameState.screen === 'world' && atSteamerLane && !nearbyDock && !nearbyBartStation && (
         <div className="absolute bottom-20 sm:bottom-36 left-1/2 -translate-x-1/2 z-30 pointer-events-none max-w-[calc(100%-16px)]">
           <div className="bg-black/60 backdrop-blur-sm rounded-xl px-3 py-2 sm:px-6 sm:py-3 border border-cyan-400/30 animate-pulse">
-            <p className="text-cyan-300 text-sm sm:text-xl font-medium">
-              🏄 Press Space to surf Steamer Lane
+            <p className="text-cyan-300 text-sm sm:text-xl font-medium inline-flex items-center gap-2">
+              <PixelIcon icon="🏄" size={26} variant="water" selected />
+              Press Space to surf Steamer Lane
             </p>
           </div>
         </div>
@@ -2613,8 +2624,9 @@ export default function Game() {
       {gameState.screen === 'world' && atBoardwalk && !nearbyDock && !nearbyBartStation && !atSteamerLane && (
         <div className="absolute bottom-20 sm:bottom-36 left-1/2 -translate-x-1/2 z-30 pointer-events-none max-w-[calc(100%-16px)]">
           <div className="bg-black/60 backdrop-blur-sm rounded-xl px-3 py-2 sm:px-6 sm:py-3 border border-amber-400/30 animate-pulse">
-            <p className="text-amber-300 text-sm sm:text-xl font-medium">
-              🎡 Press Space to enter the Boardwalk
+            <p className="text-amber-300 text-sm sm:text-xl font-medium inline-flex items-center gap-2">
+              <PixelIcon icon="🎡" size={26} variant="gold" selected />
+              Press Space to enter the Boardwalk
             </p>
           </div>
         </div>
@@ -2722,7 +2734,7 @@ export default function Game() {
                         background: unlocked ? 'rgba(251,191,36,0.06)' : 'rgba(255,255,255,0.02)',
                         border: `1px solid ${unlocked ? 'rgba(251,191,36,0.18)' : 'rgba(255,255,255,0.05)'}`,
                       }}
-                      title={unlocked ? `Travel to ${dest.name} — ${dest.description}` : `🔒 Visit this place first to unlock`}
+                      title={unlocked ? `Travel to ${dest.name} — ${dest.description}` : 'Visit this place first to unlock'}
                     >
                       <div className="flex items-start gap-2">
                         <PixelLandmarkIcon landmark={dest} size={24} undiscovered={!unlocked} title={unlocked ? dest.name : 'Locked destination'} />
@@ -2761,9 +2773,14 @@ export default function Game() {
               <div className="flex items-center gap-3">
                 <span className="text-base text-white/30 uppercase tracking-wider">Local species</span>
                 <div className="flex gap-1">
-                  {info.creatures.map((c, i) => (
-                    <span key={i} className="text-2xl">{c}</span>
-                  ))}
+                  {info.creatures.map((c, i) => {
+                    const creature = ALL_CREATURES.find(entry => entry.sprite === c)
+                    return creature ? (
+                      <PixelCreatureToken key={i} creature={creature} size={30} />
+                    ) : (
+                      <PixelIcon key={i} icon={c} size={30} variant="nature" />
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -2774,7 +2791,7 @@ export default function Game() {
       {boatAnimating && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-sky-950/80 transition-opacity">
           <div className="flex flex-col items-center gap-3">
-            <span className="text-4xl animate-bounce">⛴</span>
+            <PixelIcon icon="⛴" size={56} variant="travel" selected className="animate-bounce" />
             <p className="text-sky-200 text-sm font-medium">Sailing across the Bay...</p>
             <div className="flex gap-1">
               <div className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-pulse" />
@@ -3173,13 +3190,13 @@ export default function Game() {
           `}</style>
           {/* Level-up star particles */}
           {battleReward.levelUp && Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="absolute text-sm" style={{
+            <div key={i} className="absolute" style={{
               left: `${10 + i * 12}%`,
               bottom: '100%',
               animation: `levelup-stars 1.5s ease-out ${0.2 + i * 0.1}s forwards`,
               opacity: 0,
             }}>
-              {['⭐', '✨', '💫', '🌟'][i % 4]}
+              <PixelIcon icon={['⭐', '✨', '💫', '🌟'][i % 4]} size={18} variant="gold" />
             </div>
           ))}
           <div
@@ -3206,13 +3223,21 @@ export default function Game() {
                 <span className="text-xs font-bold tracking-wider" style={{
                   color: 'rgba(200,210,255,0.9)',
                   textShadow: '0 0 8px rgba(200,210,255,0.4)',
-                }}>🌕 BOSS SLAIN</span>
+                }}>
+                  <span className="inline-flex items-center gap-1">
+                    <PixelIcon icon="🌕" size={18} variant="mystic" />
+                    BOSS SLAIN
+                  </span>
+                </span>
                 <span className="text-white/20">|</span>
               </>
             )}
             <span className="text-xs text-emerald-400 font-medium">+{battleReward.xp} XP</span>
             <span className="text-white/20">|</span>
-            <span className="text-xs text-yellow-400 font-medium">+{battleReward.coins} 💰</span>
+            <span className="text-xs text-yellow-400 font-medium inline-flex items-center gap-1">
+              +{battleReward.coins}
+              <PixelIcon icon="💰" size={16} variant="gold" />
+            </span>
             {battleReward.levelUp && (
               <>
                 <span className="text-white/20">|</span>
@@ -3229,7 +3254,7 @@ export default function Game() {
       {achievementToast && (
         <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[70] animate-in slide-in-from-top duration-300">
           <div className="bg-black/80 backdrop-blur-sm border border-amber-500/30 rounded-lg px-4 py-2 flex items-center gap-2 shadow-lg">
-            <span className="text-lg">{achievementToast.icon}</span>
+            <PixelIcon icon={achievementToast.icon} size={30} variant="gold" selected />
             <div>
               <p className="text-amber-400 text-[10px] uppercase tracking-wider font-semibold">Achievement Unlocked</p>
               <p className="text-white text-xs font-medium">{achievementToast.name}</p>
@@ -3251,7 +3276,10 @@ export default function Game() {
           >
             <PixelCreatureToken creature={{ sprite: evolveReadyToast.sprite, name: evolveReadyToast.name }} size={34} selected />
             <div>
-              <p className="text-purple-300 text-[10px] uppercase tracking-wider font-bold">✨ Almost Ready to Evolve</p>
+              <p className="text-purple-300 text-[10px] uppercase tracking-wider font-bold inline-flex items-center gap-1">
+                <PixelIcon icon="✨" size={16} variant="mystic" />
+                Almost Ready to Evolve
+              </p>
               <p className="text-white text-xs font-medium">
                 {evolveReadyToast.name} → {evolveReadyToast.toName}
                 <span className="text-white/50 ml-1">({evolveReadyToast.gap} {evolveReadyToast.gap === 1 ? 'lvl' : 'lvls'} to go)</span>

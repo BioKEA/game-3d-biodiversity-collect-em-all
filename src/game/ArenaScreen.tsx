@@ -4,6 +4,7 @@ import { type ArenaTier, getTierConfig, generateArenaChallenger, type ArenaChall
 import RangerBattleScreen from './RangerBattleScreen'
 import FloatingPanel from './FloatingPanel'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   team: CapturedCreature[]
@@ -120,7 +121,7 @@ export default function ArenaScreen({ team, weather, timeOfDay, arenaWins, onWin
                 {opponentTeam.map((_m, i) => (
                   <div key={i} className="w-12 h-12 rounded-lg flex items-center justify-center"
                     style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                    <span className="text-xl">❓</span>
+                    <PixelIcon icon="❓" size={30} variant="danger" />
                   </div>
                 ))}
               </div>
@@ -142,8 +143,8 @@ export default function ArenaScreen({ team, weather, timeOfDay, arenaWins, onWin
           {/* Reward preview */}
           <div className="flex items-center gap-3 text-[10px]">
             <span className="text-yellow-400/60">Reward:</span>
-            <span className="text-yellow-300">💰 {challenger.reward.coins}</span>
-            <span className="text-cyan-300">✨ {challenger.reward.xp} XP</span>
+            <span className="text-yellow-300 inline-flex items-center gap-1"><PixelIcon icon="💰" size={16} variant="gold" /> {challenger.reward.coins}</span>
+            <span className="text-cyan-300 inline-flex items-center gap-1"><PixelIcon icon="✨" size={16} variant="mystic" /> {challenger.reward.xp} XP</span>
           </div>
 
           <button onClick={handleStartBattle}
@@ -209,8 +210,8 @@ export default function ArenaScreen({ team, weather, timeOfDay, arenaWins, onWin
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-yellow-400/60 text-[9px]">💰 {config.coinBase}+</p>
-                  <p className="text-cyan-400/60 text-[9px]">✨ {config.xpBase}+ XP</p>
+                  <p className="text-yellow-400/60 text-[9px] inline-flex items-center gap-1 justify-end"><PixelIcon icon="💰" size={14} variant="gold" /> {config.coinBase}+</p>
+                  <p className="text-cyan-400/60 text-[9px] inline-flex items-center gap-1 justify-end"><PixelIcon icon="✨" size={14} variant="mystic" /> {config.xpBase}+ XP</p>
                 </div>
               </div>
               {tooWeak && (

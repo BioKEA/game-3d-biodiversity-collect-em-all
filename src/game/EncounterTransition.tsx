@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { Creature, BiomeType, TimeOfDay } from '@/types/game'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   creature: Creature
@@ -343,7 +344,11 @@ export default function EncounterTransition({ creature, biome, timeOfDay, onComp
               animation: 'encounter-rare-banner 1.2s ease-in-out infinite',
             }}
           >
-            {isLegendary ? '✦ Legendary Encounter ✦' : '✨ Rare Find ✨'}
+            <span className="inline-flex items-center justify-center gap-2">
+              <PixelIcon icon={isLegendary ? '✦' : '✨'} size={18} variant={isLegendary ? 'gold' : 'mystic'} />
+              {isLegendary ? 'Legendary Encounter' : 'Rare Find'}
+              <PixelIcon icon={isLegendary ? '✦' : '✨'} size={18} variant={isLegendary ? 'gold' : 'mystic'} />
+            </span>
           </div>
         )}
         <p className="text-white/40 text-xs tracking-[0.3em] uppercase mb-2">

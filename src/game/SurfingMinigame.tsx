@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import type { InventoryItem } from '@/types/game'
+import PixelIcon from './PixelIcon'
+import { drawPixelJellyfish, drawPixelKelp, drawPixelSurfer } from './canvasPixelArt'
 
 // ============================================================
 // Steamer Lane Surfing Minigame
@@ -297,13 +299,9 @@ export default function SurfingMinigame({ onClose, onReward, onXp }: Props) {
           ctx.lineTo(obs.x - 5, obs.y + 3)
           ctx.fill()
         } else if (obs.type === 'kelp') {
-          ctx.font = '16px serif'
-          ctx.textAlign = 'center'
-          ctx.fillText('🌿', obs.x, obs.y + 5)
+          drawPixelKelp(ctx, obs.x, obs.y + 5, 1.5)
         } else {
-          ctx.font = '14px serif'
-          ctx.textAlign = 'center'
-          ctx.fillText('🪼', obs.x, obs.y + 5)
+          drawPixelJellyfish(ctx, obs.x, obs.y + 5, 1.4)
         }
       }
 
@@ -313,9 +311,7 @@ export default function SurfingMinigame({ onClose, onReward, onXp }: Props) {
       if (g.airborne) {
         ctx.rotate((g.rotation * Math.PI) / 180)
       }
-      ctx.font = '20px serif'
-      ctx.textAlign = 'center'
-      ctx.fillText('🏄', 0, 5)
+      drawPixelSurfer(ctx, 0, 3, 1.3)
       ctx.restore()
 
       // Spray particles when on water
@@ -400,7 +396,7 @@ export default function SurfingMinigame({ onClose, onReward, onXp }: Props) {
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center" style={{
         background: 'linear-gradient(180deg, #0c4a6e 0%, #0369a1 50%, #0f172a 100%)',
       }}>
-        <div className="text-5xl mb-4">🏄</div>
+        <PixelIcon icon="🏄" size={64} variant="water" selected className="mb-4" />
         <h1 className="text-white font-black text-xl mb-1">Steamer Lane</h1>
         <p className="text-cyan-300/60 text-xs mb-6">Ride the legendary waves of Santa Cruz</p>
 
@@ -436,7 +432,7 @@ export default function SurfingMinigame({ onClose, onReward, onXp }: Props) {
         background: 'rgba(12,74,110,0.95)',
       }}>
         <div className="text-center">
-          <div className="text-5xl mb-3 animate-bounce">💦</div>
+          <PixelIcon icon="💦" size={58} variant="water" selected className="mb-3 animate-bounce" />
           <h2 className="text-white font-bold text-lg">Wipeout!</h2>
           <p className="text-cyan-300/50 text-xs mt-1">Score: {score}</p>
         </div>
@@ -454,7 +450,7 @@ export default function SurfingMinigame({ onClose, onReward, onXp }: Props) {
       <div className="absolute inset-0 z-50 flex flex-col items-center justify-center" style={{
         background: 'linear-gradient(180deg, #0c4a6e 0%, #0f172a 100%)',
       }}>
-        <div className="text-4xl mb-3">🏄</div>
+        <PixelIcon icon="🏄" size={52} variant="water" selected className="mb-3" />
         <h2 className="text-white font-black text-lg mb-1">Session Complete</h2>
 
         <div className="space-y-2 my-4 text-center">
@@ -488,7 +484,7 @@ export default function SurfingMinigame({ onClose, onReward, onXp }: Props) {
               border: '1px solid rgba(251,191,36,0.15)',
             }}>
               <div className="flex items-center gap-2">
-                <span className="text-xl">{reward.sprite}</span>
+                <PixelIcon icon={reward.sprite} size={28} variant={reward.type === 'heal' ? 'nature' : reward.type === 'boost' ? 'gold' : 'item'} selected />
                 <div className="text-left">
                   <p className="text-yellow-300 text-xs font-bold">{reward.name}</p>
                   <p className="text-white/30 text-[8px]">{reward.description}</p>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { CapturedCreature } from '@/types/game'
 import FloatingPanel from './FloatingPanel'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   team: CapturedCreature[]
@@ -28,7 +29,7 @@ export default function AdoptionCenter({ team, reserves, onClose, onRelease, onS
         {/* Active team */}
         <div className="space-y-1.5">
           <h3 className="text-white/40 text-[10px] uppercase tracking-wider px-1 flex items-center gap-1.5">
-            <span>🎒</span> Active Team ({team.length}/6)
+            <PixelIcon icon="🎒" size={18} variant="item" /> Active Team ({team.length}/6)
           </h3>
           {team.map((creature, i) => (
             <div
@@ -46,8 +47,8 @@ export default function AdoptionCenter({ team, reserves, onClose, onRelease, onS
                     <span className="text-white text-[10px] font-semibold truncate">{creature.nickname || creature.name}</span>
                     <span className="text-emerald-400 text-[9px]">Lv.{creature.level}</span>
                     {i === 0 && <span className="text-[7px] px-1 py-px rounded-full bg-emerald-500/15 text-emerald-400">LEAD</span>}
-                    {creature.isAlpha && <span className="text-[8px]">⭐</span>}
-                    {creature.isShiny && <span className="text-[8px]">✨</span>}
+                    {creature.isAlpha && <PixelIcon icon="⭐" size={14} variant="gold" />}
+                    {creature.isShiny && <PixelIcon icon="✨" size={14} variant="mystic" />}
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[8px] text-white/30 capitalize">{creature.type}</span>
@@ -86,7 +87,7 @@ export default function AdoptionCenter({ team, reserves, onClose, onRelease, onS
         {/* Reserves */}
         <div className="space-y-1.5">
           <h3 className="text-white/40 text-[10px] uppercase tracking-wider px-1 flex items-center gap-1.5">
-            <span>🏠</span> Reserves ({reserves.length})
+            <PixelIcon icon="🏠" size={18} variant="nature" /> Reserves ({reserves.length})
           </h3>
           {reserves.length === 0 ? (
             <div className="rounded-lg border border-white/5 p-4 text-center">
@@ -106,8 +107,8 @@ export default function AdoptionCenter({ team, reserves, onClose, onRelease, onS
                     <div className="flex items-center gap-1">
                       <span className="text-white text-[10px] font-semibold truncate">{creature.nickname || creature.name}</span>
                       <span className="text-emerald-400 text-[9px]">Lv.{creature.level}</span>
-                      {creature.isAlpha && <span className="text-[8px]">⭐</span>}
-                      {creature.isShiny && <span className="text-[8px]">✨</span>}
+                      {creature.isAlpha && <PixelIcon icon="⭐" size={14} variant="gold" />}
+                      {creature.isShiny && <PixelIcon icon="✨" size={14} variant="mystic" />}
                     </div>
                     <span className="text-[8px] text-white/25 capitalize">{creature.type}</span>
                   </div>

@@ -3,6 +3,7 @@ import type { BossDefeat } from '@/types/game'
 import { LUNAR_BOSSES, SHADOW_BOSSES } from './creatures'
 import FloatingPanel from './FloatingPanel'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   defeats: BossDefeat[]
@@ -38,7 +39,7 @@ const BossTrophyRoom = memo(function BossTrophyRoom({ defeats, onClose }: Props)
         {/* Lunar bosses section */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🌕</span>
+            <PixelIcon icon="🌕" size={24} variant="mystic" selected />
             <h3 className="text-sm font-bold tracking-wider uppercase" style={{
               color: 'rgba(200,210,255,0.8)',
             }}>
@@ -71,7 +72,7 @@ const BossTrophyRoom = memo(function BossTrophyRoom({ defeats, onClose }: Props)
         {/* Shadow bosses section */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🌑</span>
+            <PixelIcon icon="🌑" size={24} variant="mystic" selected />
             <h3 className="text-sm font-bold tracking-wider uppercase" style={{
               color: 'rgba(168,85,247,0.8)',
             }}>
@@ -123,7 +124,7 @@ const BossTrophyRoom = memo(function BossTrophyRoom({ defeats, onClose }: Props)
 
         {defeats.length === 0 && (
           <div className="text-center py-6 text-white/30 text-sm">
-            <p className="text-3xl mb-3">🏆</p>
+            <PixelIcon icon="🏆" size={44} variant="gold" className="mb-3 mx-auto" />
             <p>No bosses defeated yet.</p>
             <p className="text-[10px] mt-1 text-white/20">
               Explore during full moon or new moon nights to encounter bosses.
@@ -190,7 +191,7 @@ function TrophyCard({ boss, defeated, captured, defeatCount, lastDefeat, type }:
           )}
           {captured && (
             <div className="flex items-center gap-1 text-[9px] mt-0.5">
-              <span className="text-amber-400">✦</span>
+              <PixelIcon icon="✦" size={14} variant="gold" />
               <span className="text-amber-400/70 font-medium">Captured</span>
             </div>
           )}

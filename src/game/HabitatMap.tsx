@@ -3,6 +3,7 @@ import type { BiomeType, CreatureType } from '@/types/game'
 import { ALL_CREATURES } from './creatures'
 import FloatingPanel from './FloatingPanel'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   catalogSeen: string[]
@@ -105,7 +106,10 @@ export default function HabitatMap({ catalogSeen, catalogCaptured, onClose }: Pr
                 color: viewMode === mode ? '#fff' : 'rgba(255,255,255,0.3)',
               }}
             >
-              {mode === 'biome' ? '🗺️ By Biome' : '🧬 By Type'}
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <PixelIcon icon={mode === 'biome' ? '🗺️' : '🧬'} size={16} variant={mode === 'biome' ? 'travel' : 'mystic'} selected={viewMode === mode} />
+                {mode === 'biome' ? 'By Biome' : 'By Type'}
+              </span>
             </button>
           ))}
         </div>
@@ -133,7 +137,7 @@ export default function HabitatMap({ catalogSeen, catalogCaptured, onClose }: Pr
                       background: `${info.color}12`,
                       border: `1px solid ${info.color}20`,
                     }}>
-                      {info.icon}
+                      <PixelIcon icon={info.icon} size={30} color={info.color} selected={isSelected} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
@@ -235,7 +239,7 @@ export default function HabitatMap({ catalogSeen, catalogCaptured, onClose }: Pr
                             {creature.type}
                           </span>
                           {isCaught && (
-                            <span className="text-[7px] text-emerald-400">✓</span>
+                            <PixelIcon icon="✓" size={13} variant="nature" />
                           )}
                           {isSeen && !isCaught && (
                             <span className="text-[7px] text-white/20">seen</span>

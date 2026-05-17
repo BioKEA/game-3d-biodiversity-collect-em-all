@@ -3,6 +3,9 @@ import type { Creature } from '@/types/game'
 import { ALL_CREATURES } from './creatures'
 import { SFX } from './sounds'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
+import { drawPixelDiver, drawPixelJellyfish } from './canvasPixelArt'
+import { drawPixelGlyphOnCanvas, resolvePixelGlyphKind } from './pixelGlyphArt'
 
 interface Props {
   playerLevel: number
@@ -271,19 +274,29 @@ export default function DivingMinigame({ playerLevel: _playerLevel, onClose, onE
       }
 
       // Draw entity
-      ctx.font = e.type === 'creature' ? '20px serif' : e.type === 'obstacle' ? '18px serif' : '16px serif'
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
+      const glyph = e.type === 'obstacle' ? null : (resolvePixelGlyphKind(e.sprite) ?? (e.type === 'creature' ? 'fish' : 'gem'))
 
       // Glow for treasures
       if (e.type === 'treasure') {
         ctx.save()
         ctx.shadowColor = '#fbbf24'
         ctx.shadowBlur = 8 + Math.sin(tick * 0.05) * 4
-        ctx.fillText(e.sprite, e.x, screenY)
+        drawPixelGlyphOnCanvas(ctx, glyph ?? 'gem', e.x, screenY, 18, {
+          primary: '#38bdf8',
+          accent: '#fbbf24',
+          dark: '#0f172a',
+          light: '#fef3c7',
+        })
         ctx.restore()
+      } else if (e.type === 'obstacle') {
+        drawPixelJellyfish(ctx, e.x, screenY, 1.4)
       } else {
-        ctx.fillText(e.sprite, e.x, screenY)
+        drawPixelGlyphOnCanvas(ctx, glyph ?? 'fish', e.x, screenY, 20, {
+          primary: '#38bdf8',
+          accent: '#a7f3d0',
+          dark: '#083344',
+          light: '#e0f2fe',
+        })
       }
 
       // Name label for creatures
@@ -310,9 +323,6 @@ export default function DivingMinigame({ playerLevel: _playerLevel, onClose, onE
     // Draw player (diver)
     const playerScreenY = player.y - camY
     ctx.save()
-    ctx.font = '22px serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
     // Player bubble trail
     if (tick % 8 === 0) {
       entities.push({
@@ -323,7 +333,7 @@ export default function DivingMinigame({ playerLevel: _playerLevel, onClose, onE
         vx: (Math.random() - 0.5) * 0.3, vy: -0.8,
       })
     }
-    ctx.fillText('🤿', player.x, playerScreenY)
+    drawPixelDiver(ctx, player.x, playerScreenY, 1.35)
     ctx.restore()
 
     // Oxygen bar overlay
@@ -376,7 +386,7 @@ export default function DivingMinigame({ playerLevel: _playerLevel, onClose, onE
         <div className="flex flex-col items-center gap-2 w-full max-w-[320px]">
           <div className="flex items-center justify-between w-full px-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs">🤿</span>
+              <PixelIcon icon="🤿" size={20} variant="water" selected />
               <div className="w-20 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.4)' }}>
                 <div className="h-full rounded-full transition-all" style={{
                   width: `${oxygen}%`,
@@ -397,7 +407,7 @@ export default function DivingMinigame({ playerLevel: _playerLevel, onClose, onE
 
           <div className="flex items-center gap-1.5">
             {sessionFinds.map((s, i) => (
-              <span key={i} className="text-sm">{s}</span>
+              <PixelIcon key={i} icon={s} size={22} variant="water" selected />
             ))}
             {sessionFinds.length === 0 && (
               <span className="text-white/20 text-[9px]">Dive deeper to find treasures!</span>
@@ -460,7 +470,7 @@ export default function DivingMinigame({ playerLevel: _playerLevel, onClose, onE
       {phase === 'surfaced' && (
         <div className="flex flex-col items-center gap-4 max-w-xs w-full px-4">
           <div className="text-center">
-            <span className="text-4xl block mb-2">🫧</span>
+            <PixelIcon icon="🫧" size={52} variant="water" selected className="mb-2 mx-auto" />
             <p className="text-[8px] text-cyan-400 font-black uppercase tracking-[4px] mb-1">SURFACED</p>
             <h2 className="text-white text-base font-bold">Dive Complete!</h2>
             <p className="text-white/30 text-[10px] mt-1">
@@ -489,7 +499,7 @@ export default function DivingMinigame({ playerLevel: _playerLevel, onClose, onE
             {sessionFinds.length > 0 && (
               <div className="flex gap-1 justify-center flex-wrap">
                 {sessionFinds.map((s, i) => (
-                  <span key={i} className="text-lg">{s}</span>
+                  <PixelIcon key={i} icon={s} size={24} variant="water" />
                 ))}
               </div>
             )}

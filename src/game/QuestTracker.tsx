@@ -3,6 +3,7 @@ import type { PlayerState, QuestProgress, Quest } from '@/types/game'
 import { RANGERS } from './rangers'
 import { ALL_CREATURES } from './creatures'
 import { getQuestProgress, getObjectiveTarget } from './questHelpers'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   questProgress: Record<string, QuestProgress>
@@ -67,7 +68,7 @@ export default function QuestTracker({ questProgress, player, onOpenQuestLog }: 
           className="w-full flex items-center justify-between px-4 py-2 hover:bg-white/5 transition-colors"
         >
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <span className="text-sm sm:text-lg">📋</span>
+            <PixelIcon icon="📋" size={22} variant="gold" selected />
             <span className="text-white/60 text-xs sm:text-base uppercase tracking-wider font-semibold">
               Quests ({activeQuests.length})
             </span>
@@ -95,9 +96,9 @@ export default function QuestTracker({ questProgress, player, onOpenQuestLog }: 
                   }}
                 >
                   <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
-                    <span className="text-xs sm:text-base">{rangerSprite}</span>
+                    <PixelIcon icon={rangerSprite} size={20} variant="nature" />
                     <span className="text-white text-xs sm:text-base font-medium truncate flex-1">{quest.title}</span>
-                    {isComplete && <span className="text-[10px] sm:text-sm">✅</span>}
+                    {isComplete && <PixelIcon icon="✅" size={18} variant="nature" />}
                   </div>
                   <p className="text-white/35 text-[10px] sm:text-sm truncate mb-0.5 sm:mb-1">
                     {shortObjective(quest.objective)}

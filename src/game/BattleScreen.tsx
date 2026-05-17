@@ -908,7 +908,7 @@ export default function BattleScreen({
               <div className="rounded-full p-1" style={{
                 animation: 'capsule-glow-pulse 0.6s ease-in-out 0.9s infinite',
               }}>
-                🔮
+                <PixelIcon icon="🔮" size={44} variant="capture" selected />
               </div>
             </div>
           </div>
@@ -984,7 +984,7 @@ export default function BattleScreen({
               animation: `capture-sparkle 1s ease-out ${0.2 + i * 0.1}s forwards`,
               opacity: 0,
             }}>
-              {['✨', '⭐', '💫', '🌟'][i % 4]}
+              <PixelIcon icon={['✨', '⭐', '💫', '🌟'][i % 4]} size={22} variant="gold" />
             </div>
           ))}
 
@@ -996,7 +996,7 @@ export default function BattleScreen({
               animation: `capture-stars 1.5s ease-out ${0.5 + i * 0.15}s forwards`,
               opacity: 0,
             }}>
-              ⭐
+              <PixelIcon icon="⭐" size={18} variant="gold" />
             </div>
           ))}
 
@@ -1013,7 +1013,12 @@ export default function BattleScreen({
                   color: wildCreature.isShiny ? '#c084fc' : wildCreature.isAlpha ? '#fbbf24' : '#4ade80',
                   textShadow: `0 0 10px ${wildCreature.isShiny ? 'rgba(192,132,252,0.5)' : wildCreature.isAlpha ? 'rgba(251,191,36,0.5)' : 'rgba(74,222,128,0.5)'}`,
                 }}>
-                  {wildCreature.isShiny ? '✨ Shiny Captured!' : wildCreature.isAlpha ? '⭐ Alpha Captured!' : 'Captured!'}
+                  <span className="inline-flex items-center justify-center gap-1.5">
+                    {(wildCreature.isShiny || wildCreature.isAlpha) && (
+                      <PixelIcon icon={wildCreature.isShiny ? '✨' : '⭐'} size={18} variant={wildCreature.isShiny ? 'mystic' : 'gold'} />
+                    )}
+                    {wildCreature.isShiny ? 'Shiny Captured!' : wildCreature.isAlpha ? 'Alpha Captured!' : 'Captured!'}
+                  </span>
                 </div>
 
                 {/* Creature sprite */}
@@ -1134,7 +1139,7 @@ export default function BattleScreen({
                     animation: `status-flame-flicker ${0.4 + i * 0.15}s ease-in-out infinite alternate`,
                     animationDelay: `${i * 0.12}s`,
                     opacity: 0.8,
-                  }}>🔥</div>
+                  }}><PixelIcon icon="🔥" size={18 + i * 2} variant="danger" /></div>
                 ))}
               </div>
             )}
@@ -1146,7 +1151,7 @@ export default function BattleScreen({
                     fontSize: '10px',
                     animation: `status-spark-flash ${0.3 + i * 0.1}s ease-in-out infinite`,
                     animationDelay: `${i * 0.2}s`,
-                  }}>⚡</div>
+                  }}><PixelIcon icon="⚡" size={18} variant="gold" /></div>
                 ))}
               </div>
             )}
@@ -1173,7 +1178,7 @@ export default function BattleScreen({
                     fontSize: `${8 + (i % 2) * 3}px`,
                     animation: `status-freeze-fall ${1.5 + i * 0.3}s ease-in infinite`,
                     animationDelay: `${i * 0.3}s`,
-                  }}>❄️</div>
+                  }}><PixelIcon icon="❄️" size={16 + (i % 2) * 3} variant="water" /></div>
                 ))}
                 <div className="absolute inset-0 rounded-xl" style={{
                   background: 'rgba(34,211,238,0.08)',
@@ -1190,7 +1195,7 @@ export default function BattleScreen({
                     fontSize: `${10 + i * 2}px`,
                     animation: `status-confuse-orbit ${1.8 + i * 0.4}s linear infinite`,
                     animationDelay: `${i * 0.6}s`,
-                  }}>💫</div>
+                  }}><PixelIcon icon="💫" size={18 + i * 2} variant="mystic" /></div>
                 ))}
               </div>
             )}
@@ -1241,7 +1246,7 @@ export default function BattleScreen({
                     color: '#fbbf24',
                     border: '1px solid rgba(251,191,36,0.35)',
                     textShadow: '0 0 6px rgba(251,191,36,0.4)',
-                  }}>⭐ ALPHA</span>
+                  }}><span className="inline-flex items-center gap-1"><PixelIcon icon="⭐" size={14} variant="gold" /> ALPHA</span></span>
                 )}
                 {wildCreature.isShiny && (
                   <span className="text-[8px] px-1.5 py-0.5 rounded-full font-bold" style={{
@@ -1249,11 +1254,11 @@ export default function BattleScreen({
                     color: '#c084fc',
                     border: '1px solid rgba(192,132,252,0.35)',
                     textShadow: '0 0 6px rgba(192,132,252,0.4)',
-                  }}>✨ SHINY</span>
+                  }}><span className="inline-flex items-center gap-1"><PixelIcon icon="✨" size={14} variant="mystic" /> SHINY</span></span>
                 )}
                 <TypeMatchupBadge attackerType={playerCreature.type} defenderType={wildCreature.type} />
                 <span className="text-[10px] px-1 py-0.5 rounded" style={{ color: moodInfo.color }} title={moodInfo.description}>
-                  {moodInfo.icon}
+                  <PixelIcon icon={moodInfo.icon} size={14} variant="nature" />
                 </span>
               </div>
               {/* HP bar with ghost trail + glow */}
@@ -1325,7 +1330,7 @@ export default function BattleScreen({
                     animation: `status-flame-flicker ${0.4 + i * 0.15}s ease-in-out infinite alternate`,
                     animationDelay: `${i * 0.12}s`,
                     opacity: 0.8,
-                  }}>🔥</div>
+                  }}><PixelIcon icon="🔥" size={18 + i * 2} variant="danger" /></div>
                 ))}
               </div>
             )}
@@ -1337,7 +1342,7 @@ export default function BattleScreen({
                     fontSize: '10px',
                     animation: `status-spark-flash ${0.3 + i * 0.1}s ease-in-out infinite`,
                     animationDelay: `${i * 0.2}s`,
-                  }}>⚡</div>
+                  }}><PixelIcon icon="⚡" size={18} variant="gold" /></div>
                 ))}
               </div>
             )}
@@ -1364,7 +1369,7 @@ export default function BattleScreen({
                     fontSize: `${8 + (i % 2) * 3}px`,
                     animation: `status-freeze-fall ${1.5 + i * 0.3}s ease-in infinite`,
                     animationDelay: `${i * 0.3}s`,
-                  }}>❄️</div>
+                  }}><PixelIcon icon="❄️" size={16 + (i % 2) * 3} variant="water" /></div>
                 ))}
                 <div className="absolute inset-0 rounded-xl" style={{
                   background: 'rgba(34,211,238,0.08)',
@@ -1381,7 +1386,7 @@ export default function BattleScreen({
                     fontSize: `${10 + i * 2}px`,
                     animation: `status-confuse-orbit ${1.8 + i * 0.4}s linear infinite`,
                     animationDelay: `${i * 0.6}s`,
-                  }}>💫</div>
+                  }}><PixelIcon icon="💫" size={18 + i * 2} variant="mystic" /></div>
                 ))}
               </div>
             )}
@@ -1712,7 +1717,7 @@ export default function BattleScreen({
                 }}>{wildCreature.rarity}</span>
                 <span className="text-[9px] text-emerald-400 px-1.5 py-0.5 rounded" style={{
                   background: 'rgba(52,211,153,0.12)',
-                }}>😊 friendly</span>
+                }}><span className="inline-flex items-center gap-1"><PixelIcon icon="😊" size={14} variant="nature" /> friendly</span></span>
               </div>
             </div>
             <div className="rounded-[10px] p-2.5 mb-4 text-center" style={{
@@ -1733,7 +1738,10 @@ export default function BattleScreen({
                   boxShadow: '0 2px 8px rgba(16,185,129,0.1)',
                 }}
               >
-                🎁 Accept Gift
+                <span className="inline-flex items-center justify-center gap-1.5">
+                  <PixelIcon icon="🎁" size={20} variant="item" />
+                  Accept Gift
+                </span>
               </button>
               <div className="flex gap-2">
                 <button
@@ -1744,7 +1752,10 @@ export default function BattleScreen({
                     border: '1px solid rgba(239,68,68,0.2)',
                   }}
                 >
-                  ⚔️ Battle Anyway
+                  <span className="inline-flex items-center justify-center gap-1.5">
+                    <PixelIcon icon="⚔️" size={18} variant="danger" />
+                    Battle Anyway
+                  </span>
                 </button>
                 <button
                   onClick={onFlee}

@@ -3,6 +3,7 @@ import type { PlayerState, QuestProgress, Quest } from '@/types/game'
 import { RANGERS } from './rangers'
 import FloatingPanel from './FloatingPanel'
 import { describeObjective, getQuestProgress, getObjectiveTarget } from './questHelpers'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   questProgress: Record<string, QuestProgress>
@@ -95,9 +96,12 @@ export default function QuestLog({ questProgress, player, onClose }: Props) {
         {/* Quest list */}
         {currentList.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-2xl mb-2">
-              {tab === 'active' ? '📋' : tab === 'completed' ? '🏅' : '🗺️'}
-            </p>
+            <PixelIcon
+              icon={tab === 'active' ? '📋' : tab === 'completed' ? '🏅' : '🗺️'}
+              size={42}
+              variant={tab === 'completed' ? 'gold' : tab === 'available' ? 'travel' : 'item'}
+              className="mb-2 mx-auto"
+            />
             <p className="text-white/30 text-xs">
               {tab === 'active' ? 'No active quests. Visit a Ranger to pick one up!' : tab === 'completed' ? 'No completed quests yet.' : 'All quests accepted!'}
             </p>
@@ -148,8 +152,8 @@ function QuestCard({ quest, rangerName, rangerSprite, player, tab }: {
       <div className="px-3 pt-2.5 pb-1.5 flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5">
-            {tab === 'completed' && <span className="text-[10px]">✅</span>}
-            {tab === 'active' && isComplete && <span className="text-[10px]">🎉</span>}
+            {tab === 'completed' && <PixelIcon icon="✅" size={16} variant="nature" />}
+            {tab === 'active' && isComplete && <PixelIcon icon="🎉" size={16} variant="gold" />}
             <h3 className="text-white text-xs font-semibold truncate">{quest.title}</h3>
           </div>
           <p className="text-white/40 text-[10px] leading-relaxed">{quest.description}</p>
@@ -192,7 +196,7 @@ function QuestCard({ quest, rangerName, rangerSprite, player, tab }: {
           <span className="text-amber-400/70 text-[9px] font-medium">{quest.reward.xp} XP</span>
           {quest.reward.items?.map((item, i) => (
             <span key={i} className="flex items-center gap-0.5">
-              <span className="text-[9px]">{item.sprite}</span>
+              <PixelIcon icon={item.sprite} size={16} variant="item" />
               <span className="text-white/40 text-[8px]">×{item.quantity}</span>
             </span>
           ))}
@@ -213,4 +217,3 @@ function QuestCard({ quest, rangerName, rangerSprite, player, tab }: {
     </div>
   )
 }
-

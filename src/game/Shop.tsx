@@ -84,7 +84,7 @@ export default function Shop({ coins, inventory, onBuy, onClose }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <div className="flex items-center gap-2">
-          <span className="text-xl">🏪</span>
+          <PixelIcon icon="🏪" size={34} variant="nature" selected />
           <div>
             <h2 className="text-white font-bold text-sm">Bay Area Shop</h2>
             <p className="text-white/30 text-[9px]">Supplies for your expedition</p>
@@ -95,7 +95,7 @@ export default function Shop({ coins, inventory, onBuy, onClose }: Props) {
             background: 'rgba(234,179,8,0.1)',
             border: '1px solid rgba(234,179,8,0.2)',
           }}>
-            <span className="text-xs">💰</span>
+            <PixelIcon icon="💰" size={18} variant="gold" />
             <span className="text-yellow-400 text-xs font-bold">{coins}</span>
           </div>
           <button

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import type { PlayerStats } from './achievements'
 import FloatingPanel from './FloatingPanel'
 import { GAME_ID, leaderboard } from '@/lib/leaderboard-client'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   playerName: string
@@ -185,7 +186,7 @@ export default function Leaderboard({ playerName, playerLevel, speciesCaught, to
           border: '1px solid rgba(251,191,36,0.15)',
         }}>
           <div className="flex items-center justify-center gap-2 mb-1">
-            <span className="text-xl">🏆</span>
+            <PixelIcon icon="🏆" size={30} variant="gold" selected />
             <span className="text-amber-400 text-lg font-bold">#{playerRank}</span>
           </div>
           {editingName && onRename ? (
@@ -232,9 +233,9 @@ export default function Leaderboard({ playerName, playerLevel, speciesCaught, to
         {/* Sort tabs */}
         <div className="flex gap-1 p-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
           {([
-            { key: 'score' as SortKey, label: '⭐ Score' },
-            { key: 'species' as SortKey, label: '📚 Species' },
-            { key: 'level' as SortKey, label: '⚡ Level' },
+            { key: 'score' as SortKey, icon: '⭐', label: 'Score' },
+            { key: 'species' as SortKey, icon: '📚', label: 'Species' },
+            { key: 'level' as SortKey, icon: '⚡', label: 'Level' },
           ]).map(tab => (
             <button
               key={tab.key}
@@ -245,7 +246,10 @@ export default function Leaderboard({ playerName, playerLevel, speciesCaught, to
                 color: sortBy === tab.key ? '#fff' : 'rgba(255,255,255,0.3)',
               }}
             >
-              {tab.label}
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <PixelIcon icon={tab.icon} size={16} variant={tab.key === 'score' ? 'gold' : tab.key === 'species' ? 'nature' : 'mystic'} selected={sortBy === tab.key} />
+                {tab.label}
+              </span>
             </button>
           ))}
         </div>
@@ -266,7 +270,7 @@ export default function Leaderboard({ playerName, playerLevel, speciesCaught, to
                 {/* Rank */}
                 <div className="w-7 text-center shrink-0">
                   {entry.rank <= 3 ? (
-                    <span className="text-base">{entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : '🥉'}</span>
+                    <PixelIcon icon={entry.rank === 1 ? '🏅' : entry.rank === 2 ? '🥈' : '🥉'} size={24} variant="gold" selected />
                   ) : (
                     <span className="text-white/30 text-xs font-mono">#{entry.rank}</span>
                   )}

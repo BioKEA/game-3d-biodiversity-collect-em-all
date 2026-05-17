@@ -7,6 +7,7 @@ import type { LandmarkRegion, LandmarkDef } from './landmarks'
 import FloatingPanel from './FloatingPanel'
 import PixelCreatureToken from './PixelCreatureToken'
 import PixelLandmarkIcon from './PixelLandmarkIcon'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   journal: Record<string, JournalEntry>
@@ -98,15 +99,20 @@ export default function FieldJournal({ journal, currentSubregion, onClose, weath
     >
       {/* Tab bar */}
       <div className="flex border-b px-3 gap-1" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        {([['regions', '🗺️ Regions'], ['landmarks', '🏛️ Landmarks'], ['weather', '⛈️ Weather']] as const).map(([key, label]) => (
+        {([
+          { key: 'regions', icon: '🗺️', label: 'Regions' },
+          { key: 'landmarks', icon: '🏛️', label: 'Landmarks' },
+          { key: 'weather', icon: '⛈️', label: 'Weather' },
+        ] as const).map(({ key, icon, label }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className="px-3 py-1.5 text-[10px] font-medium transition-all relative"
+            className="px-3 py-1.5 text-[10px] font-medium transition-all relative inline-flex items-center gap-1.5"
             style={{
               color: tab === key ? '#22d3ee' : 'rgba(255,255,255,0.35)',
             }}
           >
+            <PixelIcon icon={icon} size={16} variant={key === 'weather' ? 'mystic' : key === 'landmarks' ? 'travel' : 'nature'} selected={tab === key} />
             {label}
             {tab === key && (
               <div className="absolute bottom-0 left-1 right-1 h-[2px] rounded-full" style={{ background: '#22d3ee' }} />
@@ -125,7 +131,7 @@ export default function FieldJournal({ journal, currentSubregion, onClose, weath
         <div className="w-[45%] border-r border-white/10 overflow-y-auto p-2 space-y-1">
           {entries.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-white/30 text-xs">
-              <span className="text-2xl mb-2">🗺️</span>
+              <PixelIcon icon="🗺️" size={42} variant="travel" className="mb-2" />
               <p>No regions explored yet.</p>
               <p>Start walking to fill your journal!</p>
             </div>
@@ -147,7 +153,7 @@ export default function FieldJournal({ journal, currentSubregion, onClose, weath
                   }`}
                 >
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm">{BIOME_ICONS[entry.biome]}</span>
+                    <PixelIcon icon={BIOME_ICONS[entry.biome]} size={20} variant="nature" selected={isSelected} />
                     <span className={`text-xs font-semibold ${isSelected ? 'text-emerald-300' : 'text-white/80'}`}>
                       {entry.subregion}
                     </span>
@@ -166,7 +172,7 @@ export default function FieldJournal({ journal, currentSubregion, onClose, weath
                       {encounteredCount}/{expected.length > 0 ? expected.length : '?'} species
                     </span>
                     {expected.length > 0 && encounteredCount >= expected.length && (
-                      <span className="text-[9px] text-yellow-400">★</span>
+                      <PixelIcon icon="⭐" size={14} variant="gold" />
                     )}
                   </div>
                 </button>
@@ -182,7 +188,7 @@ export default function FieldJournal({ journal, currentSubregion, onClose, weath
               {/* Region header */}
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xl">{BIOME_ICONS[selected.biome]}</span>
+                  <PixelIcon icon={BIOME_ICONS[selected.biome]} size={30} variant="nature" selected />
                   <div>
                     <h3 className="text-white font-bold text-sm">{selected.subregion}</h3>
                     <p className="text-white/30 text-[10px]">{BIOME_LABELS[selected.biome]}</p>
@@ -303,7 +309,7 @@ export default function FieldJournal({ journal, currentSubregion, onClose, weath
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-white/20 text-xs">
-              <span className="text-3xl mb-2">📓</span>
+              <PixelIcon icon="📓" size={44} variant="nature" className="mb-2" />
               <p>Select a region to view details</p>
             </div>
           )}
@@ -379,9 +385,14 @@ function LandmarkGuideTab({ visitedLandmarks }: { visitedLandmarks: string[] }) 
             <div>
               <h4 className="text-[9px] text-white/30 uppercase tracking-wider mb-1">Associated Creatures</h4>
               <div className="flex gap-1">
-                {info.creatures.map((c, i) => (
-                  <span key={i} className="text-lg">{c}</span>
-                ))}
+                {info.creatures.map((c, i) => {
+                  const creature = ALL_CREATURES.find(entry => entry.sprite === c)
+                  return creature ? (
+                    <PixelCreatureToken key={i} creature={creature} size={26} />
+                  ) : (
+                    <PixelIcon key={i} icon={c} size={26} variant="nature" />
+                  )
+                })}
               </div>
             </div>
           </>
@@ -516,7 +527,7 @@ function WeatherAlmanacTab({ almanac, currentWeather, gameDay }: {
         border: '1px solid rgba(255,255,255,0.06)',
       }}>
         <div className="flex items-center gap-3">
-          <span className="text-3xl">{currentWeather ? getWeatherInfo(currentWeather).icon : '🌤'}</span>
+          <PixelIcon icon={currentWeather ? getWeatherInfo(currentWeather).icon : '🌤'} size={42} variant="mystic" selected />
           <div className="flex-1">
             <p className="text-white/80 text-sm font-semibold">
               {currentWeather ? getWeatherInfo(currentWeather).label : 'Clear'}
@@ -526,8 +537,9 @@ function WeatherAlmanacTab({ almanac, currentWeather, gameDay }: {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] font-medium" style={{ color: seasonInfo.color }}>
-              {seasonInfo.icon} {seasonInfo.label}
+            <p className="text-[10px] font-medium inline-flex items-center justify-end gap-1" style={{ color: seasonInfo.color }}>
+              <PixelIcon icon={seasonInfo.icon} size={16} color={seasonInfo.color} />
+              {seasonInfo.label}
             </p>
             <p className="text-[9px] text-white/25">Day {(gameDay ?? 0) % 360 + 1}</p>
           </div>
@@ -559,7 +571,7 @@ function WeatherAlmanacTab({ almanac, currentWeather, gameDay }: {
                 border: `1px solid ${isCurrent ? `${color}30` : 'rgba(255,255,255,0.04)'}`,
               }}>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-lg">{info.icon}</span>
+                  <PixelIcon icon={info.icon} size={24} variant={isCurrent ? 'mystic' : 'neutral'} selected={isCurrent} />
                   <span className="text-white/80 text-xs font-semibold flex-1">{info.label}</span>
                   {isCurrent && (
                     <span className="text-[8px] px-1.5 py-0.5 rounded-full font-medium" style={{
@@ -589,18 +601,22 @@ function WeatherAlmanacTab({ almanac, currentWeather, gameDay }: {
         <h4 className="text-white/40 text-[10px] uppercase tracking-wider mb-2">Creature Spawn Bonuses</h4>
         <div className="grid grid-cols-2 gap-1.5">
           {([
-            ['🌧️ Rain', '🐸🌊🌿 ×2.0'],
-            ['🌫️ Fog', '✨ Mystic ×2.5'],
-            ['💨 Wind', '🪶🦋 ×1.8'],
-            ['☀️ Sunny', '🦎🐾🦋 ×1.5'],
-            ['⛈️ Storm', '✨🐸🌊 ×2.5'],
-            ['⛈️ Storm', '👑 Legendary +50%'],
-          ] as const).map(([weather, bonus], i) => (
+            { weatherIcon: '🌧️', weather: 'Rain', bonusIcons: ['🐸', '🌊', '🌿'], bonus: '×2.0' },
+            { weatherIcon: '🌫️', weather: 'Fog', bonusIcons: ['✨'], bonus: 'Mystic ×2.5' },
+            { weatherIcon: '💨', weather: 'Wind', bonusIcons: ['🪶', '🦋'], bonus: '×1.8' },
+            { weatherIcon: '☀️', weather: 'Sunny', bonusIcons: ['🦎', '🐾', '🦋'], bonus: '×1.5' },
+            { weatherIcon: '⛈️', weather: 'Storm', bonusIcons: ['✨', '🐸', '🌊'], bonus: '×2.5' },
+            { weatherIcon: '⛈️', weather: 'Storm', bonusIcons: ['👑'], bonus: 'Legendary +50%' },
+          ] as const).map(({ weatherIcon, weather, bonusIcons, bonus }, i) => (
             <div key={i} className="flex items-center gap-1.5 rounded-md px-2 py-1" style={{
               background: 'rgba(255,255,255,0.02)',
               border: '1px solid rgba(255,255,255,0.04)',
             }}>
-              <span className="text-[10px]">{weather}</span>
+              <PixelIcon icon={weatherIcon} size={18} variant="mystic" />
+              <span className="text-[10px] text-white/55">{weather}</span>
+              <span className="inline-flex items-center gap-0.5">
+                {bonusIcons.map(icon => <PixelIcon key={icon} icon={icon} size={14} variant="nature" />)}
+              </span>
               <span className="text-[9px] text-white/40">{bonus}</span>
             </div>
           ))}
@@ -609,7 +625,7 @@ function WeatherAlmanacTab({ almanac, currentWeather, gameDay }: {
 
       {totalOccurrences === 0 && (
         <div className="text-center py-4">
-          <span className="text-2xl opacity-20 block mb-2">📊</span>
+          <PixelIcon icon="📊" size={36} variant="neutral" className="mb-2 opacity-30 mx-auto" />
           <p className="text-white/25 text-xs">Weather data will appear as you explore!</p>
         </div>
       )}

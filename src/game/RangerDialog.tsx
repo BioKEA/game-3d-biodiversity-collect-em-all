@@ -5,6 +5,7 @@ import { FINAL_BOSS_ID, MINI_BOSS_IDS, GRAND_CHAMPION_ID, canChallengeFinalBoss,
 import { describeObjective, getQuestProgress, getObjectiveTarget } from './questHelpers'
 import { getRangerActivity, getActivityEmoji, getActivityLabel } from './npcSchedules'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 // Pick a response based on simple keyword matching over the user's message.
 // Falls back to a generic reply. Ranger-flavored, Bay Area ecology themed.
@@ -151,7 +152,7 @@ export default function RangerDialog({
           }}
         >
           <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-            <span className="text-3xl">{ranger.sprite}</span>
+            <PixelIcon icon={ranger.sprite} size={42} variant="nature" selected title={ranger.name} />
             <div className="flex-1">
               <h2 className="text-white font-bold text-sm">{ranger.name}</h2>
               <p className="text-emerald-400 text-[10px]">{ranger.title}</p>
@@ -211,7 +212,7 @@ export default function RangerDialog({
       <div className="w-full max-w-lg bg-[#111827] border border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-emerald-900/40 to-transparent border-b border-white/5">
-          <span className="text-3xl">{ranger.sprite}</span>
+          <PixelIcon icon={ranger.sprite} size={42} variant="nature" selected title={ranger.name} />
           <div className="flex-1">
             <h2 className="text-white font-bold text-sm">{ranger.name}</h2>
             <p className="text-emerald-400 text-[10px]">{ranger.title}</p>
@@ -230,13 +231,14 @@ export default function RangerDialog({
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 py-2 text-xs font-medium transition-colors ${
+              className={`flex-1 py-2 text-xs font-medium transition-colors inline-flex items-center justify-center gap-1.5 ${
                 tab === t
                   ? 'text-emerald-400 border-b-2 border-emerald-400 bg-emerald-500/5'
                   : 'text-white/40 hover:text-white/60'
               }`}
             >
-              {t === 'talk' ? '💬 Talk' : t === 'quests' ? '📋 Quests' : t === 'trade' ? '🔄 Trade' : '⚔️ Battle'}
+              <PixelIcon icon={t === 'talk' ? '💬' : t === 'quests' ? '📋' : t === 'trade' ? '🔄' : '⚔️'} size={16} variant={t === 'battle' ? 'danger' : t === 'trade' ? 'gold' : 'nature'} selected={tab === t} />
+              {t === 'talk' ? 'Talk' : t === 'quests' ? 'Quests' : t === 'trade' ? 'Trade' : 'Battle'}
             </button>
           ))}
         </div>
@@ -257,7 +259,10 @@ export default function RangerDialog({
                 </div>
                 <div className="bg-white/3 rounded-lg p-2 border border-white/5">
                   <p className="text-white/30 text-[10px] uppercase tracking-wider mb-1">Activity</p>
-                  <p className="text-white/60 text-xs">{getActivityEmoji(schedule.activity)} {getActivityLabel(schedule.activity)}</p>
+                  <p className="text-white/60 text-xs inline-flex items-center gap-1.5">
+                    <PixelIcon icon={getActivityEmoji(schedule.activity)} size={18} variant="nature" />
+                    {getActivityLabel(schedule.activity)}
+                  </p>
                 </div>
               </div>
 
@@ -289,7 +294,7 @@ export default function RangerDialog({
                         key={i}
                         className={`flex ${line.from === 'player' ? 'justify-end' : 'justify-start'} gap-1.5 items-end`}
                       >
-                        {line.from === 'ranger' && <span className="text-sm leading-none mb-0.5">{ranger.sprite}</span>}
+                        {line.from === 'ranger' && <PixelIcon icon={ranger.sprite} size={20} variant="nature" className="mb-0.5" />}
                         <div
                           className="rounded-lg px-2 py-1 max-w-[80%]"
                           style={{
@@ -301,7 +306,7 @@ export default function RangerDialog({
                         >
                           <p className="text-white text-[10px] leading-snug">{line.text}</p>
                         </div>
-                        {line.from === 'player' && <span className="text-[10px] leading-none mb-0.5">🧭</span>}
+                        {line.from === 'player' && <PixelIcon icon="🧭" size={18} variant="travel" className="mb-0.5" />}
                       </div>
                     ))
                   )}
@@ -332,20 +337,29 @@ export default function RangerDialog({
                   onClick={() => setTab('quests')}
                   className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 text-amber-300 text-xs hover:bg-amber-500/20 transition-colors"
                 >
-                  📋 Quests ({ranger.quests.length})
+                  <span className="inline-flex items-center justify-center gap-1.5">
+                    <PixelIcon icon="📋" size={18} variant="gold" />
+                    Quests ({ranger.quests.length})
+                  </span>
                 </button>
                 <button
                   onClick={() => setTab('trade')}
                   className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-2 text-cyan-300 text-xs hover:bg-cyan-500/20 transition-colors"
                 >
-                  🔄 Trade ({ranger.trades.length})
+                  <span className="inline-flex items-center justify-center gap-1.5">
+                    <PixelIcon icon="🔄" size={18} variant="water" />
+                    Trade ({ranger.trades.length})
+                  </span>
                 </button>
                 {onChallenge && (
                   <button
                     onClick={() => setTab('battle')}
                     className="bg-red-500/10 border border-red-500/20 rounded-lg p-2 text-red-300 text-xs hover:bg-red-500/20 transition-colors"
                   >
-                    ⚔️ Battle
+                    <span className="inline-flex items-center justify-center gap-1.5">
+                      <PixelIcon icon="⚔️" size={18} variant="danger" />
+                      Battle
+                    </span>
                   </button>
                 )}
               </div>
@@ -486,7 +500,7 @@ export default function RangerDialog({
                   background: isGrandChampion ? 'rgba(251,191,36,0.08)' : isFinalBoss ? 'rgba(168,85,247,0.08)' : 'rgba(245,158,11,0.08)',
                   borderColor: isGrandChampion ? 'rgba(251,191,36,0.2)' : isFinalBoss ? 'rgba(168,85,247,0.2)' : 'rgba(245,158,11,0.2)',
                 }}>
-                  <span className="text-sm">{isGrandChampion ? '🦅' : isFinalBoss ? '👑' : '⭐'}</span>
+                  <PixelIcon icon={isGrandChampion ? '🦅' : isFinalBoss ? '👑' : '⭐'} size={22} variant={isFinalBoss ? 'mystic' : 'gold'} selected />
                   <div>
                     <span className="text-[10px] font-bold" style={{
                       color: isGrandChampion ? '#fbbf24' : isFinalBoss ? '#c084fc' : '#fbbf24',
@@ -509,7 +523,7 @@ export default function RangerDialog({
 
               {defeated && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/8 border border-emerald-500/20">
-                  <span className="text-emerald-400 text-sm">✓</span>
+                  <PixelIcon icon="✓" size={20} variant="nature" />
                   <span className="text-emerald-400 text-[10px] font-medium">
                     {isFinalBoss ? 'Bay Area Champion — challenge again anytime' : 'Defeated — challenge again for XP'}
                   </span>
@@ -519,7 +533,7 @@ export default function RangerDialog({
               {/* Locked grand champion */}
               {grandChampionLocked && grandProgress ? (
                 <div className="bg-amber-500/5 rounded-lg p-4 border border-amber-500/15 text-center">
-                  <span className="text-3xl mb-2 block">🔒</span>
+                  <PixelIcon icon="🔒" size={44} variant="gold" className="mb-2 mx-auto" />
                   <p className="text-white/70 text-xs leading-relaxed mb-3">
                     "You seek the ultimate challenge? First, prove you've mastered every corner of California. Defeat every ranger and explore the land."
                   </p>
@@ -557,17 +571,17 @@ export default function RangerDialog({
               {(finalBossLocked || grandChampionLocked) ? (
                 finalBossLocked ? (
                   <div className="bg-purple-500/5 rounded-lg p-4 border border-purple-500/15 text-center">
-                    <span className="text-3xl mb-2 block">🔒</span>
+                    <PixelIcon icon="🔒" size={44} variant="mystic" className="mb-2 mx-auto" />
                     <p className="text-white/70 text-xs leading-relaxed mb-3">
                       "You show promise, explorer... but you're not ready yet. Prove yourself by defeating my two guardians first."
                     </p>
                     <div className="space-y-1.5 mb-3">
                       <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/3 border border-white/5">
-                        <span className="text-sm">{defeatedRangers.includes('boss-salesforce') ? '✅' : '❌'}</span>
+                        <PixelIcon icon={defeatedRangers.includes('boss-salesforce') ? '✅' : '❌'} size={18} variant={defeatedRangers.includes('boss-salesforce') ? 'nature' : 'danger'} />
                         <span className="text-[10px] text-white/50">Director Hayes — Salesforce Tower</span>
                       </div>
                       <div className="flex items-center gap-2 px-2 py-1.5 rounded bg-white/3 border border-white/5">
-                        <span className="text-sm">{defeatedRangers.includes('boss-tesla') ? '✅' : '❌'}</span>
+                        <PixelIcon icon={defeatedRangers.includes('boss-tesla') ? '✅' : '❌'} size={18} variant={defeatedRangers.includes('boss-tesla') ? 'nature' : 'danger'} />
                         <span className="text-[10px] text-white/50">Engineer Volta — Tesla Factory</span>
                       </div>
                     </div>
@@ -576,7 +590,7 @@ export default function RangerDialog({
                 ) : null
               ) : sleepingNoBattle ? (
                 <div className="rounded-lg p-4 border border-blue-400/15 text-center" style={{ background: 'rgba(96,165,250,0.05)' }}>
-                  <span className="text-3xl mb-2 block">💤</span>
+                  <PixelIcon icon="💤" size={44} variant="mystic" className="mb-2 mx-auto" />
                   <p className="text-white/70 text-xs leading-relaxed mb-2">
                     {ranger.name} is resting and can't battle right now.
                   </p>
@@ -609,7 +623,7 @@ export default function RangerDialog({
                   )}
                   <button
                     onClick={onChallenge}
-                    className="w-full py-2.5 rounded-lg text-white text-xs font-bold transition-all hover:scale-[1.02]"
+                    className="w-full py-2.5 rounded-lg text-white text-xs font-bold transition-all hover:scale-[1.02] inline-flex items-center justify-center gap-2"
                     style={{
                       background: isGrandChampion
                         ? 'linear-gradient(135deg, rgba(251,191,36,0.3), rgba(168,85,247,0.15))'
@@ -620,7 +634,8 @@ export default function RangerDialog({
                       boxShadow: `0 4px 12px ${isGrandChampion ? 'rgba(251,191,36,0.15)' : isFinalBoss ? 'rgba(168,85,247,0.15)' : 'rgba(239,68,68,0.15)'}`,
                     }}
                   >
-                    {isGrandChampion ? '🦅 Challenge the Grand Champion!' : isFinalBoss ? '👑 Challenge the Champion!' : `⚔️ Challenge ${ranger.name}!`}
+                    <PixelIcon icon={isGrandChampion ? '🦅' : isFinalBoss ? '👑' : '⚔️'} size={22} variant={isFinalBoss ? 'mystic' : isGrandChampion ? 'gold' : 'danger'} />
+                    <span>{isGrandChampion ? 'Challenge the Grand Champion!' : isFinalBoss ? 'Challenge the Champion!' : `Challenge ${ranger.name}!`}</span>
                   </button>
                 </div>
               )}

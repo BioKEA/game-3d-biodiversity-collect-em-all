@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import type { CapturedCreature } from '@/types/game'
 import type { PlayerStats } from './achievements'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   playerName: string
@@ -151,7 +152,7 @@ export default function ChampionScreen({ playerName, playerLevel, team, stats, i
           transition: 'opacity 0.5s ease',
           animation: phase >= 1 ? 'crown-float 3s ease-in-out infinite' : 'none',
         }}>
-          <span className="text-5xl">👑</span>
+          <PixelIcon icon="👑" size={64} variant="gold" selected className="mx-auto" />
         </div>
 
         {/* Title */}
@@ -211,7 +212,7 @@ export default function ChampionScreen({ playerName, playerLevel, team, stats, i
               animation: phase >= 4 ? `stat-slide 0.4s ease-out ${i * 0.08}s both` : 'none',
             }}>
               <div className="flex items-center gap-2">
-                <span className="text-sm">{s.icon}</span>
+                <PixelIcon icon={s.icon} size={18} variant="gold" />
                 <span className="text-white/40 text-[10px]">{s.label}</span>
               </div>
               <span className="text-white/80 text-xs font-bold">{s.value}</span>

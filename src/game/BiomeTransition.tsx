@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import type { BiomeType } from '@/types/game'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   biome: BiomeType
@@ -22,21 +23,21 @@ const BIOME_COLORS: Record<string, string> = {
   bay: 'rgba(37,99,235,0.12)',
 }
 
-const BIOME_LABELS: Record<string, string> = {
-  grassland: '🌾 Grassland',
-  forest: '🌲 Forest',
-  wetland: '🌿 Wetland',
-  urban: '🏙️ Urban',
-  coastal: '🏖️ Coastline',
-  chaparral: '☀️ Chaparral',
-  'oak-woodland': '🌳 Oak Woodland',
-  'kelp-forest': '🌊 Kelp Forest',
-  tidepool: '🦀 Tidepool',
-  'rocky-beach': '🪨 Rocky Beach',
-  mountain: '⛰️ Mountain',
-  redwood: '🌲 Redwood Grove',
-  marsh: '🌿 Salt Marsh',
-  bay: '🌊 Bay Waters',
+const BIOME_LABELS: Record<string, { icon: string; label: string }> = {
+  grassland: { icon: '🌾', label: 'Grassland' },
+  forest: { icon: '🌲', label: 'Forest' },
+  wetland: { icon: '🌿', label: 'Wetland' },
+  urban: { icon: '🏙️', label: 'Urban' },
+  coastal: { icon: '🏖️', label: 'Coastline' },
+  chaparral: { icon: '☀️', label: 'Chaparral' },
+  'oak-woodland': { icon: '🌳', label: 'Oak Woodland' },
+  'kelp-forest': { icon: '🌊', label: 'Kelp Forest' },
+  tidepool: { icon: '🦀', label: 'Tidepool' },
+  'rocky-beach': { icon: '🪨', label: 'Rocky Beach' },
+  mountain: { icon: '⛰️', label: 'Mountain' },
+  redwood: { icon: '🌲', label: 'Redwood Grove' },
+  marsh: { icon: '🌿', label: 'Salt Marsh' },
+  bay: { icon: '🌊', label: 'Bay Waters' },
 }
 
 export default function BiomeTransition({ biome }: Props) {
@@ -57,7 +58,7 @@ export default function BiomeTransition({ biome }: Props) {
   if (!transitioning) return null
 
   const color = BIOME_COLORS[displayBiome] || 'rgba(255,255,255,0.08)'
-  const label = BIOME_LABELS[displayBiome] || displayBiome
+  const label = BIOME_LABELS[displayBiome] ?? { icon: '🗺️', label: displayBiome }
 
   return (
     <div className="absolute inset-0 pointer-events-none z-[8] overflow-hidden">
@@ -98,8 +99,9 @@ export default function BiomeTransition({ biome }: Props) {
           border: '1px solid rgba(255,255,255,0.1)',
           animation: 'biome-label-in 1.2s ease-out forwards',
         }}>
-          <span className="text-white/80 text-xs font-medium tracking-wide">
-            {label}
+          <span className="text-white/80 text-xs font-medium tracking-wide inline-flex items-center gap-1.5">
+            <PixelIcon icon={label.icon} size={18} variant="nature" />
+            {label.label}
           </span>
         </div>
       </div>

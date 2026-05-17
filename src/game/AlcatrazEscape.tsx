@@ -3,6 +3,7 @@ import type { CapturedCreature, Creature } from '@/types/game'
 import { ALL_CREATURES } from './creatures'
 import { SFX } from './sounds'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 // The Alcatraz Escape is a multi-stage quest:
 // Stage 1: "Lockdown" - You arrive and the ferry breaks down. Ranger Ghost warns you.
@@ -96,7 +97,11 @@ export default function AlcatrazEscape({ playerTeam, playerLevel, stage, cellBlo
           <div className="flex flex-col items-center gap-4 max-w-sm w-full">
             {/* Scene header */}
             <div className="text-center">
-              <p className="text-[8px] text-red-400 font-black uppercase tracking-[4px] mb-1">⚠️ LOCKDOWN ⚠️</p>
+              <p className="text-[8px] text-red-400 font-black uppercase tracking-[4px] mb-1 inline-flex items-center justify-center gap-2">
+                <PixelIcon icon="⚠️" size={20} variant="danger" selected />
+                LOCKDOWN
+                <PixelIcon icon="⚠️" size={20} variant="danger" selected />
+              </p>
               <h2 className="text-white text-lg font-bold">Escape from Alcatraz</h2>
               <p className="text-white/30 text-[10px] mt-1">The island won't let you leave...</p>
             </div>
@@ -405,7 +410,7 @@ export default function AlcatrazEscape({ playerTeam, playerLevel, stage, cellBlo
             `}</style>
 
             <div className="text-center" style={{ animation: 'freedom-sparkle 0.8s ease-out' }}>
-              <span className="text-5xl block mb-2">🗽</span>
+              <PixelIcon icon="🗽" size={64} variant="travel" selected className="mb-2 mx-auto" />
               <p className="text-[8px] text-amber-400 font-black uppercase tracking-[6px] mb-1">FREEDOM!</p>
               <h2 className="text-white text-xl font-bold">You Escaped Alcatraz!</h2>
             </div>
@@ -421,8 +426,8 @@ export default function AlcatrazEscape({ playerTeam, playerLevel, stage, cellBlo
               </p>
               <div className="space-y-1.5">
                 <p className="text-amber-400 text-sm font-bold">+500 XP</p>
-                <p className="text-purple-300 text-[10px]">🏆 Alcatraz Escapee Achievement</p>
-                <p className="text-cyan-300 text-[10px]">✨ 5x Spectral Capsules</p>
+                <p className="text-purple-300 text-[10px] inline-flex items-center justify-center gap-1"><PixelIcon icon="🏆" size={18} variant="gold" /> Alcatraz Escapee Achievement</p>
+                <p className="text-cyan-300 text-[10px] inline-flex items-center justify-center gap-1"><PixelIcon icon="✨" size={18} variant="mystic" /> 5x Spectral Capsules</p>
               </div>
             </div>
 

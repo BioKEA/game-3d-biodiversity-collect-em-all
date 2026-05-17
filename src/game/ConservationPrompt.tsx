@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   onDismiss: () => void
@@ -42,7 +43,7 @@ export default function ConservationPrompt({ onDismiss }: Props) {
         {/* Header with nature imagery */}
         <div className="relative px-6 pt-6 pb-3">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-2xl">🌿</span>
+            <PixelIcon icon="🌿" size={34} variant="nature" selected />
             <h3 className="text-white font-bold text-base">Real creatures need your help too</h3>
           </div>
           <button
@@ -70,7 +71,7 @@ export default function ConservationPrompt({ onDismiss }: Props) {
             }}
           >
             <div className="flex items-start gap-3">
-              <span className="text-2xl mt-0.5">🔬</span>
+              <PixelIcon icon="🔬" size={34} variant="nature" className="mt-0.5" />
               <div>
                 <p className="text-emerald-300 text-sm font-semibold mb-1">
                   Love collecting creatures? Do it for real
@@ -97,7 +98,7 @@ export default function ConservationPrompt({ onDismiss }: Props) {
             }}
           >
             <div className="flex items-start gap-3">
-              <span className="text-2xl mt-0.5">🦋</span>
+              <PixelIcon icon="🦋" size={34} variant="water" className="mt-0.5" />
               <div>
                 <p className="text-blue-300 text-sm font-semibold mb-1">
                   Support biodiversity in California

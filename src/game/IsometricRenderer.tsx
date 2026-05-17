@@ -4,6 +4,8 @@ import { BIOME_COLORS, getSignpostAt } from './bayAreaMap'
 import { getBartStationAt } from './BartSystem'
 import { MIGRATION_HERDS, getHerdPositions } from './migration'
 import { LANDMARKS } from './landmarks'
+import { drawPixelCampfire, drawPixelClipboard, drawPixelFerry, drawPixelFishingRod, drawPixelSurfer, drawPixelTelescope } from './canvasPixelArt'
+import { drawPixelGlyphOnCanvas, resolvePixelGlyphKind } from './pixelGlyphArt'
 
 type RangerActivityType = 'patrol' | 'rest' | 'campfire' | 'observe' | 'fishing' | 'research'
 
@@ -2388,9 +2390,7 @@ const IsometricRenderer = memo(function IsometricRenderer({ map, playerX, player
             dc.fillStyle = '#8B6914'
             dc.fillRect(screenX - 6, dockY - 4 + bob, 12, 4)
             dc.fillRect(screenX - 3, dockY - 8 + bob, 6, 4)
-            dc.font = '10px serif'
-            dc.textAlign = 'center'
-            dc.fillText('⛴', screenX, dockY - 10 + bob)
+            drawPixelFerry(dc, screenX, dockY - 11 + bob, 0.72)
             dc.beginPath()
             dc.arc(screenX, dockY - 6, 10 + Math.sin(timeRef.current * 0.004) * 2, 0, Math.PI * 2)
             dc.strokeStyle = `rgba(56, 189, 248, ${0.3 + Math.sin(timeRef.current * 0.005) * 0.15})`
@@ -2558,10 +2558,8 @@ const IsometricRenderer = memo(function IsometricRenderer({ map, playerX, player
         ctx.fillRect(rsx - 30, rsy - 24, 60, 60)
         // Fire sprite
         ctx.globalAlpha = fog
-        ctx.font = '8px serif'
-        ctx.textAlign = 'center'
         const fireFrame = Math.floor(t * 0.005) % 2
-        ctx.fillText(fireFrame ? '🔥' : '🪵', rsx + 8, rsy + 10)
+        drawPixelCampfire(ctx, rsx + 8, rsy + 8, fireFrame, 0.85)
       }
 
       // Draw the ranger (sleeping rangers drawn slightly lower, semi-transparent)
@@ -2578,11 +2576,11 @@ const IsometricRenderer = memo(function IsometricRenderer({ map, playerX, player
         ctx.globalAlpha = fog * (0.5 + Math.sin(t * 0.003) * 0.2)
         ctx.fillText(zzz, rsx + 6 + Math.sin(t * 0.002) * 3, rsy - 26 - Math.sin(t * 0.0015) * 4)
       } else if (act === 'observe') {
-        ctx.fillText('🔭', rsx + 7, rsy - 24)
+        drawPixelTelescope(ctx, rsx + 7, rsy - 24, 0.85)
       } else if (act === 'fishing') {
-        ctx.fillText('🎣', rsx + 7, rsy - 24)
+        drawPixelFishingRod(ctx, rsx + 7, rsy - 24, 0.85)
       } else if (act === 'research') {
-        ctx.fillText('📋', rsx + 7, rsy - 24)
+        drawPixelClipboard(ctx, rsx + 7, rsy - 24, 0.8)
       }
       ctx.globalAlpha = 1
     }
@@ -2660,9 +2658,12 @@ const IsometricRenderer = memo(function IsometricRenderer({ map, playerX, player
         // Bobbing animation
         const bob = Math.sin(t * 0.003 + pos.x * 0.5 + pos.y * 0.7) * 3
         ctx.globalAlpha = 0.85
-        ctx.font = '14px serif'
-        ctx.textAlign = 'center'
-        ctx.fillText(herd.sprite, hScreenX, hScreenY - 8 + bob)
+        drawPixelGlyphOnCanvas(ctx, resolvePixelGlyphKind(herd.sprite) ?? 'paw', hScreenX, hScreenY - 8 + bob, 14, {
+          primary: '#d6b07a',
+          accent: '#f3ecd7',
+          dark: '#5f3b24',
+          light: '#fff7d6',
+        })
         // Subtle dust trail
         ctx.globalAlpha = 0.15
         ctx.fillStyle = '#d4a574'
@@ -2795,9 +2796,7 @@ const IsometricRenderer = memo(function IsometricRenderer({ map, playerX, player
         const surferX = lmScreenX + Math.cos(surferPhase) * 20
         const surferY = lmScreenY + Math.sin(surferPhase * 2) * 4
         ctx.globalAlpha = 0.5
-        ctx.font = '10px serif'
-        ctx.textAlign = 'center'
-        ctx.fillText('🏄', surferX, surferY)
+        drawPixelSurfer(ctx, surferX, surferY, 0.65)
       }
     }
     ctx.globalAlpha = 1

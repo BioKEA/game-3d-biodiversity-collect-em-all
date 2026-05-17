@@ -1,6 +1,7 @@
 import { ACHIEVEMENTS, type PlayerStats } from './achievements'
 import type { GameState } from '@/types/game'
 import FloatingPanel from './FloatingPanel'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   gameState: GameState
@@ -52,7 +53,7 @@ export default function AchievementsScreen({ gameState, stats, unlockedIds, onCl
           return (
             <div key={cat}>
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm">{info.icon}</span>
+                <PixelIcon icon={info.icon} size={20} color={info.color} selected />
                 <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">
                   {info.label}
                 </span>
@@ -82,7 +83,7 @@ export default function AchievementsScreen({ gameState, stats, unlockedIds, onCl
                           filter: unlocked ? 'none' : 'grayscale(1) opacity(0.4)',
                         }}
                       >
-                        {achievement.icon}
+                        <PixelIcon icon={achievement.icon} size={28} color={info.color} selected={unlocked} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p
@@ -113,9 +114,7 @@ export default function AchievementsScreen({ gameState, stats, unlockedIds, onCl
                         )}
                       </div>
                       {unlocked && (
-                        <span className="text-[10px] shrink-0" style={{ color: info.color }}>
-                          ✓
-                        </span>
+                        <PixelIcon icon="✓" size={16} color={info.color} />
                       )}
                     </div>
                   )

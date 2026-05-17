@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import type { BiomeType } from '@/types/game'
 import { SFX } from './sounds'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface FishDef {
   id: string
@@ -235,7 +236,8 @@ export default function FishingScreen({ biome, onClose, onCatch, fishLog = [] }:
         {/* Title */}
         <div className="text-center">
           <h2 className="text-white text-lg font-bold tracking-wide flex items-center gap-2 justify-center">
-            <span>🎣</span> Fishing
+            <PixelIcon icon="🎣" size={24} variant="water" selected />
+            Fishing
           </h2>
           <p className="text-white/30 text-[10px] mt-0.5">
             {phase === 'casting' && 'Casting line...'}
@@ -263,7 +265,7 @@ export default function FishingScreen({ biome, onClose, onCatch, fishLog = [] }:
               />
               {phase === 'waiting' && (
                 <div className="relative flex flex-col items-center gap-2">
-                  <div className="text-3xl animate-bounce">🎣</div>
+                  <PixelIcon icon="🎣" size={44} variant="water" selected className="animate-bounce" />
                   <div className="flex gap-1">
                     <div className="w-1 h-1 bg-sky-400 rounded-full animate-pulse" />
                     <div className="w-1 h-1 bg-sky-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
@@ -272,7 +274,7 @@ export default function FishingScreen({ biome, onClose, onCatch, fishLog = [] }:
                 </div>
               )}
               {phase === 'casting' && (
-                <span className="text-3xl">🎣</span>
+                <PixelIcon icon="🎣" size={44} variant="water" selected />
               )}
             </div>
           </div>
@@ -431,7 +433,10 @@ export default function FishingScreen({ biome, onClose, onCatch, fishLog = [] }:
               <div className="flex items-center gap-3 justify-center mt-2">
                 <p className="text-amber-400 text-xs font-semibold">+{fish.xpReward} XP</p>
                 {streak > 1 && (
-                  <p className="text-cyan-400 text-[10px] font-semibold">🔥 {streak} streak!</p>
+                  <p className="text-cyan-400 text-[10px] font-semibold inline-flex items-center gap-1">
+                    <PixelIcon icon="🔥" size={16} variant="danger" />
+                    {streak} streak!
+                  </p>
                 )}
               </div>
             </div>
@@ -459,7 +464,10 @@ export default function FishingScreen({ biome, onClose, onCatch, fishLog = [] }:
                   border: '1px solid rgba(34,197,94,0.3)',
                 }}
               >
-                Cast Again 🎣
+                <span className="inline-flex items-center gap-1.5">
+                  Cast Again
+                  <PixelIcon icon="🎣" size={18} variant="water" />
+                </span>
               </button>
               <button
                 onClick={onClose}
@@ -477,7 +485,7 @@ export default function FishingScreen({ biome, onClose, onCatch, fishLog = [] }:
 
         {phase === 'escaped' && fish && (
           <div className="flex flex-col items-center gap-4">
-            <span className="text-5xl opacity-50">💨</span>
+            <PixelIcon icon="💨" size={56} variant="water" className="opacity-70" />
             <div className="text-center">
               <p className="text-white/60 text-base font-medium">The {fish.name} escaped!</p>
               <p className="text-white/30 text-[10px] mt-1">Better luck next time.</p>
@@ -494,7 +502,10 @@ export default function FishingScreen({ biome, onClose, onCatch, fishLog = [] }:
                   border: '1px solid rgba(56,189,248,0.3)',
                 }}
               >
-                Try Again 🎣
+                <span className="inline-flex items-center gap-1.5">
+                  Try Again
+                  <PixelIcon icon="🎣" size={18} variant="water" />
+                </span>
               </button>
               <button
                 onClick={onClose}

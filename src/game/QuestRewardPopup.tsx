@@ -1,5 +1,6 @@
 import { useState, useEffect, memo } from 'react'
 import type { QuestReward } from '@/types/game'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   questTitle: string
@@ -50,9 +51,9 @@ const QuestRewardPopup = memo(function QuestRewardPopup({ questTitle, reward, on
           transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}
       >
-        <div className="text-5xl" style={{
+        <PixelIcon icon="🎉" size={64} variant="gold" selected className="mb-1" style={{
           animation: phase === 'show' ? 'quest-reward-bounce 0.6s ease' : undefined,
-        }}>🎉</div>
+        }} />
 
         <h2 className="text-xl font-bold text-amber-300 tracking-wide text-center">
           Quest Complete!
@@ -70,7 +71,7 @@ const QuestRewardPopup = memo(function QuestRewardPopup({ questTitle, reward, on
               transition: 'all 0.3s ease',
             }}
           >
-            <span className="text-lg">⭐</span>
+            <PixelIcon icon="⭐" size={24} variant="gold" />
             <span className="text-emerald-300 font-semibold text-sm">+{reward.xp} XP</span>
           </div>
 
@@ -84,7 +85,7 @@ const QuestRewardPopup = memo(function QuestRewardPopup({ questTitle, reward, on
               transition: 'all 0.3s ease',
             }}
           >
-            <span className="text-lg">💰</span>
+            <PixelIcon icon="💰" size={24} variant="gold" />
             <span className="text-amber-300 font-semibold text-sm">+{reward.coins} coins</span>
           </div>
 
@@ -100,7 +101,7 @@ const QuestRewardPopup = memo(function QuestRewardPopup({ questTitle, reward, on
                 transition: 'all 0.3s ease',
               }}
             >
-              <span className="text-lg">{item.sprite}</span>
+              <PixelIcon icon={item.sprite} size={24} variant="item" />
               <span className="text-purple-300 font-semibold text-sm">{item.name} ×{item.quantity}</span>
             </div>
           ))}

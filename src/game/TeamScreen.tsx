@@ -6,6 +6,7 @@ import { HELD_ITEMS, getHeldItem } from './heldItems'
 import { getHappiness, getHappinessLabel, MAX_HAPPINESS } from './happiness'
 import FloatingPanel from './FloatingPanel'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   team: CapturedCreature[]
@@ -83,7 +84,7 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
             }}
           >
             <div className="flex items-center gap-2">
-              <span className="text-xl">❤️</span>
+              <PixelIcon icon="❤️" size={28} variant="nature" selected />
               <div className="text-left">
                 <p className="text-white text-xs font-bold">Heal Team</p>
                 <p className="text-white/40 text-[9px]">
@@ -92,7 +93,7 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
               </div>
             </div>
             <div className="flex items-center gap-1 text-yellow-300 text-[11px] font-bold">
-              <span>💰</span>
+              <PixelIcon icon="💰" size={18} variant="gold" />
               <span>{HEAL_COST}</span>
             </div>
           </button>
@@ -120,11 +121,11 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
                 >
                   <PixelCreatureToken creature={creature} size={42} selected={i === 0} />
                   {petHearts.filter(h => h.idx === i).map(h => (
-                    <span key={h.id} className="absolute text-sm pointer-events-none" style={{
+                    <PixelIcon key={h.id} icon="❤️" size={18} variant="nature" className="absolute pointer-events-none" style={{
                       animation: 'pet-heart-float 1.2s ease-out forwards',
                       left: '50%',
                       top: '-4px',
-                    }}>❤️</span>
+                    }} />
                   ))}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -157,10 +158,10 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
                         {onNickname && (
                           <button
                             onClick={() => { setEditingIdx(i); setEditValue(creature.nickname || '') }}
-                            className="text-[9px] text-white/20 hover:text-white/50 transition-colors"
+                            className="text-white/20 hover:text-white/50 transition-colors"
                             title="Edit nickname"
                           >
-                            ✏️
+                            <PixelIcon icon="📝" size={14} variant="neutral" />
                           </button>
                         )}
                       </>
@@ -219,7 +220,10 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
                               color: h >= MAX_HAPPINESS ? 'rgba(255,255,255,0.3)' : '#f9a8d4',
                             }}
                           >
-                            ❤️ Pet
+                            <span className="inline-flex items-center gap-1">
+                              <PixelIcon icon="❤️" size={14} variant="nature" />
+                              Pet
+                            </span>
                           </button>
                         )}
                       </div>
@@ -233,7 +237,7 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
                     const ready = creature.level >= evo.level
                     return (
                       <div className={`flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[8px] ${ready ? 'bg-amber-500/10 text-amber-300' : 'bg-white/[0.02] text-white/30'}`}>
-                        <span>{ready ? '✨' : '→'}</span>
+                        {ready ? <PixelIcon icon="✨" size={16} variant="gold" /> : <span>→</span>}
                         <span>{ready ? `Ready → ${target.name}` : `Lv.${evo.level} → ${target.name}`}</span>
                         <PixelCreatureToken creature={target} size={18} selected={ready} />
                         {ready && onEvolve && (
@@ -345,7 +349,7 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
                         }}
                       >
                         <div className="flex items-center gap-2">
-                          <span className="text-xl">{heldDef.sprite}</span>
+                          <PixelIcon icon={heldDef.sprite} size={28} variant="item" selected={isCurrent} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
                               <p className="text-white text-[11px] font-bold">{heldDef.name}</p>
@@ -383,7 +387,7 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
                   }}
                 >
                   <div className="flex items-center gap-1.5">
-                    <span className="text-lg">{item.sprite}</span>
+                    <PixelIcon icon={item.sprite} size={24} variant={isHeal ? 'nature' : 'item'} />
                     <div className="min-w-0 flex-1">
                       <p className="text-white text-[10px] font-semibold truncate">{item.name}</p>
                       <div className="flex items-center gap-1">
@@ -417,7 +421,7 @@ export default function TeamScreen({ team, inventory, coins = 0, onClose, onSwap
                 }}
                 onClick={e => e.stopPropagation()}>
                 <div className="flex items-center gap-2 pb-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span className="text-2xl">{item.sprite}</span>
+                  <PixelIcon icon={item.sprite} size={30} variant="nature" selected />
                   <div className="flex-1">
                     <p className="text-white text-xs font-bold">Use {item.name}</p>
                     <p className="text-emerald-400/80 text-[9px]">

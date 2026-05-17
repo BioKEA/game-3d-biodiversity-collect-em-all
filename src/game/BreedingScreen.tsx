@@ -3,6 +3,7 @@ import type { CapturedCreature, BreedingSlot } from '@/types/game'
 import { canBreed, startBreeding, isBreedingReady, getBreedingTimeLeft, hatchOffspring, getBreedingTypeLabel } from './breeding'
 import FloatingPanel from './FloatingPanel'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   team: CapturedCreature[]
@@ -136,7 +137,7 @@ export default function BreedingScreen({ team, nursery, onClose, onStartBreeding
             <div className="text-center mt-4">
               {ready ? (
                 <>
-                  <div className="text-5xl mb-3 animate-pulse">🥚</div>
+                  <PixelIcon icon="🥚" size={64} variant="mystic" selected className="mb-3 animate-pulse mx-auto" />
                   <p className="text-emerald-400 text-sm font-bold">Ready to hatch!</p>
                   <button
                     onClick={handleHatch}
@@ -147,7 +148,7 @@ export default function BreedingScreen({ team, nursery, onClose, onStartBreeding
                 </>
               ) : (
                 <>
-                  <div className="text-5xl mb-3">🥚</div>
+                  <PixelIcon icon="🥚" size={64} variant="mystic" className="mb-3 mx-auto" />
                   <p className="text-white/60 text-sm">Incubating...</p>
                   <p className="text-cyan-400 text-2xl font-mono font-bold mt-2">
                     {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}

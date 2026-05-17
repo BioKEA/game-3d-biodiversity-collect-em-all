@@ -698,7 +698,7 @@ export default function GameHUD({
                               background: 'rgba(74,222,128,0.1)',
                               border: '1px solid rgba(74,222,128,0.2)',
                             }}>
-                              <span className="text-[10px]">{TYPE_ICONS[type] ?? '✨'}</span>
+                              <PixelIcon icon={TYPE_ICONS[type] ?? '✨'} size={16} variant="nature" />
                               <span className="text-[9px] text-emerald-300/80 font-medium capitalize">{type}</span>
                               <span className="text-[8px] text-emerald-400 font-bold">{typeBonus.multiplier}×</span>
                             </div>
@@ -713,7 +713,7 @@ export default function GameHUD({
                             background: 'rgba(250,204,21,0.1)',
                             border: '1px solid rgba(250,204,21,0.2)',
                           }}>
-                            <span className="text-[10px]">{TYPE_ICONS[type] ?? '✨'}</span>
+                            <PixelIcon icon={TYPE_ICONS[type] ?? '✨'} size={16} variant="gold" />
                             <span className="text-[9px] text-amber-300/80 font-medium capitalize">{type}</span>
                             <span className="text-[8px] text-amber-400 font-bold">3×</span>
                           </div>
@@ -755,7 +755,7 @@ export default function GameHUD({
                           background: `${rareColor}0.1)`,
                           border: `1px solid ${rareColor}0.25)`,
                         }}>
-                          <span className="text-[10px]">💎</span>
+                          <PixelIcon icon="💎" size={16} variant="mystic" />
                           <span className="text-[9px] font-medium capitalize" style={{ color: `${rareColor}0.8)` }}>Rare</span>
                           <span className="text-[8px] font-bold" style={{ color: `${rareColor}1)` }}>{trb.rare}×</span>
                         </div>
@@ -765,7 +765,7 @@ export default function GameHUD({
                           background: `${rareColor}0.1)`,
                           border: `1px solid ${rareColor}0.25)`,
                         }}>
-                          <span className="text-[10px]">⭐</span>
+                          <PixelIcon icon="⭐" size={16} variant="gold" />
                           <span className="text-[9px] font-medium capitalize" style={{ color: `${rareColor}0.8)` }}>Legendary</span>
                           <span className="text-[8px] font-bold" style={{ color: `${rareColor}1)` }}>{trb.legendary}×</span>
                         </div>
@@ -780,7 +780,10 @@ export default function GameHUD({
                 return (
                   <div className="mt-2 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                     <p className="text-[9px] font-medium tracking-wider text-center mb-1" style={{ color: isActive ? 'rgba(200,200,255,0.7)' : 'rgba(255,255,255,0.3)' }}>
-                      {moon.icon} {moon.name.toUpperCase()}
+                      <span className="inline-flex items-center justify-center gap-1">
+                        <PixelIcon icon={moon.icon} size={16} variant="mystic" selected={isActive} />
+                        {moon.name.toUpperCase()}
+                      </span>
                     </p>
                     <p className="text-[9px] text-white/40 text-center mb-1.5">{moon.label}</p>
                     {isActive && (
@@ -790,7 +793,7 @@ export default function GameHUD({
                             background: 'rgba(147,130,220,0.1)',
                             border: '1px solid rgba(147,130,220,0.25)',
                           }}>
-                            <span className="text-[10px]">✨</span>
+                            <PixelIcon icon="✨" size={16} variant="mystic" />
                             <span className="text-[9px] font-medium text-purple-300">Mystic</span>
                             <span className="text-[8px] font-bold text-purple-200">{moon.mysticMultiplier}×</span>
                           </div>
@@ -800,7 +803,7 @@ export default function GameHUD({
                             background: 'rgba(250,204,21,0.1)',
                             border: '1px solid rgba(250,204,21,0.25)',
                           }}>
-                            <span className="text-[10px]">⭐</span>
+                            <PixelIcon icon="⭐" size={16} variant="gold" />
                             <span className="text-[9px] font-medium text-amber-300">Legendary</span>
                             <span className="text-[8px] font-bold text-amber-200">{moon.legendaryMultiplier}×</span>
                           </div>
@@ -823,7 +826,10 @@ export default function GameHUD({
                 return (
                   <div className="mt-2 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                     <p className="text-[8px] font-medium tracking-wider text-center mb-1" style={{ color: `${todColor}0.5)` }}>
-                      {timeOfDay === 'night' ? '🌙' : timeOfDay === 'dawn' ? '🌅' : '🌇'} ACTIVE NOW
+                      <span className="inline-flex items-center justify-center gap-1">
+                        <PixelIcon icon={timeOfDay === 'night' ? '🌙' : timeOfDay === 'dawn' ? '🌅' : '🌇'} size={16} variant="mystic" />
+                        ACTIVE NOW
+                      </span>
                     </p>
                     <div className="flex items-center justify-center gap-1 flex-wrap">
                       {timeCreatures.map(c => (

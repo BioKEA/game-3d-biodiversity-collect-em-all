@@ -4,6 +4,7 @@ import { ABILITY_STONES, canLearnMove, teachMove, type AbilityStone } from './mo
 import { TEACHABLE_ABILITY_LIST, getEffectiveAbility, type TeachableAbility } from './abilities'
 import FloatingPanel from './FloatingPanel'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   team: CapturedCreature[]
@@ -94,7 +95,7 @@ export default function MoveTutorScreen({ team, coins, onTeachMove, onLearnAbili
       <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <span className="text-white/30 text-[10px]">Your coins</span>
         <div className="flex items-center gap-1">
-          <span className="text-xs">💰</span>
+          <PixelIcon icon="💰" size={18} variant="gold" />
           <span className="text-yellow-400 text-xs font-bold">{coins}</span>
         </div>
       </div>
@@ -110,7 +111,10 @@ export default function MoveTutorScreen({ team, coins, onTeachMove, onLearnAbili
             color: tab === 'moves' ? '#c4b5fd' : 'rgba(255,255,255,0.4)',
           }}
         >
-          ⚔️ Moves
+          <span className="inline-flex items-center justify-center gap-1.5">
+            <PixelIcon icon="⚔️" size={16} variant="mystic" />
+            Moves
+          </span>
         </button>
         <button
           onClick={() => switchTab('abilities')}
@@ -121,7 +125,10 @@ export default function MoveTutorScreen({ team, coins, onTeachMove, onLearnAbili
             color: tab === 'abilities' ? '#f9a8d4' : 'rgba(255,255,255,0.4)',
           }}
         >
-          ✨ Abilities
+          <span className="inline-flex items-center justify-center gap-1.5">
+            <PixelIcon icon="✨" size={16} variant="mystic" />
+            Abilities
+          </span>
         </button>
       </div>
 
@@ -151,12 +158,12 @@ export default function MoveTutorScreen({ team, coins, onTeachMove, onLearnAbili
                     }}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-lg">{stone.sprite}</span>
+                      <PixelIcon icon={stone.sprite} size={26} variant="mystic" />
                       <span className="text-white text-[10px] font-semibold">{stone.name}</span>
                     </div>
                     <p className="text-white/40 text-[9px] leading-tight">{stone.move.name} — PWR {stone.move.power || 'DEF'}</p>
                     <div className="flex items-center justify-between mt-1.5">
-                      <span className="text-yellow-400/70 text-[9px] font-bold">💰 {stone.cost}</span>
+                      <span className="text-yellow-400/70 text-[9px] font-bold inline-flex items-center gap-1"><PixelIcon icon="💰" size={14} variant="gold" /> {stone.cost}</span>
                       <span className="text-white/15 text-[8px]">{stone.compatibleTypes.join(', ')}</span>
                     </div>
                   </button>
@@ -176,7 +183,7 @@ export default function MoveTutorScreen({ team, coins, onTeachMove, onLearnAbili
               background: 'rgba(139,92,246,0.1)',
               border: '1px solid rgba(139,92,246,0.2)',
             }}>
-              <span className="text-xl">{selectedStone.sprite}</span>
+              <PixelIcon icon={selectedStone.sprite} size={30} variant="mystic" selected />
               <div>
                 <p className="text-white text-xs font-semibold">{selectedStone.move.name}</p>
                 <p className="text-white/40 text-[9px]">{selectedStone.move.description}</p>
@@ -242,7 +249,7 @@ export default function MoveTutorScreen({ team, coins, onTeachMove, onLearnAbili
               background: 'rgba(74,222,128,0.1)',
               border: '1px solid rgba(74,222,128,0.2)',
             }}>
-              <span className="text-sm">{selectedStone.sprite}</span>
+              <PixelIcon icon={selectedStone.sprite} size={22} variant="mystic" />
               <div>
                 <p className="text-green-300 text-[10px] font-semibold">New: {selectedStone.move.name}</p>
                 <p className="text-white/30 text-[9px]">PWR {selectedStone.move.power || 'DEF'} · {selectedStone.move.type}</p>
@@ -307,9 +314,9 @@ export default function MoveTutorScreen({ team, coins, onTeachMove, onLearnAbili
                     }}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-lg">{ability.sprite}</span>
+                      <PixelIcon icon={ability.sprite} size={26} variant="mystic" />
                       <span className="text-white text-[11px] font-semibold">{ability.name}</span>
-                      <span className="text-yellow-400/70 text-[9px] font-bold ml-auto">💰 {ability.price}</span>
+                      <span className="text-yellow-400/70 text-[9px] font-bold ml-auto inline-flex items-center gap-1"><PixelIcon icon="💰" size={14} variant="gold" /> {ability.price}</span>
                     </div>
                     <p className="text-white/45 text-[9px] leading-tight">{ability.description}</p>
                   </button>
@@ -330,7 +337,7 @@ export default function MoveTutorScreen({ team, coins, onTeachMove, onLearnAbili
               background: 'rgba(236,72,153,0.1)',
               border: '1px solid rgba(236,72,153,0.2)',
             }}>
-              <span className="text-xl">{selectedAbility.sprite}</span>
+              <PixelIcon icon={selectedAbility.sprite} size={30} variant="mystic" selected />
               <div className="flex-1">
                 <p className="text-white text-xs font-semibold">{selectedAbility.name}</p>
                 <p className="text-white/40 text-[9px]">{selectedAbility.description}</p>

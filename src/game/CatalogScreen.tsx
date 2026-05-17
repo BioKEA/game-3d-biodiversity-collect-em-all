@@ -1,6 +1,7 @@
 import { ALL_CREATURES } from './creatures'
 import FloatingPanel from './FloatingPanel'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   catalogSeen: string[]
@@ -87,9 +88,9 @@ export default function CatalogScreen({ catalogSeen, catalogCaptured, onClose }:
                 </div>
                 <div className="shrink-0">
                   {captured ? (
-                    <span className="text-emerald-400 text-[10px]">✓</span>
+                    <PixelIcon icon="✓" size={16} variant="nature" />
                   ) : seen ? (
-                    <span className="text-yellow-400/50 text-[10px]">👁</span>
+                    <PixelIcon icon="👁" size={16} variant="gold" />
                   ) : (
                     <span className="text-white/20 text-[10px]">?</span>
                   )}

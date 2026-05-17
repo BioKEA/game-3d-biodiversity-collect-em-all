@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import type { CapturedCreature, CreatureType, Move } from '@/types/game'
 import { SFX } from './sounds'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   team: CapturedCreature[]
@@ -266,7 +267,11 @@ export default function FusionLab({ team, onFuse, onClose }: Props) {
       {phase === 'select' && (
         <div className="flex flex-col items-center gap-3 max-w-sm w-full px-4">
           <div className="text-center">
-            <p className="text-[8px] text-purple-400 font-black uppercase tracking-[4px] mb-1">🧬 FUSION LAB 🧬</p>
+            <p className="text-[8px] text-purple-400 font-black uppercase tracking-[4px] mb-1 inline-flex items-center justify-center gap-2">
+              <PixelIcon icon="🧬" size={20} variant="mystic" selected />
+              FUSION LAB
+              <PixelIcon icon="🧬" size={20} variant="mystic" selected />
+            </p>
             <h2 className="text-white text-base font-bold">Creature Fusion</h2>
             <p className="text-white/30 text-[10px] mt-1">Combine two creatures into a powerful hybrid</p>
           </div>
@@ -331,7 +336,10 @@ export default function FusionLab({ team, onFuse, onClose }: Props) {
                   </div>
                   <p className="text-white/60 text-[9px]">{previewRecipe.description}</p>
                   <p className="text-purple-300 text-[8px] mt-1">Type: {previewRecipe.resultType} · Bonus: +{previewRecipe.bonus}</p>
-                  <p className="text-amber-300/50 text-[7px] mt-1">⚠️ Both creatures will be consumed</p>
+                  <p className="text-amber-300/50 text-[7px] mt-1 inline-flex items-center gap-1">
+                    <PixelIcon icon="⚠️" size={14} variant="gold" />
+                    Both creatures will be consumed
+                  </p>
                 </>
               ) : (
                 <p className="text-red-300/60 text-[9px]">
@@ -415,7 +423,7 @@ export default function FusionLab({ team, onFuse, onClose }: Props) {
                 <div key={s.label} className="text-center">
                   <p className="text-white/30 text-[7px] uppercase">{s.label}</p>
                   <p className={`text-sm font-bold ${s.bonus ? 'text-amber-400' : 'text-white/70'}`}>{s.val}</p>
-                  {s.bonus && <p className="text-amber-400/60 text-[7px]">★</p>}
+                  {s.bonus && <PixelIcon icon="⭐" size={14} variant="gold" className="mx-auto" />}
                 </div>
               ))}
             </div>

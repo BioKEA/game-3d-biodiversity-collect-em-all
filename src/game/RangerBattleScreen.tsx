@@ -8,6 +8,7 @@ import { getEffectiveStats, getHeldItem } from './heldItems'
 import { rollHappinessCrit } from './happiness'
 import { SFX } from './sounds'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface DamageNumber {
   id: number
@@ -377,7 +378,7 @@ export default function RangerBattleScreen({ ranger, playerTeam, weather, timeOf
       }}>
         {/* Ranger badge */}
         <div className="absolute top-2 left-2 z-10 flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-lg px-2.5 py-1.5 border border-white/10">
-          <span className="text-xl">{ranger.sprite}</span>
+          <PixelIcon icon={ranger.sprite} size={28} variant="nature" selected title={ranger.name} />
           <div>
             <p className="text-white text-[10px] font-bold">{ranger.name}</p>
             <div className="flex gap-1 mt-0.5">
