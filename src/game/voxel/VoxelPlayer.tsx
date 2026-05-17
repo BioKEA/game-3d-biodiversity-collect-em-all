@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { TILE_BASE_HEIGHT, ELEVATION_SCALE, gridToWorldX, gridToWorldZ } from './constants'
@@ -11,10 +11,28 @@ interface Props {
   map: MapTile[][]
 }
 
+function shortestAngleDelta(from: number, to: number): number {
+  return Math.atan2(Math.sin(to - from), Math.cos(to - from))
+}
+
 export default function VoxelPlayer({ x, y, map }: Props) {
   const groupRef = useRef<THREE.Group>(null)
   const targetPos = useRef(new THREE.Vector3())
   const currentPos = useRef(new THREE.Vector3(gridToWorldX(x), 0, gridToWorldZ(y)))
+  const previousGridPos = useRef({ x, y })
+  const targetYaw = useRef(0)
+
+  useEffect(() => {
+    const previous = previousGridPos.current
+    if (previous.x === x && previous.y === y) return
+
+    const dx = gridToWorldX(x) - gridToWorldX(previous.x)
+    const dz = gridToWorldZ(y) - gridToWorldZ(previous.y)
+    if (dx !== 0 || dz !== 0) {
+      targetYaw.current = Math.atan2(dx, dz)
+    }
+    previousGridPos.current = { x, y }
+  }, [x, y])
 
   // Calculate target position based on tile elevation
   const tile = map[y]?.[x]
@@ -28,6 +46,7 @@ export default function VoxelPlayer({ x, y, map }: Props) {
     if (!group) return
     currentPos.current.lerp(targetPos.current, 1 - Math.pow(0.001, delta))
     group.position.copy(currentPos.current)
+    group.rotation.y += shortestAngleDelta(group.rotation.y, targetYaw.current) * (1 - Math.pow(0.0001, delta))
 
     // Slight bob animation
     group.position.y += Math.sin(Date.now() * 0.003) * 0.02
