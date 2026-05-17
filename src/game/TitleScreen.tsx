@@ -6,6 +6,7 @@ import { ALL_CREATURES } from './creatures'
 import { MINI_BOSS_IDS, RANGERS } from './rangers'
 import { createInitialStats } from './achievements'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelIcon from './PixelIcon'
 
 interface Props {
   onLoadSlot: (slot: SaveSlotIndex) => void
@@ -180,7 +181,7 @@ function SaveSlotCard({ summary, slot, onLoad, onNew, onDelete, onRename }: {
             { icon: '📍', label: 'Area', value: state.currentSubregion || state.currentBiome, pct: -1 },
           ].map((s, i) => (
             <div key={i} className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-              <span className="text-base sm:text-xl shrink-0">{s.icon}</span>
+              <PixelIcon icon={s.icon} size={window.innerWidth < 640 ? 18 : 22} color={glowColor} title={s.label} />
               <div className="min-w-0">
                 <p className="text-[10px] text-white/25 leading-tight uppercase tracking-wider">{s.label}</p>
                 <p className="text-sm text-white/70 font-semibold leading-tight truncate">{s.value}</p>

@@ -39,11 +39,13 @@ This lets future evolutions add visible traits without replacing every asset at 
 - `src/game/artDirection.ts` is the shared source for palette, lighting, biome, icon, and entity tokens.
 - The voxel renderer remains the main world-art foundation for three-dimensional pixel boxes.
 - `PixelIcon` is the UI primitive for non-creature pixel-box controls and items.
+- `PixelGlyph` and `pixelGlyphArt.ts` translate legacy emoji metadata into crisp 7x7 pixel glyphs for HUD icons, rewards, weather, status, and map markers.
 - `PixelCreatureToken` is the small-surface creature frame used across HUD, battle, catalog, fusion, title, trade, and notifications.
 - `PixelCreatureSprite` is the procedural creature silhouette layer that replaces emoji inside creature tokens.
 - `creatureArt.ts` owns body-plan inference, palette resolution, evolution stage, and adaptation slots.
 - Larger battle poses should build on the same `creatureArt.ts` spec so small and large creature art evolve together.
 - `PixelLandmarkIcon` and `landmarkArt.ts` provide the matching modular landmark language for map labels, fast travel, and Field Journal discovery.
+- Ambient effects should use CSS/canvas pixel particles instead of emoji leaves, droplets, or weather symbols.
 
 ## Open Art Backlog
 
@@ -51,3 +53,4 @@ This lets future evolutions add visible traits without replacing every asset at 
 - Add curated hand-authored landmark specs for marquee locations once the procedural landmark system has covered all surfaces.
 - Add map tile overlays for roads, BART/ferries, mountain ranges, rivers, and major coastlines.
 - Add larger battle-scale creature poses after the small token silhouette system is stable.
+- Sweep remaining feature-specific minigames and modal copy for direct emoji text once their local art primitives exist.

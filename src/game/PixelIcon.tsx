@@ -1,5 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { FIELD_GUIDE_ICON_COLORS } from './artDirection'
+import PixelGlyph from './PixelGlyph'
+import { resolvePixelGlyphKind } from './pixelGlyphArt'
 
 type PixelIconVariant = keyof typeof FIELD_GUIDE_ICON_COLORS
 
@@ -44,6 +46,7 @@ export default function PixelIcon({
     selected ? `drop-shadow(0 0 9px ${accent}70)` : 'drop-shadow(0 3px 6px rgba(0,0,0,0.28))',
     styleFilter,
   ].filter(Boolean).join(' ')
+  const glyphKind = resolvePixelGlyphKind(icon)
 
   return (
     <span
@@ -86,7 +89,13 @@ export default function PixelIcon({
           transform: 'translateY(-5%)',
         }}
       >
-        {icon}
+        {glyphKind ? (
+          <PixelGlyph
+            glyph={glyphKind}
+            size={size * 0.5}
+            palette={{ primary: dark, accent, dark: shade(dark, -28), light: '#fff4c2' }}
+          />
+        ) : icon}
       </span>
       <span
         className="absolute"

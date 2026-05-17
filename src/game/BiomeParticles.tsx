@@ -8,7 +8,7 @@ interface Props {
 }
 
 interface Particle {
-  emoji: string
+  kind: 'bubble' | 'droplet' | 'dust' | 'firefly' | 'leaf' | 'reed' | 'wind'
   x: number
   y: number
   delay: number
@@ -22,7 +22,7 @@ function getParticles(biome: BiomeType, timeOfDay: TimeOfDay, weather: WeatherTy
     return {
       animation: 'firefly',
       particles: Array.from({ length: 15 }, (_, i) => ({
-        emoji: '',
+        kind: 'firefly',
         x: (i * 23 + 7) % 100,
         y: (i * 31 + 11) % 80 + 10,
         delay: (i * 0.7) % 4,
@@ -37,7 +37,7 @@ function getParticles(biome: BiomeType, timeOfDay: TimeOfDay, weather: WeatherTy
       return {
         animation: 'leaf-fall',
         particles: Array.from({ length: 8 }, (_, i) => ({
-          emoji: ['🍃', '🍂', '🌿'][i % 3],
+          kind: i % 3 === 2 ? 'reed' : 'leaf',
           x: (i * 29 + 5) % 100,
           y: -5,
           delay: i * 1.5,
@@ -51,7 +51,7 @@ function getParticles(biome: BiomeType, timeOfDay: TimeOfDay, weather: WeatherTy
       return {
         animation: 'float-up',
         particles: Array.from({ length: 6 }, (_, i) => ({
-          emoji: biome === 'beach' ? '🫧' : '💧',
+          kind: biome === 'beach' ? 'bubble' : 'droplet',
           x: (i * 31 + 10) % 90 + 5,
           y: 90,
           delay: i * 2,
@@ -64,7 +64,7 @@ function getParticles(biome: BiomeType, timeOfDay: TimeOfDay, weather: WeatherTy
       return {
         animation: 'wind-drift',
         particles: Array.from({ length: 5 }, (_, i) => ({
-          emoji: '',
+          kind: 'wind',
           x: -10,
           y: (i * 19 + 15) % 70 + 10,
           delay: i * 2.5,
@@ -78,7 +78,7 @@ function getParticles(biome: BiomeType, timeOfDay: TimeOfDay, weather: WeatherTy
         return {
           animation: 'dust-mote',
           particles: Array.from({ length: 6 }, (_, i) => ({
-            emoji: '',
+            kind: 'dust',
             x: (i * 27 + 8) % 90 + 5,
             y: (i * 19 + 20) % 60 + 20,
             delay: i * 1.3,
@@ -98,6 +98,89 @@ export default function BiomeParticles({ biome, timeOfDay, weather }: Props) {
   )
 
   if (particles.length === 0) return null
+
+  function ParticleSprite({ particle }: { particle: Particle }) {
+    const px = particle.size
+    if (particle.kind === 'leaf') {
+      return (
+        <span
+          className="absolute block"
+          style={{
+            width: px,
+            height: Math.max(2, px * 0.55),
+            background: 'linear-gradient(135deg, #b7f06a 0%, #55a64f 55%, #275f35 100%)',
+            borderRadius: '55% 0 55% 0',
+            boxShadow: '1px 1px 0 rgba(8,30,18,0.7)',
+            transform: 'rotate(-24deg)',
+          }}
+        />
+      )
+    }
+    if (particle.kind === 'reed') {
+      return (
+        <span className="absolute block" style={{ width: px, height: px }}>
+          <span className="absolute" style={{ left: px * 0.45, top: 0, width: Math.max(1, px * 0.12), height: px, background: '#7fbf5d' }} />
+          <span className="absolute" style={{ left: px * 0.18, top: px * 0.18, width: px * 0.45, height: Math.max(2, px * 0.16), background: '#b8d66a', transform: 'rotate(-34deg)' }} />
+          <span className="absolute" style={{ right: px * 0.08, top: px * 0.35, width: px * 0.42, height: Math.max(2, px * 0.16), background: '#4c8f48', transform: 'rotate(28deg)' }} />
+        </span>
+      )
+    }
+    if (particle.kind === 'bubble') {
+      return (
+        <span
+          className="absolute block rounded-full"
+          style={{
+            width: px,
+            height: px,
+            border: `${Math.max(1, Math.round(px * 0.12))}px solid rgba(180,245,255,0.72)`,
+            boxShadow: 'inset 1px 1px 0 rgba(255,255,255,0.45), 0 0 6px rgba(80,220,255,0.28)',
+          }}
+        />
+      )
+    }
+    if (particle.kind === 'droplet') {
+      return (
+        <span
+          className="absolute block"
+          style={{
+            width: px * 0.72,
+            height: px,
+            background: 'linear-gradient(180deg, #b6f5ff, #38bdf8 56%, #0f6f94)',
+            clipPath: 'polygon(50% 0, 84% 45%, 64% 100%, 28% 100%, 10% 45%)',
+            boxShadow: '0 0 6px rgba(56,189,248,0.35)',
+          }}
+        />
+      )
+    }
+    if (particle.kind === 'wind') {
+      return (
+        <span
+          className="absolute block"
+          style={{
+            width: px * 8,
+            height: Math.max(2, px * 0.65),
+            background: 'linear-gradient(90deg, transparent, rgba(220,240,255,0.62), transparent)',
+            boxShadow: `0 ${px * 1.4}px 0 rgba(180,210,235,0.18)`,
+          }}
+        />
+      )
+    }
+    return (
+      <span
+        className="absolute block rounded-full"
+        style={{
+          width: px,
+          height: px,
+          background: particle.kind === 'firefly'
+            ? 'radial-gradient(circle, rgba(250,240,100,0.95), rgba(175,230,70,0.35))'
+            : 'rgba(255,255,255,0.34)',
+          boxShadow: particle.kind === 'firefly'
+            ? '0 0 6px rgba(250,240,100,0.6), 0 0 12px rgba(200,230,50,0.3)'
+            : 'none',
+        }}
+      />
+    )
+  }
 
   return (
     <div className="absolute inset-0 pointer-events-none z-[8] overflow-hidden">
@@ -146,23 +229,7 @@ export default function BiomeParticles({ biome, timeOfDay, weather }: Props) {
             opacity: 0,
           }}
         >
-          {p.emoji || (
-            <div
-              className="rounded-full"
-              style={{
-                width: p.size,
-                height: p.size,
-                background: animation === 'firefly'
-                  ? 'radial-gradient(circle, rgba(250,240,100,0.9), rgba(200,230,50,0.3))'
-                  : animation === 'wind-drift'
-                  ? 'rgba(200,220,240,0.4)'
-                  : 'rgba(255,255,255,0.3)',
-                boxShadow: animation === 'firefly'
-                  ? '0 0 6px rgba(250,240,100,0.6), 0 0 12px rgba(200,230,50,0.3)'
-                  : 'none',
-              }}
-            />
-          )}
+          <ParticleSprite particle={p} />
         </div>
       ))}
     </div>

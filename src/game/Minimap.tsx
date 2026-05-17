@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback, memo, useMemo } from 'react'
 import type { MapTile, JournalEntry, TimeOfDay, WeatherType } from '@/types/game'
 import type { WorldEvent } from './WorldEvents'
 import { BIOME_COLORS, MAP_WIDTH, MAP_HEIGHT } from './bayAreaMap'
+import { drawPixelGlyphOnCanvas, type PixelGlyphKind } from './pixelGlyphArt'
 
 interface Props {
   map: MapTile[][]
@@ -22,13 +23,19 @@ const SM_H = 240
 const LG_W = 384
 const MAP_ASPECT = MAP_HEIGHT / MAP_WIDTH
 
-const WEATHER_INFO: Record<WeatherType, { icon: string; color: string }> = {
-  clear: { icon: '☀', color: '#fbbf24' },
-  sunny: { icon: '☀', color: '#f59e0b' },
-  rain:  { icon: '☔', color: '#60a5fa' },
-  fog:   { icon: '🌫', color: '#cbd5e1' },
-  wind:  { icon: '💨', color: '#94a3b8' },
-  thunderstorm: { icon: '⛈', color: '#a78bfa' },
+const WEATHER_INFO: Record<WeatherType, { glyph: PixelGlyphKind; color: string; dark: string }> = {
+  clear: { glyph: 'sun', color: '#fbbf24', dark: '#7c4d12' },
+  sunny: { glyph: 'sun', color: '#f59e0b', dark: '#7c2d12' },
+  rain:  { glyph: 'rain', color: '#60a5fa', dark: '#1d4ed8' },
+  fog:   { glyph: 'fog', color: '#cbd5e1', dark: '#64748b' },
+  wind:  { glyph: 'wind', color: '#94a3b8', dark: '#475569' },
+  thunderstorm: { glyph: 'storm', color: '#a78bfa', dark: '#5b21b6' },
+}
+
+const EVENT_GLYPHS: Record<WorldEvent['type'], PixelGlyphKind> = {
+  rare_spawn: 'sparkle',
+  swarm: 'leaf',
+  weather_bonus: 'lightning',
 }
 
 const TIME_THEME: Record<TimeOfDay, { bg: string; fogColor: string; exploredBoost: number; playerColor: string }> = {
@@ -434,10 +441,13 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
         ctx.globalAlpha = 0.7 + pulse * 0.3
         ctx.fill()
         if (expanded) {
-          ctx.font = '8px system-ui'
-          ctx.textAlign = 'center'
-          ctx.globalAlpha = 0.8
-          ctx.fillText(activeEvent.icon, evx, evy - 8)
+          ctx.globalAlpha = 0.9
+          drawPixelGlyphOnCanvas(ctx, EVENT_GLYPHS[activeEvent.type], evx, evy - 9, 9, {
+            primary: eventColor,
+            accent: '#fff1a8',
+            dark: '#2d1a3f',
+            light: '#fff7d6',
+          })
         }
         ctx.globalAlpha = 1
       } else {
@@ -473,10 +483,13 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
         ctx.globalAlpha = 0.7 + pulse * 0.3
         ctx.fill()
         if (expanded) {
-          ctx.font = '8px system-ui'
-          ctx.textAlign = 'center'
-          ctx.globalAlpha = 0.7
-          ctx.fillText(activeEvent.icon, chevX - Math.cos(angle) * 10, chevY - Math.sin(angle) * 10)
+          ctx.globalAlpha = 0.85
+          drawPixelGlyphOnCanvas(ctx, EVENT_GLYPHS[activeEvent.type], chevX - Math.cos(angle) * 10, chevY - Math.sin(angle) * 10, 9, {
+            primary: eventColor,
+            accent: '#fff1a8',
+            dark: '#2d1a3f',
+            light: '#fff7d6',
+          })
         }
         ctx.globalAlpha = 1
       }
@@ -496,11 +509,12 @@ const Minimap = memo(function Minimap({ map, playerX, playerY, journal, explored
       ctx.strokeStyle = `${wInfo.color}66`
       ctx.lineWidth = 0.5
       ctx.stroke()
-      ctx.font = `${bs - 2}px system-ui`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillStyle = wInfo.color
-      ctx.fillText(wInfo.icon, bx + (bs + 4) / 2, by + (bs + 2) / 2 + 0.5)
+      drawPixelGlyphOnCanvas(ctx, wInfo.glyph, bx + (bs + 4) / 2, by + (bs + 2) / 2 + 0.5, bs - 1, {
+        primary: wInfo.color,
+        accent: '#f8fafc',
+        dark: wInfo.dark,
+        light: '#ffffff',
+      })
     }
 
     // Compass rose

@@ -2,6 +2,7 @@ import type { Creature } from '@/types/game'
 import { getEvolutionTarget, getPreEvolution } from './evolutions'
 import { ALL_CREATURES } from './creatures'
 import PixelCreatureToken from './PixelCreatureToken'
+import PixelGlyph from './PixelGlyph'
 
 interface Props {
   creature: Creature
@@ -120,13 +121,20 @@ export default function CreatureCard({ creature, caught, onClose }: Props) {
               <p className="text-white/25 text-[9px] italic">{creature.scientificName}</p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-[9px] px-2 py-0.5 rounded-full font-semibold"
+              <span className="text-[9px] px-2 py-0.5 rounded-full font-semibold inline-flex items-center gap-1"
                 style={{
                   background: `${typeColor}18`,
                   color: typeColor,
                   border: `1px solid ${typeColor}35`,
                 }}
-              >{TYPE_ICONS[creature.type]} {creature.type}</span>
+              >
+                <PixelGlyph
+                  source={TYPE_ICONS[creature.type]}
+                  size={11}
+                  palette={{ primary: typeColor, accent: '#f8f2c0', dark: '#1f2937', light: '#ffffff' }}
+                />
+                {creature.type}
+              </span>
             </div>
           </div>
 
@@ -290,11 +298,17 @@ export default function CreatureCard({ creature, caught, onClose }: Props) {
               }}>
                 <h4 className="text-white/25 text-[7px] font-bold uppercase tracking-wider mb-1">Active</h4>
                 <div className="flex gap-1">
-                  {creature.activeTime.map(t => (
-                    <span key={t} className="text-xs">
-                      {t === 'dawn' ? '🌅' : t === 'day' ? '☀️' : t === 'dusk' ? '🌇' : '🌙'}
-                    </span>
-                  ))}
+                  {creature.activeTime.map(t => {
+                    const timeIcon = t === 'dawn' ? '🌅' : t === 'day' ? '☀️' : t === 'dusk' ? '🌇' : '🌙'
+                    return (
+                      <PixelGlyph
+                        key={t}
+                        source={timeIcon}
+                        size={11}
+                        palette={{ primary: typeColor, accent: '#f8d47a', dark: '#1f2937', light: '#ffffff' }}
+                      />
+                    )
+                  })}
                 </div>
               </div>
             )}
