@@ -2313,8 +2313,8 @@ const IsometricRenderer = memo(function IsometricRenderer({ map, playerX, player
       const zI = 1 / zoom
       const cullL = w * (1 - zI) / 2 - 120
       const cullR = w * (1 + zI) / 2 + 120
-      const cullT = h * (1 - zI) / 2 - 260
-      const cullB = h * (1 + zI) / 2 + 160
+      const cullT = h * (1 - zI) / 2 - 380
+      const cullB = h * (1 + zI) / 2 + 220
 
       const shadowDirX = timeOfDay === 'dawn' ? -1 : timeOfDay === 'dusk' ? 1 : 0
       const shadowDirY = timeOfDay === 'night' ? 0 : 1

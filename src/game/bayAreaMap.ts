@@ -45,6 +45,43 @@ const VALLEY_E: [number, number][] = [
   [50,88],[100,90],[140,94],[170,96],[210,100],[250,106],[300,100],[340,96],[360,92],
 ]
 
+const KLAMATH_W: [number, number][] = [
+  [0,34],[20,35],[50,38],[80,42],[105,48],
+]
+const KLAMATH_E: [number, number][] = [
+  [0,78],[20,77],[50,80],[80,84],[105,86],
+]
+const CASCADE_W: [number, number][] = [
+  [0,68],[30,69],[65,73],[95,78],
+]
+const CASCADE_E: [number, number][] = [
+  [0,112],[30,110],[65,105],[95,102],
+]
+const MODOC_W: [number, number][] = [
+  [0,102],[40,104],[95,108],
+]
+const MODOC_E: [number, number][] = [
+  [0,128],[40,128],[95,130],
+]
+const DIABLO_TEMBLOR_W: [number, number][] = [
+  [215,68],[245,70],[285,76],[325,84],[360,92],
+]
+const DIABLO_TEMBLOR_E: [number, number][] = [
+  [215,82],[245,88],[285,96],[325,104],[360,112],
+]
+const WHITE_INYO_W: [number, number][] = [
+  [185,137],[220,140],[260,145],[285,148],
+]
+const WHITE_INYO_E: [number, number][] = [
+  [185,150],[220,153],[260,158],[285,160],
+]
+const PENINSULAR_W: [number, number][] = [
+  [430,142],[455,145],[490,148],
+]
+const PENINSULAR_E: [number, number][] = [
+  [430,162],[455,166],[490,169],
+]
+
 function coastAt(y: number): number { return interpX(y, COASTLINE) }
 function eastAt(y: number): number { return interpX(y, EAST_BORDER) }
 
@@ -121,6 +158,128 @@ function rangeBandInfluence(x: number, y: number, westPts: [number, number][], e
   const crossRange = Math.sin(Math.PI * t)
   const endFalloff = smoothstep(minY, minY + 22, y) * (1 - smoothstep(maxY - 22, maxY, y))
   return clamp(crossRange * endFalloff, 0, 1)
+}
+
+interface MountainBandDef {
+  name: string
+  westPts: [number, number][]
+  eastPts: [number, number][]
+  base: number
+  relief: number
+  biome: BiomeType
+  alpineAt?: number
+  snowAt?: number
+}
+
+const MOUNTAIN_BANDS: MountainBandDef[] = [
+  { name: 'Klamath Mountains', westPts: KLAMATH_W, eastPts: KLAMATH_E, base: 1.7, relief: 4.1, biome: 'mountain', alpineAt: 0.78 },
+  { name: 'Cascade Range', westPts: CASCADE_W, eastPts: CASCADE_E, base: 1.9, relief: 4.8, biome: 'volcanic', alpineAt: 0.72, snowAt: 0.9 },
+  { name: 'Modoc Plateau', westPts: MODOC_W, eastPts: MODOC_E, base: 1.4, relief: 2.4, biome: 'volcanic' },
+  { name: 'Sierra Nevada', westPts: SIERRA_W, eastPts: SIERRA_E, base: 1.6, relief: 6.8, biome: 'mountain', alpineAt: 0.5, snowAt: 0.78 },
+  { name: 'Diablo and Temblor Ranges', westPts: DIABLO_TEMBLOR_W, eastPts: DIABLO_TEMBLOR_E, base: 1.2, relief: 3.2, biome: 'mountain' },
+  { name: 'White-Inyo Mountains', westPts: WHITE_INYO_W, eastPts: WHITE_INYO_E, base: 1.6, relief: 5.7, biome: 'mountain', alpineAt: 0.58, snowAt: 0.84 },
+  { name: 'Peninsular Ranges', westPts: PENINSULAR_W, eastPts: PENINSULAR_E, base: 1.1, relief: 3.4, biome: 'mountain', alpineAt: 0.72 },
+]
+
+interface PeakDef {
+  name: string
+  cx: number
+  cy: number
+  rx: number
+  ry: number
+  peak: number
+  biome?: BiomeType
+}
+
+const MOUNTAIN_PEAKS: PeakDef[] = [
+  { name: 'Mt. Shasta', cx: 78, cy: 35, rx: 16, ry: 18, peak: 9.6, biome: 'snow' },
+  { name: 'Mount Eddy / Trinity Alps', cx: 58, cy: 42, rx: 20, ry: 22, peak: 5.9, biome: 'mountain' },
+  { name: 'Lassen Volcanic', cx: 85, cy: 78, rx: 18, ry: 20, peak: 7.4, biome: 'volcanic' },
+  { name: 'Medicine Lake Highlands', cx: 112, cy: 28, rx: 16, ry: 18, peak: 4.8, biome: 'volcanic' },
+  { name: 'Snow Mountain / Inner North Coast Ranges', cx: 62, cy: 140, rx: 18, ry: 24, peak: 4.8, biome: 'mountain' },
+  { name: 'Mt. Saint Helena / Mayacamas', cx: 56, cy: 168, rx: 12, ry: 16, peak: 4.1, biome: 'mountain' },
+  { name: 'Mt. Tamalpais', cx: 49, cy: 210, rx: 8, ry: 8, peak: 4.2, biome: 'mountain' },
+  { name: 'Mt. Diablo', cx: 74, cy: 220, rx: 9, ry: 9, peak: 4.7, biome: 'mountain' },
+  { name: 'Santa Cruz Mountains', cx: 56, cy: 245, rx: 13, ry: 18, peak: 4.3, biome: 'mountain' },
+  { name: 'Santa Lucia Range / Big Sur', cx: 70, cy: 290, rx: 18, ry: 24, peak: 4.9, biome: 'mountain' },
+  { name: 'Gabilan Range / Pinnacles', cx: 72, cy: 265, rx: 13, ry: 16, peak: 3.9, biome: 'mountain' },
+  { name: 'Diablo Range', cx: 84, cy: 285, rx: 18, ry: 34, peak: 4.5, biome: 'mountain' },
+  { name: 'Temblor Range', cx: 88, cy: 325, rx: 16, ry: 20, peak: 4.0, biome: 'mountain' },
+  { name: 'Lake Tahoe Crest', cx: 126, cy: 156, rx: 14, ry: 24, peak: 7.8, biome: 'snow' },
+  { name: 'Yosemite High Country', cx: 118, cy: 198, rx: 16, ry: 22, peak: 8.2, biome: 'alpine' },
+  { name: 'Mammoth / Ritter Range', cx: 140, cy: 212, rx: 13, ry: 18, peak: 8.7, biome: 'snow' },
+  { name: 'Palisades', cx: 132, cy: 232, rx: 12, ry: 16, peak: 9.1, biome: 'snow' },
+  { name: 'Sequoia / Great Western Divide', cx: 118, cy: 255, rx: 18, ry: 24, peak: 8.8, biome: 'snow' },
+  { name: 'Mt. Whitney / Southern High Sierra', cx: 138, cy: 248, rx: 13, ry: 16, peak: 10.3, biome: 'snow' },
+  { name: 'White Mountain Peak', cx: 145, cy: 218, rx: 9, ry: 24, peak: 9.5, biome: 'snow' },
+  { name: 'Inyo Mountains', cx: 150, cy: 255, rx: 8, ry: 26, peak: 7.2, biome: 'alpine' },
+  { name: 'Panamint Range / Telescope Peak', cx: 154, cy: 292, rx: 10, ry: 28, peak: 6.4, biome: 'mountain' },
+  { name: 'Amargosa Range', cx: 168, cy: 292, rx: 6, ry: 24, peak: 5.6, biome: 'mountain' },
+  { name: 'Tehachapi Mountains', cx: 112, cy: 360, rx: 26, ry: 14, peak: 4.8, biome: 'mountain' },
+  { name: 'San Rafael / Santa Ynez Mountains', cx: 104, cy: 388, rx: 24, ry: 14, peak: 4.5, biome: 'mountain' },
+  { name: 'Santa Monica Mountains', cx: 116, cy: 405, rx: 18, ry: 10, peak: 3.5, biome: 'mountain' },
+  { name: 'San Gabriel Mountains', cx: 138, cy: 410, rx: 18, ry: 12, peak: 6.7, biome: 'alpine' },
+  { name: 'San Bernardino Mountains / San Gorgonio', cx: 152, cy: 412, rx: 17, ry: 13, peak: 7.0, biome: 'alpine' },
+  { name: 'Providence / New York Mountains', cx: 176, cy: 374, rx: 16, ry: 18, peak: 4.4, biome: 'mountain' },
+  { name: 'Joshua Tree Uplands', cx: 165, cy: 438, rx: 18, ry: 22, peak: 3.6, biome: 'mountain' },
+  { name: 'Santa Ana Mountains', cx: 140, cy: 438, rx: 12, ry: 14, peak: 3.6, biome: 'mountain' },
+  { name: 'San Jacinto Mountains', cx: 155, cy: 445, rx: 12, ry: 18, peak: 6.4, biome: 'alpine' },
+  { name: 'Palomar / Laguna Mountains', cx: 150, cy: 468, rx: 12, ry: 20, peak: 4.5, biome: 'mountain' },
+  { name: 'Cuyamaca Mountains', cx: 146, cy: 478, rx: 10, ry: 14, peak: 4.2, biome: 'mountain' },
+  { name: 'Santa Cruz Island highlands', cx: 95, cy: 402, rx: 8, ry: 5, peak: 3.4, biome: 'mountain' },
+  { name: 'Santa Catalina Island highlands', cx: 120, cy: 430, rx: 8, ry: 5, peak: 3.2, biome: 'mountain' },
+]
+
+function coastRangeInfluence(x: number, y: number): number {
+  if (y < 25 || y > 395) return 0
+  const coast = coastAt(y)
+  const width = y < 215 ? 24 : y < 260 ? 16 : y < 370 ? 30 : 24
+  if (x < coast + 3 || x > coast + width) return 0
+  const t = (x - (coast + 3)) / (width - 3)
+  const ridge = Math.sin(Math.PI * clamp(t, 0, 1))
+  const northSouthFalloff = smoothstep(25, 45, y) * (1 - smoothstep(382, 395, y))
+  return clamp(ridge * northSouthFalloff, 0, 1)
+}
+
+function coastRangeElevation(x: number, y: number, n: number): number {
+  const influence = coastRangeInfluence(x, y)
+  if (influence <= 0) return 0
+  const relief = y < 210 ? 2.9 : y < 260 ? 2.6 : y < 360 ? 3.4 : 2.8
+  return 1.05 + influence * relief + n * 0.3
+}
+
+function mountainBandBiome(x: number, y: number): BiomeType | null {
+  let best: { def: MountainBandDef; influence: number } | null = null
+  for (const def of MOUNTAIN_BANDS) {
+    const influence = rangeBandInfluence(x, y, def.westPts, def.eastPts)
+    if (influence > (best?.influence ?? 0)) best = { def, influence }
+  }
+
+  if (best && best.influence > 0.28) {
+    if (best.def.snowAt && best.influence >= best.def.snowAt) return 'snow'
+    if (best.def.alpineAt && best.influence >= best.def.alpineAt) return 'alpine'
+    return best.def.biome
+  }
+
+  const coastInfluence = coastRangeInfluence(x, y)
+  if (coastInfluence > 0.68) return 'mountain'
+  if (coastInfluence > 0.52 && y >= 260 && y <= 360) return 'mountain'
+
+  return null
+}
+
+function namedPeakBiome(x: number, y: number): BiomeType | null {
+  let best: { peak: PeakDef; influence: number } | null = null
+  for (const peak of MOUNTAIN_PEAKS) {
+    const influence = ellipseInfluence(x, y, peak.cx, peak.cy, peak.rx, peak.ry)
+    if (influence > (best?.influence ?? 0)) best = { peak, influence }
+  }
+  if (!best || best.influence < 0.22) return null
+  if (best.peak.biome === 'snow' && best.influence > 0.42) return 'snow'
+  if (best.peak.biome === 'alpine' && best.influence > 0.45) return 'alpine'
+  if (best.peak.biome === 'volcanic' && best.influence > 0.35) return 'volcanic'
+  if (best.influence > 0.32) return best.peak.biome ?? 'mountain'
+  return 'mountain'
 }
 
 const SF_BAY: [number, number][] = [
@@ -307,11 +466,12 @@ function getBiome(x: number, y: number): BiomeType {
     return 'lakeshore'
   }
 
+  // Death Valley's basin must stay a low graben even while ranges tower beside it.
+  if (inEllipse(x, y, 165, 300, 5, 18)) return 'dunes'
+
   // === NAMED PEAKS ===
-  if (inEllipse(x, y, 78, 35, 5, 5)) return 'snow'
-  if (inEllipse(x, y, 78, 35, 8, 8)) return 'alpine'
-  if (inEllipse(x, y, 85, 78, 6, 6)) return 'volcanic'
-  if (inEllipse(x, y, 138, 248, 4, 4)) return 'snow'
+  const peakBiome = namedPeakBiome(x, y)
+  if (peakBiome) return peakBiome
 
   // === URBAN AREAS ===
   if (inEllipse(x, y, 82, 140, 7, 5)) return 'urban'
@@ -332,6 +492,10 @@ function getBiome(x: number, y: number): BiomeType {
   if (inEllipse(x, y, 62, 268, 4, 3)) return 'urban'
   if (inEllipse(x, y, 86, 134, 3, 3)) return 'urban'
   if (inEllipse(x, y, 90, 15, 4, 3)) return 'urban'
+
+  // === MAJOR MOUNTAIN PROVINCES ===
+  const mountainBiome = mountainBandBiome(x, y)
+  if (mountainBiome) return mountainBiome
 
   // === SIERRA NEVADA ===
   const sw = interpX(y, SIERRA_W), se = interpX(y, SIERRA_E)
@@ -429,9 +593,9 @@ function getElevation(x: number, y: number, biome: BiomeType): number {
   else if (biome === 'urban') elevation = 0.9
   else if (biome === 'forest' || biome === 'chaparral' || biome === 'oak_woodland') elevation = 1.2 + hash(x, y) * 0.35
   else if (biome === 'redwood' || biome === 'old_growth') elevation = 1.55 + hash(x, y) * 0.35
-  else if (biome === 'mountain' || biome === 'volcanic' || biome === 'canyon') elevation = 2.45 + hash(x, y) * 0.55
-  else if (biome === 'alpine') elevation = 3.15 + hash(x, y) * 0.45
-  else if (biome === 'snow') elevation = 3.8 + hash(x, y) * 0.45
+  else if (biome === 'mountain' || biome === 'volcanic' || biome === 'canyon') elevation = 2.75 + hash(x, y) * 0.7
+  else if (biome === 'alpine') elevation = 4.05 + hash(x, y) * 0.7
+  else if (biome === 'snow') elevation = 5.25 + hash(x, y) * 0.75
   else if (biome === 'rocky_beach') elevation = 0.55
 
   // California's main physical structure: low Central Valley, high Sierra Nevada.
@@ -440,52 +604,28 @@ function getElevation(x: number, y: number, biome: BiomeType): number {
     elevation = Math.min(elevation, 0.38 + hash(x + 9, y + 3) * 0.18)
   }
 
-  const sierra = rangeBandInfluence(x, y, SIERRA_W, SIERRA_E)
-  if (sierra > 0) {
-    elevation = Math.max(elevation, 1.15 + sierra * 4.35 + n * 0.45)
+  for (const range of MOUNTAIN_BANDS) {
+    const influence = rangeBandInfluence(x, y, range.westPts, range.eastPts)
+    if (influence > 0) {
+      elevation = Math.max(elevation, range.base + influence * range.relief + n * 0.45)
+    }
   }
 
   // Coastal ranges: lower than the Sierra, but visible as long north/south ridges.
-  const coast = coastAt(y)
-  if (x >= coast + 3 && x <= coast + 18 && y >= 25 && y <= 380) {
-    const t = (x - (coast + 3)) / 15
-    const ridge = Math.sin(Math.PI * clamp(t, 0, 1))
-    elevation = Math.max(elevation, 0.9 + ridge * 1.7 + n * 0.25)
-  }
+  elevation = Math.max(elevation, coastRangeElevation(x, y, n))
 
   // Named high points and volcanic/cascade terrain.
-  const highPoints = [
-    { cx: 78, cy: 35, rx: 16, ry: 18, peak: 5.4 },  // Mt. Shasta / Castle Crags
-    { cx: 85, cy: 78, rx: 18, ry: 20, peak: 4.9 },  // Lassen Volcanic
-    { cx: 130, cy: 156, rx: 14, ry: 24, peak: 4.9 }, // Tahoe crest
-    { cx: 115, cy: 200, rx: 16, ry: 22, peak: 5.2 }, // Yosemite high country
-    { cx: 118, cy: 255, rx: 18, ry: 24, peak: 5.15 }, // Sequoia / Kings Canyon
-    { cx: 49, cy: 210, rx: 8, ry: 8, peak: 3.35 },  // Mt. Tamalpais
-    { cx: 74, cy: 220, rx: 9, ry: 9, peak: 3.9 },   // Mt. Diablo
-    { cx: 56, cy: 245, rx: 13, ry: 18, peak: 3.1 }, // Santa Cruz Mountains
-    { cx: 126, cy: 418, rx: 24, ry: 18, peak: 3.8 }, // Transverse ranges north of LA
-    { cx: 144, cy: 475, rx: 18, ry: 22, peak: 3.25 }, // Peninsular ranges
-    { cx: 165, cy: 438, rx: 18, ry: 22, peak: 2.8 }, // Joshua Tree uplands
-  ]
-  for (const hp of highPoints) {
-    const influence = ellipseInfluence(x, y, hp.cx, hp.cy, hp.rx, hp.ry)
-    if (influence > 0) elevation = Math.max(elevation, 1 + influence * (hp.peak - 1) + n * 0.25)
+  for (const peak of MOUNTAIN_PEAKS) {
+    const influence = ellipseInfluence(x, y, peak.cx, peak.cy, peak.rx, peak.ry)
+    if (influence > 0) elevation = Math.max(elevation, 1 + influence * (peak.peak - 1) + n * 0.25)
   }
 
   // Death Valley is a low basin tucked beside high desert mountains.
-  const deathValleyBasin = ellipseInfluence(x, y, 165, 295, 9, 25)
+  const deathValleyBasin = ellipseInfluence(x, y, 165, 295, 5, 25)
   if (deathValleyBasin > 0) {
     elevation = Math.min(elevation, 0.18 + (1 - deathValleyBasin) * 0.6)
   }
-  const deathValleyRanges = Math.max(
-    ellipseInfluence(x, y, 154, 292, 10, 28),
-    ellipseInfluence(x, y, 176, 292, 10, 28),
-  )
-  if (deathValleyRanges > 0) {
-    elevation = Math.max(elevation, 1.2 + deathValleyRanges * 2.4)
-  }
-
-  return Math.round(clamp(elevation, 0.15, 5.8) * 100) / 100
+  return Math.round(clamp(elevation, 0.15, 10.5) * 100) / 100
 }
 
 // Subregion centers: [name, cx, cy, radius]
@@ -499,9 +639,9 @@ const SUBS: [string, number, number, number][] = [
   ['Sea Ranch',36,155,4],['Salt Point',37,160,4],['Jenner',38,165,3],
   // North Interior
   ['Yreka',90,15,5],['Mt. Shasta',78,35,6],['Castle Crags',74,42,4],
-  ['Weaverville',58,50,5],['Lava Beds',115,20,8],['Modoc Plateau',120,35,8],
+  ['Trinity Alps',58,42,6],['Weaverville',58,50,5],['Lava Beds',115,20,8],['Modoc Plateau',120,35,8],
   ['Redding',72,68,5],['Lake Shasta',72,60,5],['Lassen Volcanic NP',85,78,7],
-  ['Susanville',110,52,5],['Burney Falls',88,55,4],['Eagle Lake',118,42,4],
+  ['Medicine Lake Highlands',112,28,5],['Susanville',110,52,5],['Burney Falls',88,55,4],['Eagle Lake',118,42,4],
   ['Red Bluff',68,82,4],
   // Sacramento Valley
   ['Chico',78,102,5],['Oroville',82,108,4],['Yuba City',78,118,4],
@@ -510,7 +650,7 @@ const SUBS: [string, number, number, number][] = [
   // Wine Country
   ['Napa',56,178,4],['Sonoma',52,182,4],['Santa Rosa',48,175,5],
   ['Petaluma',46,188,4],['Healdsburg',44,168,4],['Calistoga',58,172,3],
-  ['Bodega Bay',42,190,3],
+  ['Bodega Bay',42,190,3],['Snow Mountain',62,140,5],['Mt. Saint Helena',56,168,4],
   // Bay Area
   ['Point Reyes',42,205,5],['Muir Woods',49,212,3],['Mt. Tamalpais',51,210,3],
   ['Sausalito',51,214,3],['San Rafael',56,210,4],['Novato',54,206,4],
@@ -535,6 +675,7 @@ const SUBS: [string, number, number, number][] = [
   ['Santa Cruz Coast',50,253,3],['Watsonville',56,258,4],['Monterey',60,268,4],
   ['Monterey Bay',56,262,5],['Monterey Bay Kelp Forest',55,264,4],
   ['Carmel',58,272,3],['Pacific Grove',59,266,3],['Pinnacles NP',72,265,5],
+  ['Santa Lucia Range',70,290,7],['Gabilan Range',72,265,5],
   // Central Valley South
   ['Stockton',88,170,5],['Tracy',82,175,4],['Modesto',86,192,5],
   ['Merced',90,215,5],['Fresno',92,238,6],['Visalia',95,265,5],
@@ -543,17 +684,19 @@ const SUBS: [string, number, number, number][] = [
   ['Auburn',92,130,4],['Placerville',95,136,4],['Lake Tahoe',130,156,5],
   ['Truckee',126,148,4],['Donner Pass',124,146,3],
   ['Yosemite Valley',115,200,5],['Tuolumne Meadows',120,195,4],
-  ['Mammoth Lakes',140,212,4],['Bishop',148,235,4],['Mt. Whitney',138,248,4],
+  ['Mammoth Lakes',140,212,4],['Bishop',148,235,4],['White Mountain Peak',145,218,4],
+  ['Inyo Mountains',150,255,5],['Mt. Whitney',138,248,4],
   ['Sequoia NP',118,255,6],['Kings Canyon',115,245,5],['Lone Pine',148,250,4],
   ['Mono Lake',142,198,4],['Desolation Wilderness',126,155,4],
   // Central Coast
   ['Big Sur',62,290,6],['San Simeon',67,315,4],['Morro Bay',73,330,4],
   ['San Luis Obispo',80,340,5],['Pismo Beach',79,348,4],['Paso Robles',82,325,5],
-  ['Cambria',68,318,3],
+  ['Cambria',68,318,3],['Diablo Range',84,285,6],['Temblor Range',88,325,5],
   // SoCal Mountains
+  ['Tehachapi Mountains',112,360,6],['Santa Ynez Mountains',104,388,5],
   ['San Gabriel Mountains',138,410,7],['San Bernardino Mountains',152,412,6],
   ['Big Bear Lake',155,415,4],['San Jacinto Mountains',155,445,5],
-  ['Palomar Mountain',148,460,4],
+  ['Palomar Mountain',148,460,4],['Cuyamaca Mountains',146,478,4],
   // SoCal Coast
   ['Santa Barbara',100,390,5],['Ventura',108,395,4],['Malibu',115,405,4],
   ['Santa Monica',120,412,4],['Long Beach',130,425,4],
@@ -567,7 +710,7 @@ const SUBS: [string, number, number, number][] = [
   ['Escondido',146,468,4],['Temecula',150,455,5],['Julian',152,468,4],
   // Deserts
   ['Death Valley',165,295,8],['Badwater Basin',167,300,4],['Zabriskie Point',163,290,3],
-  ['Mojave NP',175,378,8],['Kelso Dunes',178,385,5],['Barstow',155,388,5],
+  ['Mojave NP',175,378,8],['Providence Mountains',176,374,5],['Kelso Dunes',178,385,5],['Barstow',155,388,5],
   ['Victorville',148,395,5],['Joshua Tree NP',165,438,8],
   ['Palm Springs',158,440,5],['Palm Desert',162,445,4],
   ['Anza-Borrego',160,465,8],['Borrego Springs',162,462,4],
@@ -761,15 +904,17 @@ export function generateMap(): MapTile[][] {
       const dock = getBoatDockAt(x, y)
       const borderState = getBorderState(x, y)
       const subregion = island ? island.name : (bridgeName ?? getSubregion(x, y, biome))
+      const renderedBiome = bridgeName ? 'urban' : island ? island.biome : biome
+      const renderedElevation = bridgeName ? 1 : island ? Math.max(2, getElevation(x, y, island.biome)) : elevation
       const walkable = borderState ? false
         : bridgeName ? true
         : island ? true
         : (biome !== 'water')
       row.push({
         x, y,
-        biome: bridgeName ? 'urban' : island ? island.biome : biome,
+        biome: renderedBiome,
         subregion: borderState ?? subregion,
-        elevation: bridgeName ? 1 : island ? 2 : elevation,
+        elevation: renderedElevation,
         hasCreature: borderState ? false : bridgeName ? false : island ? (noise < 0.2) : hasCreature,
         isWalkable: walkable,
         bridge: bridgeName,
