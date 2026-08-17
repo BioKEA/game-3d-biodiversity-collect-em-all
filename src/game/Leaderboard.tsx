@@ -246,7 +246,7 @@ export default function Leaderboard({ playerName, playerLevel, speciesCaught, to
               <p className="text-[11px] mt-0.5" style={{ color: '#e6e8eb' }}>
                 WildCal is a long-form game and doesn't post to the daily leaderboard.{' '}
                 <a
-                  href="https://biokea.ai/mission/games/leaderboard"
+                  href="https://games.biokea.ai/leaderboard"
                   target="_top"
                   className="underline font-semibold text-amber-300"
                 >
