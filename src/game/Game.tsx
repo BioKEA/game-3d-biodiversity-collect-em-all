@@ -254,6 +254,13 @@ export default function Game({ children }: { children?: ReactNode }) {
     saveFishLog(fishLog)
   }, [fishLog])
 
+  // Track the highest player level reached. Lives in an effect rather than in
+  // each level-up handler so a save whose stats predate this field heals on load.
+  const playerLevel = gameState.player.level
+  useEffect(() => {
+    setPlayerStats(ps => playerLevel > ps.highestLevel ? { ...ps, highestLevel: playerLevel } : ps)
+  }, [playerLevel])
+
   // Save stats & check achievements
   useEffect(() => {
     if (gameState.screen !== 'title') saveStats(playerStats, activeSlot)

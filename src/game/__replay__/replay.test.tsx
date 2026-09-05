@@ -183,6 +183,10 @@ describe('replay oracle', () => {
     act(() => h().closeOverlay())
     expect(state().screen).toBe('world')
 
+    // highestLevel tracks the player's level (it was stuck at 1 before Sept 2026).
+    expect(probe().state().playerStats.highestLevel).toBe(state().player.level)
+    expect(state().player.level).toBeGreaterThan(1)
+
     const result = {
       gameState: state(),
       playerStats: probe().state().playerStats,

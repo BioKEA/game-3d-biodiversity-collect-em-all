@@ -382,7 +382,7 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
     "defeatedRangers": [
       "ranger-presidio",
     ],
-    "highestLevel": 1,
+    "highestLevel": 5,
     "rangerBattlesWon": 2,
     "totalBattlesWon": 4,
     "totalBreedsCompleted": 1,
@@ -973,7 +973,7 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
     "defeatedRangers": [
       "ranger-presidio",
     ],
-    "highestLevel": 1,
+    "highestLevel": 5,
     "rangerBattlesWon": 2,
     "totalBattlesWon": 4,
     "totalBreedsCompleted": 1,
