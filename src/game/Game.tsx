@@ -1,16 +1,17 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import type { ReactNode } from 'react'
 import type { GameState, Creature, CapturedCreature, MapTile, BreedingSlot } from '@/types/game'
-import { createInitialState } from './core/state'
+import { createInitialState, applyBackwardCompat, runtimeDeps } from './core/state'
 import {
   saveGame, loadGame, clearSave, saveStats, loadStats, saveExplored, loadExplored, loadPlayerName, savePlayerName, loadBayDexAck,
   loadAlcatrazEscaped, saveAlcatrazEscaped, loadDefeatedTrainers, saveDefeatedTrainers, loadFishLog, saveFishLog, loadConservationDismissed, saveConservationDismissed,
 } from './core/persistence'
-import { applyBackwardCompat, runtimeDeps } from './core/state'
 import { captureCreature } from './features/capture/logic'
 import { applyBattleWin, applyBattleLose, endBattle, applyUseItem, applyBattleSwitch, applyFriendlyGift } from './features/battle/logic'
 import { startRangerBattle, applyRangerBattleWin, applyRangerBattleLose, leaveRangerScreen, applyArenaWin, applyArenaLose, applyDeclineTrainer, applyTrainerBattleWin } from './features/trainers/logic'
 import { recordRangerDefeat, recordStepStats } from './features/progression/logic'
 import { stepPlayer, revealTiles, boatTravel, fastTravel, selectStarter } from './features/world/logic'
+import type { StepEvents } from './features/world/logic'
 import { acceptQuest, claimQuestReward } from './features/quests/logic'
 import { applyTrade, importCreature, removeTeamMember } from './features/trade/logic'
 import { applyCraft } from './features/crafting/logic'
@@ -42,7 +43,6 @@ import type { EscapeStage } from './AlcatrazEscape'
 import { getBartStationAt } from './BartSystem'
 import type { ArenaTier } from './arena'
 import { loadDailyState, updateChallengeProgress, type DailyState } from './dailyChallengesData'
-import { exposeTestHook } from './testHook'
 import { GameStateContext, GameActionsContext } from './core/GameContext'
 import type { GameStateValue, GameActions } from './core/GameContext'
 import { useKeyboardControls } from './hooks/useKeyboardControls'
@@ -51,7 +51,10 @@ import { useWorldProximity } from './hooks/useWorldProximity'
 // Screens that Escape should back out of, returning to the world map.
 const OVERLAY_SCREENS: GameState['screen'][] = ['catalog', 'inventory', 'journal', 'ranger', 'trade', 'baydex', 'breeding', 'questlog', 'crafting', 'fishing', 'ranger_battle', 'habitat_map', 'adoption', 'leaderboard', 'fusion', 'diving', 'bart', 'boardwalk', 'surfing', 'shop', 'daily_challenges', 'arena', 'move_tutor']
 
-export default function Game() {
+/** `children` is rendered inside both context providers on every screen. The
+ *  app passes nothing; the replay oracle passes `<GameProbe />` to read the
+ *  live context values (see `src/game/__replay__/GameProbe.tsx`). */
+export default function Game({ children }: { children?: ReactNode }) {
   const [activeSlot, setActiveSlot] = useState<SaveSlotIndex>(1)
   const [gameState, setGameState] = useState<GameState>(() => createInitialState())
   const [playerName, setPlayerName] = useState<string>(() => loadPlayerName())
@@ -262,6 +265,36 @@ export default function Game() {
     prevUnlockedRef.current = getUnlockedAchievements(gameState, playerStats)
   }, [playerStats, gameState])
 
+  // The side effects of a successful step, lifted out of `movePlayer`'s
+  // updater so that function stays short. Statements and order are unchanged;
+  // it is a plain (non-memoised) function so that the copy `movePlayer`
+  // closes over keeps `movePlayer`'s existing stale-closure reading of
+  // `activeSlot` (see the deps note at the end of `movePlayer`).
+  const applyStepEffects = (next: GameState, ev: Extract<StepEvents, { kind: 'moved' }>) => {
+    if (ev.clearBorderPeek) setBorderPeek(null)
+    setDailyState(ds => updateChallengeProgress(ds, 'steps'))
+    setPlayerStats(ps => recordStepStats(ps, ev.tile))
+    setExploredTiles(explored => {
+      const { next: revealed, changed } = revealTiles(explored, next.player.x, next.player.y)
+      if (!changed) return explored
+      // Persist periodically (every ~20 new tiles)
+      if (revealed.size % 20 < 5) saveExplored(revealed, activeSlot)
+      return revealed
+    })
+    if (ev.sfxStep) SFX.step()
+    if (ev.enteredNewSubregion) {
+      setDailyState(ds => updateChallengeProgress(ds, 'explore'))
+      if (ev.enteredNewBiome) {
+        triggerTutorial('new_biome', `You entered ${ev.tile.biome.replace('_', ' ')} terrain. Different biomes have different creatures!`)
+      }
+    }
+    if (ev.weatherChangedAt !== null) lastWeatherChange.current = ev.weatherChangedAt
+    if (ev.encounter) SFX.battleStart()
+    if (ev.lunarBoss) { lunarBossTriggeredRef.current = next.gameDay ?? 0; setLunarBoss(ev.lunarBoss) }
+    if (ev.shadowBoss) { shadowBossTriggeredRef.current = next.gameDay ?? 0; setShadowBoss(ev.shadowBoss) }
+    if (ev.trainer) setPendingTrainer(ev.trainer)
+  }
+
   const movePlayer = useCallback((dx: number, dy: number) => {
     const now = Date.now()
     if (now - lastMoveTime.current < 120) return
@@ -296,36 +329,16 @@ export default function Game() {
           setBorderMessage(ev.message)
           setTimeout(() => setBorderMessage(null), 3000)
           return next
-        case 'moved': {
-          if (ev.clearBorderPeek) setBorderPeek(null)
-          setDailyState(ds => updateChallengeProgress(ds, 'steps'))
-          setPlayerStats(ps => recordStepStats(ps, ev.tile))
-          setExploredTiles(explored => {
-            const { next: revealed, changed } = revealTiles(explored, next.player.x, next.player.y)
-            if (!changed) return explored
-            // Persist periodically (every ~20 new tiles)
-            if (revealed.size % 20 < 5) saveExplored(revealed, activeSlot)
-            return revealed
-          })
-          if (ev.sfxStep) SFX.step()
-          if (ev.enteredNewSubregion) {
-            setDailyState(ds => updateChallengeProgress(ds, 'explore'))
-            if (ev.enteredNewBiome) {
-              triggerTutorial('new_biome', `You entered ${ev.tile.biome.replace('_', ' ')} terrain. Different biomes have different creatures!`)
-            }
-          }
-          if (ev.weatherChangedAt !== null) lastWeatherChange.current = ev.weatherChangedAt
-          if (ev.encounter) SFX.battleStart()
-          if (ev.lunarBoss) { lunarBossTriggeredRef.current = next.gameDay ?? 0; setLunarBoss(ev.lunarBoss) }
-          if (ev.shadowBoss) { shadowBossTriggeredRef.current = next.gameDay ?? 0; setShadowBoss(ev.shadowBoss) }
-          if (ev.trainer) setPendingTrainer(ev.trainer)
+        case 'moved':
+          applyStepEffects(next, ev)
           return next
-        }
       }
     })
     // `borderPeek` and `activeSlot` are deliberately read through a stale closure — the
     // pre-refactor deps did the same, and listing them would change behavior (see the
     // border-peek known issue in docs/ARCHITECTURE.md: the 3-step cap effectively never fires).
+    // `applyStepEffects` is likewise unlisted: it is the carrier of that same stale `activeSlot`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, defeatedTrainers, triggerTutorial])
 
   // When encounter starts, roll mood and encounter type
@@ -874,25 +887,6 @@ export default function Game() {
     saveConservationDismissed(conservationDismissals.current)
   }, [])
 
-  useEffect(() => {
-    exposeTestHook({
-      getState: () => gameState,
-      getStats: () => playerStats,
-      getExploredCount: () => exploredTiles.size,
-      getDefeatedTrainers: () => defeatedTrainers,
-      getFishLog: () => fishLog,
-      handleNewGame, handleLoadSlot, handleSelectStarter, movePlayer, openScreen, closeOverlay,
-      handleEncounterComplete, handleBattleWin, handleBattleLose, handleCapture, handleFlee, handleCreatureFled,
-      handleFriendlyGift, handleAcceptTrainer, handleDeclineTrainer, handleTrainerBattleWin,
-      handleStartRangerBattle, handleRangerBattleWin, handleRangerBattleLose, handleArenaWin, handleArenaLose,
-      handleAcceptQuest, handleClaimReward, handleTrade, handleCraft, handleUseItem, handleSwapLead, handleBattleSwitch,
-      handleFishCatch, handleStartBreeding, handleHatchCreature, handleCancelBreeding, handleImportCreature,
-      handleTradeRemoveCreature, handleManualEvolve, handleReleaseFromTeam, handleSwapFromReserve,
-      handleAdoptFromReserve, handleReleaseFromReserve, handleAlcatrazComplete, handleFusion, handleDiveCollect,
-      handleDiveEncounter, handleFastTravel, handleTeachMove, handleLearnAbility,
-    })
-  })
-
   // ---- Context values -------------------------------------------------
   // Built once, before the early returns, so every screen (title, starter
   // and the main tree) is wrapped in the same providers.
@@ -961,6 +955,7 @@ export default function Game() {
       <GameStateContext.Provider value={stateValue}>
       <GameActionsContext.Provider value={actions}>
       <ScreenRouter />
+      {children}
       </GameActionsContext.Provider>
       </GameStateContext.Provider>
     )
@@ -979,6 +974,8 @@ export default function Game() {
       <WorldPanels />
 
       <GlobalOverlays />
+
+      {children}
     </div>
     </GameActionsContext.Provider>
     </GameStateContext.Provider>

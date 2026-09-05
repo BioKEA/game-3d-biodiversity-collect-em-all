@@ -4,7 +4,8 @@ import { render, act, cleanup } from '@testing-library/react'
 import Game from '../Game'
 import { STARTERS } from '../StarterSelect'
 import { mulberry32 } from '@/test/fixtures'
-import type { WildcalTestHook } from '../testHook'
+import { GameProbe, probe } from './GameProbe'
+import type { GameActions } from '../core/GameContext'
 import type { GameState } from '@/types/game'
 
 // Presentation-only components that touch canvas / rAF / audio. The oracle
@@ -45,12 +46,11 @@ vi.mock('../sounds', () => {
 vi.mock('@/lib/golden-sample', () => ({ reportCreatureEncountered: async () => {} }))
 vi.mock('@/components/BiokeaLeaderboardPrompt', () => ({ BiokeaLeaderboardPrompt: () => null }))
 
-const h = (): WildcalTestHook => {
-  const hook = (window as unknown as { __wildcal?: WildcalTestHook }).__wildcal
-  if (!hook) throw new Error('test hook not exposed')
-  return hook
-}
-const state = (): GameState => h().getState()
+// The oracle drives the same context the screens consume: `<GameProbe />` is
+// passed to `Game` as `children` and republishes the live context values after
+// every commit. `h()` keeps the old call shape — `h().handleCapture(...)`.
+const h = (): GameActions => probe().actions()
+const state = (): GameState => probe().state().gameState
 
 const DIRS: [number, number][] = [[1, 0], [0, 1], [-1, 0], [0, -1]]
 
@@ -81,7 +81,7 @@ describe('replay oracle', () => {
   afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers() })
 
   it('produces an identical GameState for a fixed script', () => {
-    render(<Game />)
+    render(<Game><GameProbe /></Game>)
     act(() => h().handleNewGame(1))
     expect(state().screen).toBe('starter')
     act(() => h().handleSelectStarter(STARTERS[0].creature))
@@ -185,10 +185,10 @@ describe('replay oracle', () => {
 
     const result = {
       gameState: state(),
-      playerStats: h().getStats(),
-      exploredCount: h().getExploredCount(),
-      defeatedTrainers: h().getDefeatedTrainers(),
-      fishLog: h().getFishLog(),
+      playerStats: probe().state().playerStats,
+      exploredCount: probe().state().exploredTiles.size,
+      defeatedTrainers: probe().state().ui.defeatedTrainers,
+      fishLog: probe().state().ui.fishLog,
       savedSlot1: JSON.parse(localStorage.getItem('bioquest-bay-save-1') ?? 'null'),
       savedStats1: JSON.parse(localStorage.getItem('bioquest-bay-stats-1') ?? 'null'),
       savedExplored1: JSON.parse(localStorage.getItem('bioquest-bay-explored-1') ?? 'null'),
