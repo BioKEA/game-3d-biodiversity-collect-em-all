@@ -21,13 +21,13 @@ function isEditableTarget(target: EventTarget | null): boolean {
 }
 import { createInitialState, saveGame, loadGame, clearSave, saveStats, loadStats, saveExplored, loadExplored, loadPlayerName, savePlayerName, loadBayDexAck, saveBayDexAck } from './gameState'
 import { applyBackwardCompat, runtimeDeps } from './core/state'
-import { BOSS_IDS } from './features/bosses/logic'
 import { captureCreature } from './features/capture/logic'
+import { applyBattleWin, applyBattleLose, endBattle, applyUseItem, applyBattleSwitch, applyFriendlyGift } from './features/battle/logic'
 import { BiokeaLeaderboardPrompt } from '@/components/BiokeaLeaderboardPrompt'
 import { reportCreatureEncountered } from '@/lib/golden-sample'
 import type { SaveSlotIndex } from './gameState'
 import { generateMap, getBoatDockAt, getSignpostAt, type BoatDock } from './bayAreaMap'
-import { getRandomEncounter, ALL_CREATURES, isFullMoon, isNewMoon, getLunarBoss, getShadowBoss, LUNAR_BOSSES } from './creatures'
+import { getRandomEncounter, ALL_CREATURES, isFullMoon, isNewMoon, getLunarBoss, getShadowBoss } from './creatures'
 import { RANGERS, getNearbyRanger } from './rangers'
 import { getRangerActivity, getRangerPosition, type RangerActivity } from './npcSchedules'
 import { advanceTime, rollWeather } from './timeWeather'
@@ -49,7 +49,7 @@ import TradeCenter from './TradeCenter'
 import EvolutionScreen from './EvolutionScreen'
 import BayDex from './BayDex'
 import BreedingScreen from './BreedingScreen'
-import { getEvolution, getEvolutionTarget, evolveCreature } from './evolutions'
+import { getEvolution, evolveCreature } from './evolutions'
 import { createInitialStats, getNewAchievements, getUnlockedAchievements, type PlayerStats } from './achievements'
 import AchievementsScreen from './AchievementsScreen'
 import QuestLog from './QuestLog'
@@ -66,7 +66,7 @@ import { getLandmarkAt, getNearbyLandmark, LANDMARK_INFO } from './landmarks'
 import { FINAL_BOSS_ID, GRAND_CHAMPION_ID, canChallengeGrandChampion } from './rangers'
 import WorldEventBanner, { useWorldEvents } from './WorldEvents'
 import { SFX, Music } from './sounds'
-import { rollMaterialDrops, RECIPES, canCraft, MATERIALS } from './crafting'
+import { RECIPES, canCraft } from './crafting'
 import HabitatMap from './HabitatMap'
 import TrainerEncounter from './TrainerEncounter'
 import { rollTrainerEncounter, type RoamingTrainer } from './roamingTrainers'
@@ -82,7 +82,7 @@ import DailyChallenges from './DailyChallenges'
 import ArenaScreen from './ArenaScreen'
 import MoveTutorScreen from './MoveTutorScreen'
 import { HELD_ITEMS } from './heldItems'
-import { adjustHappiness, LEVEL_UP_GAIN, BATTLE_WIN_LEAD_GAIN, BATTLE_WIN_BENCH_GAIN, PET_GAIN } from './happiness'
+import { adjustHappiness, PET_GAIN } from './happiness'
 import type { ArenaTier } from './arena'
 import { loadDailyState, updateChallengeProgress, claimChallengeReward, getClaimableCount, type DailyState } from './dailyChallengesData'
 import { checkHerdEncounter } from './migration'
@@ -857,86 +857,21 @@ export default function Game() {
     SFX.victory()
     setPlayerStats(ps => ({ ...ps, totalBattlesWon: ps.totalBattlesWon + 1 }))
     setDailyState(ds => updateChallengeProgress(ds, 'battle'))
-    // Fade transition out of battle
     setScreenTransition('fade-out')
     setTimeout(() => {
       setScreenTransition('fade-in')
       setTimeout(() => setScreenTransition('none'), 400)
     }, 300)
     setGameState(prev => {
-      let newXp = prev.player.xp + xpGained
-      let newLevel = prev.player.level
-      let newMaxXp = prev.player.maxXp
-      const didLevelUp = newXp >= newMaxXp
-
-      while (newXp >= newMaxXp) {
-        newXp -= newMaxXp
-        newLevel++
-        newMaxXp = Math.floor(newMaxXp * 1.3)
-      }
-
-      const isBossKill = !!(prev.battle.wildCreature && BOSS_IDS.has(prev.battle.wildCreature.id))
-      const coinsGained = isBossKill ? (50 + newLevel * 5) : (10 + newLevel * 2)
-      setBattleReward({ xp: xpGained, coins: coinsGained, levelUp: didLevelUp, isBoss: isBossKill })
+      const r = applyBattleWin(prev, xpGained, { alcatrazEscapeActive })
+      setBattleReward(r.reward)
       setTimeout(() => setBattleReward(null), 3000)
-
-      const newCatalog = prev.battle.wildCreature
-        ? [...new Set([...prev.player.catalog, prev.battle.wildCreature.id])]
-        : prev.player.catalog
-
-      const newTeam = [...prev.player.team]
-      let evolutionData: { from: CapturedCreature; to: CapturedCreature; description: string; teamIndex: number } | null = null
-      // Award XP + happiness to all team members (lead gets full share, others get half)
-      for (let ti = 0; ti < newTeam.length; ti++) {
-        let member = { ...newTeam[ti] }
-        member.xp += Math.floor(xpGained * (ti === 0 ? 1 : 0.5))
-        member = adjustHappiness(member, ti === 0 ? BATTLE_WIN_LEAD_GAIN : BATTLE_WIN_BENCH_GAIN)
-        if (member.xp >= member.level * 50) {
-          member.xp = 0
-          member.level++
-          member = adjustHappiness(member, LEVEL_UP_GAIN)
-          member.stats = {
-            ...member.stats,
-            maxHp: member.stats.maxHp + 3,
-            hp: Math.min(member.stats.hp + 3, member.stats.maxHp + 3),
-            attack: member.stats.attack + 2,
-            defense: member.stats.defense + 1,
-            speed: member.stats.speed + 1,
-          }
-
-          const evo = getEvolution(member.id, member.level)
-          if (evo) {
-            const beforeEvo = { ...member }
-            const evolved = evolveCreature(member, evo)
-            if (!evolutionData) {
-              evolutionData = { from: beforeEvo, to: evolved, description: evo.description, teamIndex: ti }
-            }
-            newTeam[ti] = evolved
-          } else {
-            newTeam[ti] = member
-            // Almost-evolve hint: fires when lead team member is within 2 levels of its evolution
-            const nextEvo = getEvolutionTarget(member.id)
-            if (ti === 0 && nextEvo && member.level < nextEvo.level && nextEvo.level - member.level <= 2) {
-              const targetSpecies = ALL_CREATURES.find(c => c.id === nextEvo.toId)
-              if (targetSpecies) {
-                const gap = nextEvo.level - member.level
-                setEvolveReadyToast({
-                  name: member.nickname || member.name,
-                  sprite: member.sprite,
-                  toName: targetSpecies.name,
-                  gap,
-                })
-                setTimeout(() => setEvolveReadyToast(null), 4000)
-              }
-            }
-          }
-        } else {
-          newTeam[ti] = member
-        }
+      if (r.evolveReadyHint) {
+        setEvolveReadyToast(r.evolveReadyHint)
+        setTimeout(() => setEvolveReadyToast(null), 4000)
       }
-
-      if (evolutionData) {
-        pendingEvolutionRef.current = evolutionData
+      if (r.evolution) {
+        pendingEvolutionRef.current = r.evolution
         setPlayerStats(ps => ({ ...ps, totalEvolutions: ps.totalEvolutions + 1 }))
         SFX.evolution()
         setTimeout(() => {
@@ -946,23 +881,6 @@ export default function Game() {
           }
         }, 100)
       }
-
-      // Material drops from battle victory
-      const drops = rollMaterialDrops(prev.currentBiome, newLevel)
-      const newInventory = [...prev.player.inventory]
-      for (const drop of drops) {
-        const existing = newInventory.find(i => i.id === drop.itemId)
-        if (existing) {
-          existing.quantity += drop.quantity
-        } else {
-          const mat = MATERIALS.find(m => m.id === drop.itemId)
-          if (mat) {
-            newInventory.push({ ...mat, quantity: drop.quantity })
-          }
-        }
-      }
-
-      // Route back to Alcatraz escape if active
       if (alcatrazEscapeActive) {
         if (alcatrazStage === 'cellblock') {
           setAlcatrazCellProgress(p => p + 1)
@@ -970,43 +888,7 @@ export default function Game() {
           setAlcatrazStage('freedom')
         }
       }
-
-      // Increment invasive removal counter if the defeated wild creature was invasive
-      const defeated = prev.battle.wildCreature
-      const wasInvasive = !!defeated && (defeated.conservationStatus === 'INV' || defeated.isNative === false)
-      const newInvasivesRemoved = (prev.player.invasivesRemoved ?? 0) + (wasInvasive ? 1 : 0)
-
-      // Track boss defeats
-      const newBossDefeats = [...(prev.bossDefeats ?? [])]
-      if (defeated && BOSS_IDS.has(defeated.id)) {
-        const isLunar = LUNAR_BOSSES.some(b => b.id === defeated.id)
-        newBossDefeats.push({
-          bossId: defeated.id,
-          bossName: defeated.name,
-          bossSprite: defeated.sprite,
-          bossType: isLunar ? 'lunar' : 'shadow',
-          gameDay: prev.gameDay ?? 0,
-          captured: false,
-        })
-      }
-
-      return {
-        ...prev,
-        screen: alcatrazEscapeActive ? 'alcatraz_escape' : 'world',
-        player: {
-          ...prev.player,
-          xp: newXp,
-          level: newLevel,
-          maxXp: newMaxXp,
-          coins: (prev.player.coins ?? 0) + coinsGained,
-          team: newTeam,
-          catalog: newCatalog,
-          inventory: newInventory,
-          invasivesRemoved: newInvasivesRemoved,
-        },
-        bossDefeats: newBossDefeats,
-        battle: { active: false, wildCreature: null, playerCreature: null, turn: 'player', log: [], captureChance: 0 },
-      }
+      return r.state
     })
   }, [alcatrazEscapeActive, alcatrazStage])
 
@@ -1017,17 +899,7 @@ export default function Game() {
       setScreenTransition('fade-in')
       setTimeout(() => setScreenTransition('none'), 400)
     }, 300)
-    setGameState(prev => {
-      const newTeam = prev.player.team.map(c => ({
-        ...c,
-        stats: { ...c.stats, hp: Math.floor(c.stats.maxHp * 0.5) },
-      }))
-      return {
-        ...prev, screen: alcatrazEscapeActive ? 'alcatraz_escape' : 'world',
-        player: { ...prev.player, team: newTeam },
-        battle: { active: false, wildCreature: null, playerCreature: null, turn: 'player', log: [], captureChance: 0 },
-      }
-    })
+    setGameState(prev => applyBattleLose(prev, { alcatrazEscapeActive }))
   }, [alcatrazEscapeActive])
 
   const handleCapture = useCallback((creature: Creature, _personality: Personality) => {
@@ -1055,11 +927,7 @@ export default function Game() {
       setScreenTransition('fade-in')
       setTimeout(() => setScreenTransition('none'), 400)
     }, 300)
-    setGameState(prev => ({
-      ...prev, screen: 'world',
-      battle: { active: false, wildCreature: null, playerCreature: null, turn: 'player', log: [], captureChance: 0 },
-      encounterCooldown: 8,
-    }))
+    setGameState(prev => endBattle(prev, 8))
   }, [])
 
   const handleCreatureFled = useCallback(() => {
@@ -1068,11 +936,7 @@ export default function Game() {
       setScreenTransition('fade-in')
       setTimeout(() => setScreenTransition('none'), 400)
     }, 300)
-    setGameState(prev => ({
-      ...prev, screen: 'world',
-      battle: { active: false, wildCreature: null, playerCreature: null, turn: 'player', log: [], captureChance: 0 },
-      encounterCooldown: 6,
-    }))
+    setGameState(prev => endBattle(prev, 6))
   }, [])
 
   const handleBossChallenge = useCallback(() => {
@@ -1122,19 +986,7 @@ export default function Game() {
   }, [shadowBoss, gameState.player.catalog])
 
   const handleFriendlyGift = useCallback((gift: FriendlyGift) => {
-    setGameState(prev => {
-      const newInventory = [...prev.player.inventory]
-      const existing = newInventory.find(i => i.id === gift.itemId)
-      if (existing) {
-        existing.quantity += 1
-      }
-      return {
-        ...prev, screen: 'world',
-        player: { ...prev.player, inventory: newInventory },
-        battle: { active: false, wildCreature: null, playerCreature: null, turn: 'player', log: [], captureChance: 0 },
-        encounterCooldown: 5,
-      }
-    })
+    setGameState(prev => applyFriendlyGift(prev, gift))
     setGiftNotif(gift)
     setTimeout(() => setGiftNotif(null), 4000)
   }, [])
@@ -1283,30 +1135,11 @@ export default function Game() {
   }, [])
 
   const handleUseItem = useCallback((itemId: string) => {
-    setGameState(prev => ({
-      ...prev,
-      player: {
-        ...prev.player,
-        inventory: prev.player.inventory.map(item =>
-          item.id === itemId ? { ...item, quantity: Math.max(0, item.quantity - 1) } : item
-        ),
-      },
-    }))
+    setGameState(prev => applyUseItem(prev, itemId))
   }, [])
 
   const handleBattleSwitch = useCallback((index: number) => {
-    setGameState(prev => {
-      if (index <= 0 || index >= prev.player.team.length) return prev
-      const newTeam = [...prev.player.team]
-      const temp = newTeam[0]
-      newTeam[0] = newTeam[index]
-      newTeam[index] = temp
-      return {
-        ...prev,
-        player: { ...prev.player, team: newTeam },
-        battle: { ...prev.battle, playerCreature: newTeam[0] },
-      }
-    })
+    setGameState(prev => applyBattleSwitch(prev, index))
   }, [])
 
   const handleSwapLead = useCallback((index: number) => {
