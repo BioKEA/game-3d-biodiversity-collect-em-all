@@ -432,7 +432,10 @@ export default function Game() {
         }
       }
     })
-  }, [map, defeatedTrainers, triggerTutorial, borderPeek, activeSlot])
+    // `borderPeek` and `activeSlot` are deliberately read through a stale closure — the
+    // pre-refactor deps did the same, and listing them would change behavior (see the
+    // border-peek known issue in docs/ARCHITECTURE.md: the 3-step cap effectively never fires).
+  }, [map, defeatedTrainers, triggerTutorial])
 
   // When encounter starts, roll mood and encounter type
   useEffect(() => {
