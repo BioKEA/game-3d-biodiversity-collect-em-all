@@ -1,0 +1,87 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`save round-trip > legacy save loads through backward compat identically 1`] = `
+{
+  "activeRangerId": null,
+  "arenaWins": {
+    "bronze": 0,
+    "gold": 0,
+    "silver": 0,
+  },
+  "battle": {
+    "active": false,
+    "captureChance": 0,
+    "log": [],
+    "playerCreature": null,
+    "turn": "player",
+    "wildCreature": null,
+  },
+  "currentBiome": "water",
+  "currentSubregion": "",
+  "encounterCooldown": 0,
+  "gameDay": 75,
+  "gameMinutes": 480,
+  "player": {
+    "captured": [
+      "coyote",
+    ],
+    "catalog": [
+      "coyote",
+    ],
+    "coins": 100,
+    "hp": 100,
+    "inventory": [
+      {
+        "description": "d",
+        "id": "bio-capsule",
+        "name": "Bio Capsule",
+        "quantity": 3,
+        "sprite": "🔮",
+        "type": "capture",
+      },
+    ],
+    "journal": {},
+    "level": 4,
+    "maxHp": 100,
+    "maxXp": 220,
+    "nursery": null,
+    "reserves": [],
+    "team": [
+      {
+        "biomes": [
+          "grassland",
+        ],
+        "capturedAt": "2026-01-01T00:00:00.000Z",
+        "capturedBiome": "grassland",
+        "color": "#888",
+        "description": "d",
+        "id": "coyote",
+        "isFantasy": false,
+        "level": 5,
+        "moves": [],
+        "name": "Coyote",
+        "rarity": "common",
+        "scientificName": "Canis latrans",
+        "sprite": "🐺",
+        "stats": {
+          "attack": 9,
+          "defense": 7,
+          "hp": 20,
+          "maxHp": 40,
+          "speed": 8,
+        },
+        "subregions": [],
+        "type": "beast",
+        "xp": 10,
+      },
+    ],
+    "x": 30,
+    "xp": 20,
+    "y": 3,
+  },
+  "questProgress": {},
+  "screen": "battle",
+  "timeOfDay": "day",
+  "weather": "clear",
+}
+`;
