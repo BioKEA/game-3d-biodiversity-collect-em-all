@@ -95,7 +95,12 @@ describe('replay oracle', () => {
     const seen = { wild: 0, trainer: 0 }
     const wildPolicy = ['capture', 'win', 'flee', 'capture', 'win', 'fled', 'gift', 'lose'] as const
     let wildIdx = 0
-    for (let i = 0; i < 8; i++) {
+    // Run until every wild policy has executed at least once (a fixed count of
+    // 8 stops leaves 'lose' unreached whenever one of them is a trainer), with
+    // a hard cap so a divergent walk fails loudly instead of hanging.
+    let encounters = 0
+    while (wildIdx < wildPolicy.length && encounters < 12) {
+      encounters++
       walkUntil(s => s.screen !== 'world')
       const s = state()
       if (s.screen === 'ranger') {
@@ -126,12 +131,11 @@ describe('replay oracle', () => {
       act(() => { vi.advanceTimersByTime(6000) })
       expect(state().screen).toBe('world')
     }
-    // Documents the shape of the replay under seed 12345: 7 wild encounters
-    // exercising policies capture/win/flee/capture/win/fled/gift (the 8th,
-    // 'lose', is never reached because one of the eight stops is a trainer)
-    // plus 1 roaming-trainer battle. A change here means the walk diverged.
-    expect(seen).toEqual({ wild: 7, trainer: 1 })
-    expect(wildIdx).toBe(7)
+    // Documents the shape of the replay under seed 12345. Every wild policy —
+    // capture/win/flee/capture/win/fled/gift/lose — runs exactly once.
+    // A change here means the walk diverged.
+    expect(seen).toEqual({ wild: 8, trainer: 1 })
+    expect(wildIdx).toBe(wildPolicy.length)
     expect(seen.wild).toBeGreaterThan(0)
     expect(state().player.team.length).toBeGreaterThan(1)
 

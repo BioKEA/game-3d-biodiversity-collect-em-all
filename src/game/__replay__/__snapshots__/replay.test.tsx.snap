@@ -5,7 +5,7 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
   "defeatedTrainers": [
     "jogger-priya",
   ],
-  "exploredCount": 183,
+  "exploredCount": 195,
   "fishLog": [
     "fish-test",
   ],
@@ -85,10 +85,10 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
     },
     "bossDefeats": [],
     "currentBiome": "urban",
-    "currentSubregion": "San Mateo Bridge",
+    "currentSubregion": "San Mateo",
     "encounterCooldown": 5,
     "gameDay": 75,
-    "gameMinutes": 924,
+    "gameMinutes": 957,
     "player": {
       "captured": [
         "pacific-tree-frog",
@@ -106,6 +106,7 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
         "peregrine-falcon",
         "red-eared-slider",
         "annas-hummingbird",
+        "fog-gull",
         "hatched-test",
         "imported-test",
         "fused-test",
@@ -202,10 +203,11 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
           "creaturesCaptured": [],
           "creaturesEncountered": [
             "red-eared-slider",
+            "fog-gull",
           ],
           "firstVisited": "2026-03-15T12:00:33.490Z",
           "subregion": "San Mateo",
-          "visitCount": 17,
+          "visitCount": 20,
         },
         "San Mateo Bridge": {
           "biome": "urban",
@@ -215,7 +217,7 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
           ],
           "firstVisited": "2026-03-15T12:00:57.340Z",
           "subregion": "San Mateo Bridge",
-          "visitCount": 9,
+          "visitCount": 11,
         },
         "SoMa / Mission District": {
           "biome": "urban",
@@ -345,7 +347,7 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
       ],
       "x": 53,
       "xp": 22,
-      "y": 226,
+      "y": 227,
     },
     "questProgress": {
       "presidio-coyote": {
@@ -388,7 +390,7 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
     "totalCriticalHits": 0,
     "totalEvolutions": 0,
     "totalFishCaught": 1,
-    "totalStepsWalked": 148,
+    "totalStepsWalked": 159,
     "uniqueBiomesVisited": [
       "urban",
     ],
@@ -584,9 +586,21 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
     "49,229",
     "50,230",
     "53,231",
+    "59,227",
+    "58,230",
+    "51,231",
+    "52,231",
+    "55,231",
+    "56,231",
+    "57,231",
+    "54,232",
+    "48,227",
+    "49,230",
+    "50,231",
+    "53,232",
   ],
   "savedSlot1": {
-    "_lastPlayed": "2026-03-15T12:01:09.630Z",
+    "_lastPlayed": "2026-03-15T12:01:17.060Z",
     "activeRangerId": null,
     "arenaWins": {
       "bronze": 1,
@@ -662,10 +676,10 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
     },
     "bossDefeats": [],
     "currentBiome": "urban",
-    "currentSubregion": "San Mateo Bridge",
+    "currentSubregion": "San Mateo",
     "encounterCooldown": 5,
     "gameDay": 75,
-    "gameMinutes": 924,
+    "gameMinutes": 957,
     "player": {
       "captured": [
         "pacific-tree-frog",
@@ -683,6 +697,7 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
         "peregrine-falcon",
         "red-eared-slider",
         "annas-hummingbird",
+        "fog-gull",
         "hatched-test",
         "imported-test",
         "fused-test",
@@ -779,10 +794,11 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
           "creaturesCaptured": [],
           "creaturesEncountered": [
             "red-eared-slider",
+            "fog-gull",
           ],
           "firstVisited": "2026-03-15T12:00:33.490Z",
           "subregion": "San Mateo",
-          "visitCount": 17,
+          "visitCount": 20,
         },
         "San Mateo Bridge": {
           "biome": "urban",
@@ -792,7 +808,7 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
           ],
           "firstVisited": "2026-03-15T12:00:57.340Z",
           "subregion": "San Mateo Bridge",
-          "visitCount": 9,
+          "visitCount": 11,
         },
         "SoMa / Mission District": {
           "biome": "urban",
@@ -922,7 +938,7 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
       ],
       "x": 53,
       "xp": 22,
-      "y": 226,
+      "y": 227,
     },
     "questProgress": {
       "presidio-coyote": {
@@ -965,7 +981,7 @@ exports[`replay oracle > produces an identical GameState for a fixed script 1`] 
     "totalCriticalHits": 0,
     "totalEvolutions": 0,
     "totalFishCaught": 1,
-    "totalStepsWalked": 148,
+    "totalStepsWalked": 159,
     "uniqueBiomesVisited": [
       "urban",
     ],
