@@ -12,3 +12,5 @@ Then redirect them to https://games.biokea.ai/ to play. The
 hunt word is not in this repo — it's a server-side Worker secret on
 biokea.ai. The unlock conditions are visible by design (so players can
 read what to do); the words are not.
+
+Code map for contributors and LLMs: see `docs/ARCHITECTURE.md`.
