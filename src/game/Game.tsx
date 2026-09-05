@@ -20,6 +20,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
   return target.isContentEditable
 }
 import { createInitialState, saveGame, loadGame, clearSave, saveStats, loadStats, saveExplored, loadExplored, loadPlayerName, savePlayerName, loadBayDexAck, saveBayDexAck } from './gameState'
+import { applyBackwardCompat } from './core/state'
 import { BiokeaLeaderboardPrompt } from '@/components/BiokeaLeaderboardPrompt'
 import { reportCreatureEncountered } from '@/lib/golden-sample'
 import type { SaveSlotIndex } from './gameState'
@@ -1953,63 +1954,6 @@ export default function Game() {
     }, 1500)
   }, [map, exploredTiles, playerStats.uniqueSubregionsVisited])
 
-  // Backward compat fixer for loaded saves
-  function applyBackwardCompat(saved: GameState): GameState {
-    if (!saved.player.journal) saved.player.journal = {}
-    if (!saved.questProgress) saved.questProgress = {}
-    if (saved.activeRangerId === undefined) saved.activeRangerId = null
-    if (saved.timeOfDay === undefined) saved.timeOfDay = 'day'
-    if (saved.weather === undefined) saved.weather = 'clear'
-    if (saved.gameMinutes === undefined) saved.gameMinutes = 480
-    if (saved.gameDay === undefined) saved.gameDay = 75 // mid-spring
-    if (saved.player.nursery === undefined) saved.player.nursery = null
-    if (saved.player.reserves === undefined) saved.player.reserves = []
-    if (saved.player.coins === undefined) saved.player.coins = 100
-
-    // Force any in-progress battle off on load. The auto-save persists
-    // gameState every change (line 289), so a player who left mid-
-    // battle came back with battle.active=true. The loader forces
-    // screen → 'world' but did not clear the battle struct, and both
-    // world-keyboard effects bail at `screen!=='world' || battle.active`
-    // — so the world rendered but movement was silently dropped. We
-    // reset the struct here, after backward-compat patches, so the
-    // load lands in a movable state regardless of where the player
-    // saved.
-    saved.battle = {
-      active: false,
-      wildCreature: null,
-      playerCreature: null,
-      turn: 'player',
-      log: [],
-      captureChance: 0,
-    }
-
-    // Rescue: if the player is stuck on an unwalkable tile (e.g. from an
-    // older map generation or a broken fast-travel destination), bump them
-    // to the nearest walkable tile with a spiral search.
-    const startTile = map[saved.player.y]?.[saved.player.x]
-    if (startTile && !startTile.isWalkable) {
-      for (let r = 1; r <= 10; r++) {
-        let found = false
-        for (let dy = -r; dy <= r && !found; dy++) {
-          for (let dx = -r; dx <= r && !found; dx++) {
-            if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue
-            const nx = saved.player.x + dx
-            const ny = saved.player.y + dy
-            const t = map[ny]?.[nx]
-            if (t && t.isWalkable) {
-              saved.player.x = nx
-              saved.player.y = ny
-              found = true
-            }
-          }
-        }
-        if (found) break
-      }
-    }
-    return saved
-  }
-
   // Title screen
   if (gameState.screen === 'title') {
     return (
@@ -2018,7 +1962,7 @@ export default function Game() {
           setActiveSlot(slot)
           const saved = loadGame(slot)
           if (saved) {
-            const loaded = { ...applyBackwardCompat(saved), screen: 'world' as const }
+            const loaded = { ...applyBackwardCompat(saved, map), screen: 'world' as const }
             setGameState(loaded)
             tutorialFlagsRef.current = new Set(loaded.tutorialFlags ?? [])
             const stats = loadStats(slot)
