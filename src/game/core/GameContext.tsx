@@ -1,13 +1,16 @@
-// Game context — the seam between Game.tsx's state/handlers and the
-// per-screen wrapper components that will replace its ~1,300-line JSX
-// block (see the ScreenRouter tasks).
+// Game context — the seam between Game.tsx's state/handlers and the screen
+// tree. Game.tsx builds `stateValue` (a fresh object every render) and
+// `actions` (memoised on the handler identities) and provides both; every
+// `screens/*ScreenWrapper`, WorldScreen, WorldPrompts, WorldPanels and
+// GlobalOverlays consumes them via useGameState()/useGameActions(), as does
+// the replay oracle's `__replay__/GameProbe`.
 //
 // Deliberately TWO contexts:
 //   - GameStateContext  changes on every render (it carries `gameState`)
 //   - GameActionsContext is memoised on the handler identities, so a
 //     component that only needs actions does not re-render with state.
 //
-// Nothing consumes these yet; Game.tsx only provides them.
+// See docs/ARCHITECTURE.md §3 (handler shape) and §8 (recipes).
 import { createContext, useContext } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { CapturedCreature, Creature, GameState, MapTile, BreedingSlot } from '@/types/game'

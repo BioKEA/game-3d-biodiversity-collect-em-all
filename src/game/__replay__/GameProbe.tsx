@@ -9,7 +9,9 @@
 //
 // The effect has no dependency array on purpose — it runs after *every*
 // commit, so `probe()` always returns the current render's values (the old
-// `exposeTestHook` effect had the same shape).
+// `exposeTestHook` effect had the same shape). Its cleanup clears the slot,
+// so after unmount `probe()` throws rather than handing back a stale probe
+// bound to a torn-down tree.
 import { useEffect } from 'react'
 import { useGameState, useGameActions } from '@/game/core/GameContext'
 import type { GameStateValue, GameActions } from '@/game/core/GameContext'
@@ -26,6 +28,9 @@ export const probe = (): Probe => {
 export function GameProbe() {
   const s = useGameState()
   const a = useGameActions()
-  useEffect(() => { current = { state: () => s, actions: () => a } })
+  useEffect(() => {
+    current = { state: () => s, actions: () => a }
+    return () => { current = null }
+  })
   return null
 }
