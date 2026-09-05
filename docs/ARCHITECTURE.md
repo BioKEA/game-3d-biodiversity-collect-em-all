@@ -17,7 +17,7 @@ wrapper. The visible world (player, map tiles, creatures) is drawn by
 three.js or WebGL anywhere in this repo, despite the "3D" in the outer project
 name.
 
-`Game.tsx` is now a **shell** (983 lines): state declarations, effects, thin
+`Game.tsx` is now a **shell** (997 lines): state declarations, effects, thin
 `useCallback` handlers, context wiring, and a JSX return that contains nothing
 but the two providers, one wrapper `<div>`, and the five screen-tree
 components (plus an optional `children` slot — see §6). It contains no
@@ -37,9 +37,10 @@ patches from past releases (e.g. defaulting `weather`, `gameMinutes`, forcing
 
 ```
 src/game/
-  Game.tsx                    Shell: state, effects, handlers, context wiring. 983 lines.
+  Game.tsx                    Shell: state, effects, handlers, context wiring. 997 lines.
   IsometricRenderer.tsx       2D canvas world renderer (not three.js).
   sounds.ts                   SFX/music playback + the two volume localStorage keys.
+  healItems.ts                Heal-item lookup table (`getHealAmount`); shared by TeamScreen and features/team.
   dailyChallengesData.ts      Daily challenge state + its localStorage key.
   StarterSelect.tsx           Starter screen; see §7 re: import-time Date.
   TitleScreen.tsx             Save-slot picker; reads slots from core/persistence.ts.

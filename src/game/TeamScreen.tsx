@@ -3,6 +3,7 @@ import type { CapturedCreature, InventoryItem } from '@/types/game'
 import { getEvolutionTarget } from './evolutions'
 import { ALL_CREATURES } from './creatures'
 import { HELD_ITEMS, getHeldItem } from './heldItems'
+import { getHealAmount } from './healItems'
 import { getHappiness, getHappinessLabel, MAX_HAPPINESS } from './happiness'
 import FloatingPanel from './FloatingPanel'
 
@@ -23,19 +24,6 @@ interface Props {
 const HEAL_COST = 50
 
 /** How much a heal item restores. `fullHeal` means top off to maxHp. */
-export function getHealAmount(itemId: string): { hp: number; fullHeal: boolean } {
-  switch (itemId) {
-    case 'herb-potion': return { hp: 30, fullHeal: false }
-    case 'kelp-wrap': return { hp: 40, fullHeal: false }
-    case 'super-potion': return { hp: 80, fullHeal: false }
-    case 'max-potion': return { hp: 0, fullHeal: true }
-    case 'full-restore': return { hp: 0, fullHeal: true }
-    case 'mystic-elixir': return { hp: 0, fullHeal: true }
-    case 'cotton-candy': return { hp: 15, fullHeal: false }
-    case 'boardwalk-funnel-cake': return { hp: 30, fullHeal: false }
-    default: return { hp: 25, fullHeal: false }
-  }
-}
 
 function formatHealAmount(itemId: string): string {
   const h = getHealAmount(itemId)
