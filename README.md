@@ -35,6 +35,7 @@ Every creature you log is a real California species in a real biome — woodland
 - React `useState` game state + `localStorage` save slots (see `src/game/core/`)
 - Supabase for the optional online leaderboard (silently no-ops without env vars)
 - Vitest + Testing Library for unit tests
+- Bun as package manager and runtime (npm works too)
 - See `docs/ARCHITECTURE.md` for the code map
 
 ## Local dev
@@ -45,6 +46,8 @@ bun run dev      # http://localhost:5173
 bun run build    # production build into dist/
 bun test         # run the vitest suite
 ```
+
+`bun.lock` was not regenerated after the three.js packages were removed in the September 2026 refactor; run `bun install` once to refresh it (or use `npm install`, which reads the regenerated `package-lock.json`).
 
 Optional Supabase leaderboard:
 
