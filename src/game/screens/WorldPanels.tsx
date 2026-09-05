@@ -1,4 +1,4 @@
-// World-only overlays that sit *after* <ScreenRouter /> in the tree: the
+// World-only panels that sit *after* <ScreenRouter /> in the tree: the
 // hotkey legend / fast-travel panel and the landmark info card. Kept in a
 // separate component so their DOM order (and therefore z-stacking) is
 // unchanged.
@@ -6,7 +6,7 @@ import { getLandmarkAt, LANDMARK_INFO } from '@/game/landmarks'
 import { FAST_TRAVEL_DESTINATIONS } from '@/game/features/world/fastTravelDestinations'
 import { useGameState, useGameActions } from '@/game/core/GameContext'
 
-export default function WorldOverlaysLate() {
+export default function WorldPanels() {
   const { gameState, playerStats, exploredTiles, ui } = useGameState()
   const { showHotkeys, showFastTravel, currentLandmark, nearbyRangerId, nearbyDock } = ui
   const { handleFastTravel, setShowFastTravel } = useGameActions()
