@@ -1,6 +1,9 @@
-import type { CapturedCreature, GameState } from '@/types/game'
+import type { CapturedCreature, GameState, InventoryItem } from '@/types/game'
 import { getEvolution, evolveCreature } from '@/game/evolutions'
-import type { EvolutionData } from '@/game/features/progression/logic'
+import { adjustHappiness, PET_GAIN } from '@/game/happiness'
+import { HELD_ITEMS } from '@/game/heldItems'
+import { getHealAmount } from '@/game/TeamScreen'
+import { incrementIfPresent, type EvolutionData } from '@/game/features/progression/logic'
 
 export function swapLead(state: GameState, index: number): GameState {
   const newTeam = [...state.player.team]
@@ -50,4 +53,100 @@ export function adoptFromReserve(state: GameState, reserveIndex: number): GameSt
 
 export function releaseFromReserve(state: GameState, reserveIndex: number): GameState {
   return { ...state, player: { ...state.player, reserves: state.player.reserves.filter((_, i) => i !== reserveIndex) } }
+}
+
+/**
+ * The five inventory-screen transitions, lifted out of the inline
+ * `setGameState` updaters that used to live in
+ * `screens/InventoryScreenWrapper.tsx`. Bodies are verbatim except that
+ * in-place item mutation is replaced by the immutable helpers in
+ * `features/progression/logic.ts`; final values are identical.
+ */
+export function setNickname(state: GameState, index: number, nickname: string | undefined): GameState {
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      team: state.player.team.map((c, i) => i === index ? { ...c, nickname } : c),
+    },
+  }
+}
+
+export function healAllTeam(state: GameState): GameState {
+  if ((state.player.coins ?? 0) < 50) return state
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      coins: (state.player.coins ?? 0) - 50,
+      team: state.player.team.map(c => ({ ...c, stats: { ...c.stats, hp: c.stats.maxHp } })),
+    },
+  }
+}
+
+export function assignHeldItem(state: GameState, creatureIdx: number, itemId: string | null): GameState {
+  const creature = state.player.team[creatureIdx]
+  if (!creature) return state
+  const previouslyHeld = creature.heldItem ?? null
+  // Build new inventory: refund previous, consume new
+  let newInventory: InventoryItem[] = state.player.inventory
+  if (previouslyHeld) {
+    const existing = newInventory.find(it => it.id === previouslyHeld)
+    if (existing) {
+      newInventory = incrementIfPresent(newInventory, previouslyHeld, 1)
+    } else {
+      // Look up the held item def to recreate the inventory entry
+      // (could happen if the user used the last copy and we filtered the slot)
+      const meta = HELD_ITEMS[previouslyHeld]
+      if (meta) {
+        newInventory = [...newInventory, {
+          id: meta.id,
+          name: meta.name,
+          type: 'held',
+          quantity: 1,
+          description: meta.description,
+          sprite: meta.sprite,
+        }]
+      }
+    }
+  }
+  if (itemId) {
+    const slot = newInventory.find(it => it.id === itemId)
+    if (!slot || slot.quantity < 1) return state
+    newInventory = incrementIfPresent(newInventory, itemId, -1)
+  }
+  // Drop empty held-item slots so they don't show as "x0"
+  const filteredInventory = newInventory.filter(it => it.quantity > 0 || it.type !== 'held')
+  const newTeam = state.player.team.map((c, i) => i === creatureIdx ? { ...c, heldItem: itemId ?? undefined } : c)
+  return { ...state, player: { ...state.player, inventory: filteredInventory, team: newTeam } }
+}
+
+export function petCreature(state: GameState, index: number): GameState {
+  return {
+    ...state,
+    player: {
+      ...state.player,
+      team: state.player.team.map((c, i) => i === index ? adjustHappiness(c, PET_GAIN) : c),
+    },
+  }
+}
+
+export function useHealItem(state: GameState, itemId: string, creatureIndex: number): GameState {
+  const item = state.player.inventory.find(i => i.id === itemId)
+  if (!item || item.quantity <= 0) return state
+  const target = state.player.team[creatureIndex]
+  if (!target) return state
+  if (target.stats.hp >= target.stats.maxHp) return state
+
+  const { hp, fullHeal } = getHealAmount(itemId)
+  const newHp = fullHeal ? target.stats.maxHp : Math.min(target.stats.maxHp, target.stats.hp + hp)
+  if (newHp <= target.stats.hp) return state
+
+  const newInventory = state.player.inventory
+    .map(it => it.id === itemId ? { ...it, quantity: it.quantity - 1 } : it)
+    .filter(it => it.quantity > 0 || it.type === 'held')
+  const newTeam = state.player.team.map((c, i) =>
+    i === creatureIndex ? { ...c, stats: { ...c.stats, hp: newHp } } : c
+  )
+  return { ...state, player: { ...state.player, inventory: newInventory, team: newTeam } }
 }
