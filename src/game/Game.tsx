@@ -56,6 +56,10 @@ const OVERLAY_SCREENS: GameState['screen'][] = ['catalog', 'inventory', 'journal
  *  live context values (see `src/game/__replay__/GameProbe.tsx`). */
 export default function Game({ children }: { children?: ReactNode }) {
   const [activeSlot, setActiveSlot] = useState<SaveSlotIndex>(1)
+  // Mirrored into a ref so `movePlayer` (whose identity must stay stable — the
+  // hold-to-move effect re-registers on it) still sees the *current* slot.
+  const activeSlotRef = useRef<SaveSlotIndex>(activeSlot)
+  activeSlotRef.current = activeSlot
   const [gameState, setGameState] = useState<GameState>(() => createInitialState())
   const [playerName, setPlayerName] = useState<string>(() => loadPlayerName())
   const [bayDexAck, setBayDexAck] = useState<string[]>([])
@@ -154,6 +158,11 @@ export default function Game({ children }: { children?: ReactNode }) {
   const [showFastTravel, setShowFastTravel] = useState(false)
   const [borderMessage, setBorderMessage] = useState<string | null>(null)
   const [borderPeek, setBorderPeek] = useState<{ state: string; stepsLeft: number; returnX: number; returnY: number } | null>(null)
+  // Same pattern: `stepPlayer` needs the live peek state to count the three
+  // steps down, but listing `borderPeek` in `movePlayer`'s deps would recreate
+  // the callback on every peek transition and tear down hold-to-move mid-hold.
+  const borderPeekRef = useRef(borderPeek)
+  borderPeekRef.current = borderPeek
 
   // Daily challenges
   const [dailyState, setDailyState] = useState<DailyState>(() => loadDailyState())
@@ -245,6 +254,13 @@ export default function Game({ children }: { children?: ReactNode }) {
     saveFishLog(fishLog)
   }, [fishLog])
 
+  // Track the highest player level reached. Lives in an effect rather than in
+  // each level-up handler so a save whose stats predate this field heals on load.
+  const playerLevel = gameState.player.level
+  useEffect(() => {
+    setPlayerStats(ps => playerLevel > ps.highestLevel ? { ...ps, highestLevel: playerLevel } : ps)
+  }, [playerLevel])
+
   // Save stats & check achievements
   useEffect(() => {
     if (gameState.screen !== 'title') saveStats(playerStats, activeSlot)
@@ -266,10 +282,9 @@ export default function Game({ children }: { children?: ReactNode }) {
   }, [playerStats, gameState])
 
   // The side effects of a successful step, lifted out of `movePlayer`'s
-  // updater so that function stays short. Statements and order are unchanged;
-  // it is a plain (non-memoised) function so that the copy `movePlayer`
-  // closes over keeps `movePlayer`'s existing stale-closure reading of
-  // `activeSlot` (see the deps note at the end of `movePlayer`).
+  // updater so that function stays short. Statements and order are unchanged.
+  // Plain (non-memoised) on purpose: it reads only refs and stable setters, so
+  // the copy `movePlayer` closes over never goes stale.
   const applyStepEffects = (next: GameState, ev: Extract<StepEvents, { kind: 'moved' }>) => {
     if (ev.clearBorderPeek) setBorderPeek(null)
     setDailyState(ds => updateChallengeProgress(ds, 'steps'))
@@ -278,7 +293,7 @@ export default function Game({ children }: { children?: ReactNode }) {
       const { next: revealed, changed } = revealTiles(explored, next.player.x, next.player.y)
       if (!changed) return explored
       // Persist periodically (every ~20 new tiles)
-      if (revealed.size % 20 < 5) saveExplored(revealed, activeSlot)
+      if (revealed.size % 20 < 5) saveExplored(revealed, activeSlotRef.current)
       return revealed
     })
     if (ev.sfxStep) SFX.step()
@@ -302,7 +317,7 @@ export default function Game({ children }: { children?: ReactNode }) {
 
     setGameState(prev => {
       const { state: next, events: ev } = stepPlayer(prev, map, dx, dy, {
-        borderPeek,
+        borderPeek: borderPeekRef.current,
         lastWeatherChange: lastWeatherChange.current,
         lunarTriggeredDay: lunarBossTriggeredRef.current,
         shadowTriggeredDay: shadowBossTriggeredRef.current,
@@ -334,10 +349,9 @@ export default function Game({ children }: { children?: ReactNode }) {
           return next
       }
     })
-    // `borderPeek` and `activeSlot` are deliberately read through a stale closure — the
-    // pre-refactor deps did the same, and listing them would change behavior (see the
-    // border-peek known issue in docs/ARCHITECTURE.md: the 3-step cap effectively never fires).
-    // `applyStepEffects` is likewise unlisted: it is the carrier of that same stale `activeSlot`.
+    // `borderPeek` and `activeSlot` are read through refs (see their declarations), so the
+    // callback identity stays stable for the hold-to-move effect while the values stay live.
+    // `applyStepEffects` is unlisted for the same reason: it reads only refs and setters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, defeatedTrainers, triggerTutorial])
 

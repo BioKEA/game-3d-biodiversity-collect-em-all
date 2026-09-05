@@ -91,7 +91,7 @@ describe('assignHeldItem', () => {
       team: [makeCaptured({ id: 'a', heldItem: 'iron-plate' }), makeCaptured({ id: 'b' })],
     })
     const r = assignHeldItem(s, 0, 'power-stone')
-    // iron-plate refunded 1 -> 1, power-stone consumed 1 -> 0 and filtered out
+    // iron-plate refunded 1 -> 2, power-stone consumed 1 -> 0 and filtered out
     expect(r.player.inventory.map(i => [i.id, i.quantity])).toEqual([['iron-plate', 2]])
     expect(r.player.team[0].heldItem).toBe('power-stone')
     expect(r.player.team[1].heldItem).toBeUndefined()

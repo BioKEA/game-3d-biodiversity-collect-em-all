@@ -17,7 +17,7 @@ wrapper. The visible world (player, map tiles, creatures) is drawn by
 three.js or WebGL anywhere in this repo, despite the "3D" in the outer project
 name.
 
-`Game.tsx` is now a **shell** (983 lines): state declarations, effects, thin
+`Game.tsx` is now a **shell** (997 lines): state declarations, effects, thin
 `useCallback` handlers, context wiring, and a JSX return that contains nothing
 but the two providers, one wrapper `<div>`, and the five screen-tree
 components (plus an optional `children` slot — see §6). It contains no
@@ -37,9 +37,10 @@ patches from past releases (e.g. defaulting `weather`, `gameMinutes`, forcing
 
 ```
 src/game/
-  Game.tsx                    Shell: state, effects, handlers, context wiring. 983 lines.
+  Game.tsx                    Shell: state, effects, handlers, context wiring. 997 lines.
   IsometricRenderer.tsx       2D canvas world renderer (not three.js).
   sounds.ts                   SFX/music playback + the two volume localStorage keys.
+  healItems.ts                Heal-item lookup table (`getHealAmount`); shared by TeamScreen and features/team.
   dailyChallengesData.ts      Daily challenge state + its localStorage key.
   StarterSelect.tsx           Starter screen; see §7 re: import-time Date.
   TitleScreen.tsx             Save-slot picker; reads slots from core/persistence.ts.
@@ -254,35 +255,24 @@ reveal the word.
    the very objects held by the module constant. Nothing mutates an inventory
    item in place any more, so the aliasing is harmless today — but any future
    in-place mutation of an inventory item would reintroduce the leak.
-2. **`savedStats.highestLevel` is never updated.** `PlayerStats.highestLevel`
-   (`src/game/achievements.ts`) is initialized to `1` and never written again
-   anywhere in `src/game`, even as the player levels up. Pre-existing, pinned
-   by the oracle snapshot, and deliberately out of scope for this refactor.
-3. **`StarterSelect.tsx` evaluates `new Date()` at module import time.** Its
+2. **`StarterSelect.tsx` evaluates `new Date()` at module import time.** Its
    `STARTERS` array bakes `capturedAt: new Date().toISOString()` in at import,
    not at selection time. The oracle mocks the module to freeze that timestamp
    so runs are reproducible; that is a test accommodation, not a production
    fix.
-4. **The border-peek three-step cap is effectively unreachable.**
-   `movePlayer` reads `borderPeek` through a stale closure — its deps are
-   deliberately `[map, defeatedTrainers, triggerTutorial]` to preserve
-   pre-refactor behavior — so `stepPlayer` almost always sees a stale peek
-   state and the `MAX_BORDER_STEPS` cap never fires. Enabling the cap means
-   adding `borderPeek` to those deps, which is a gameplay change and was
-   deliberately deferred.
-5. **`handleBossChallenge` / `handleShadowBossChallenge` read from `prev`.**
+3. **`handleBossChallenge` / `handleShadowBossChallenge` read from `prev`.**
    They now take the creature catalog from the `prev` argument of the
    `setGameState` updater rather than from the closed-over `gameState`.
    Identical unless the catalog changes in the same React batch, which the
    blocking boss popup prevents.
-6. **`handleClaimReward`'s reward popup setter moved inside the updater.**
+4. **`handleClaimReward`'s reward popup setter moved inside the updater.**
    `setQuestReward` now fires inside the `setGameState` updater rather than
    just before it. Same batch; nothing observable changes.
-7. **`deps.now()` is evaluated on every step.** `stepPlayer` calls
+5. **`deps.now()` is evaluated on every step.** `stepPlayer` calls
    `deps.now()` unconditionally rather than only when a journal entry is
    created. `now()` has no state effect (it neither advances the seeded RNG
    nor writes anything), so the produced state is unchanged.
-8. **Effect declaration order in `Game.tsx` changed.** When the ranger /
+6. **Effect declaration order in `Game.tsx` changed.** When the ranger /
    landmark / dock / signpost proximity effects moved into
    `hooks/useWorldProximity`, they moved above the keyboard effects, so they
    now run before them on every commit (previously they ran after). Verified

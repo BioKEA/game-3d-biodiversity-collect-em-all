@@ -2,7 +2,7 @@ import type { CapturedCreature, GameState, InventoryItem } from '@/types/game'
 import { getEvolution, evolveCreature } from '@/game/evolutions'
 import { adjustHappiness, PET_GAIN } from '@/game/happiness'
 import { HELD_ITEMS } from '@/game/heldItems'
-import { getHealAmount } from '@/game/TeamScreen'
+import { getHealAmount } from '@/game/healItems'
 import { incrementIfPresent, type EvolutionData } from '@/game/features/progression/logic'
 
 export function swapLead(state: GameState, index: number): GameState {
