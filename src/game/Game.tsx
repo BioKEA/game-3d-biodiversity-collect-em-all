@@ -257,7 +257,7 @@ export default function Game() {
   const [encounterMood, setEncounterMood] = useState<CreatureMood>('neutral')
   const [encounterType, setEncounterType] = useState<EncounterType>('single')
 
-  // Achievement stats — persisted in localStorage per slot
+  // Achievement stats — persisted per slot (see core/persistence saveStats/loadStats)
   const [playerStats, setPlayerStats] = useState<PlayerStats>(() => createInitialStats())
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([])
   const [achievementToast, setAchievementToast] = useState<{ name: string; icon: string } | null>(null)
