@@ -25,6 +25,9 @@ import { captureCreature } from './features/capture/logic'
 import { applyBattleWin, applyBattleLose, endBattle, applyUseItem, applyBattleSwitch, applyFriendlyGift } from './features/battle/logic'
 import { startRangerBattle, applyRangerBattleWin, applyRangerBattleLose, leaveRangerScreen, applyArenaWin, applyArenaLose, applyDeclineTrainer, applyTrainerBattleWin } from './features/trainers/logic'
 import { recordRangerDefeat } from './features/progression/logic'
+import { acceptQuest, claimQuestReward } from './features/quests/logic'
+import { applyTrade, importCreature, removeTeamMember } from './features/trade/logic'
+import { applyCraft } from './features/crafting/logic'
 import { BiokeaLeaderboardPrompt } from '@/components/BiokeaLeaderboardPrompt'
 import { reportCreatureEncountered } from '@/lib/golden-sample'
 import type { SaveSlotIndex } from './gameState'
@@ -68,7 +71,6 @@ import { getLandmarkAt, getNearbyLandmark, LANDMARK_INFO } from './landmarks'
 import { FINAL_BOSS_ID, GRAND_CHAMPION_ID, canChallengeGrandChampion } from './rangers'
 import WorldEventBanner, { useWorldEvents } from './WorldEvents'
 import { SFX, Music } from './sounds'
-import { RECIPES, canCraft } from './crafting'
 import HabitatMap from './HabitatMap'
 import TrainerEncounter from './TrainerEncounter'
 import { rollTrainerEncounter, type RoamingTrainer } from './roamingTrainers'
@@ -1194,125 +1196,18 @@ export default function Game() {
 
   // (BART station and boardwalk detection moved above keyboard handler)
 
-  const handleAcceptQuest = useCallback((questId: string) => {
-    setGameState(prev => ({
-      ...prev,
-      questProgress: { ...prev.questProgress, [questId]: { questId, status: 'active', progress: 0 } },
-    }))
-  }, [])
-
+  const handleAcceptQuest = useCallback((questId: string) => { setGameState(prev => acceptQuest(prev, questId)) }, [])
   const handleClaimReward = useCallback((questId: string) => {
-    const ranger = RANGERS.find(r => r.quests.some(q => q.id === questId))
-    const quest = ranger?.quests.find(q => q.id === questId)
-    if (quest) {
-      const coins = 25 + quest.reward.xp
-      setQuestReward({
-        title: quest.title,
-        xp: quest.reward.xp,
-        coins,
-        items: quest.reward.items?.map(i => ({ id: i.id, name: i.name, sprite: i.sprite, quantity: i.quantity })),
-      })
-    }
     setGameState(prev => {
-      if (!quest) return prev
-
-      let newXp = prev.player.xp + quest.reward.xp
-      let newLevel = prev.player.level
-      let newMaxXp = prev.player.maxXp
-      while (newXp >= newMaxXp) { newXp -= newMaxXp; newLevel++; newMaxXp = Math.floor(newMaxXp * 1.3) }
-
-      const newInventory = [...prev.player.inventory]
-      for (const item of quest.reward.items ?? []) {
-        const existing = newInventory.find(i => i.id === item.id)
-        if (existing) { existing.quantity += item.quantity }
-        else { newInventory.push({ id: item.id, name: item.name, type: item.type, quantity: item.quantity, description: item.description, sprite: item.sprite }) }
-      }
-
-      return {
-        ...prev,
-        player: { ...prev.player, xp: newXp, level: newLevel, maxXp: newMaxXp, coins: (prev.player.coins ?? 0) + 25 + quest.reward.xp, inventory: newInventory },
-        questProgress: { ...prev.questProgress, [questId]: { questId, status: 'rewarded', progress: 0 } },
-      }
+      const r = claimQuestReward(prev, questId)
+      if (r.reward) setQuestReward(r.reward)
+      return r.state
     })
   }, [])
-
-  const handleTrade = useCallback((tradeId: string) => {
-    setGameState(prev => {
-      const ranger = RANGERS.find(r => r.trades.some(t => t.id === tradeId))
-      const trade = ranger?.trades.find(t => t.id === tradeId)
-      if (!trade) return prev
-
-      const newInventory = [...prev.player.inventory]
-      const giveItem = newInventory.find(i => i.id === trade.give.itemId)
-      if (!giveItem || giveItem.quantity < trade.give.quantity) return prev
-      giveItem.quantity -= trade.give.quantity
-
-      const receiveItem = newInventory.find(i => i.id === trade.receive.itemId)
-      if (receiveItem) { receiveItem.quantity += trade.receive.quantity }
-      else {
-        newInventory.push({
-          id: trade.receive.itemId, name: trade.receive.itemName,
-          type: trade.receive.type, quantity: trade.receive.quantity,
-          description: trade.receive.description, sprite: trade.receive.sprite,
-        })
-      }
-
-      return { ...prev, player: { ...prev.player, inventory: newInventory } }
-    })
-  }, [])
-
-  const handleCraft = useCallback((recipeId: string) => {
-    setGameState(prev => {
-      const recipe = RECIPES.find(r => r.id === recipeId)
-      if (!recipe || !canCraft(recipe, prev.player.inventory)) return prev
-
-      const newInventory = [...prev.player.inventory]
-
-      // Remove ingredients
-      for (const ing of recipe.ingredients) {
-        const item = newInventory.find(i => i.id === ing.itemId)
-        if (item) item.quantity -= ing.quantity
-      }
-
-      // Add result
-      const existing = newInventory.find(i => i.id === recipe.result.itemId)
-      if (existing) {
-        existing.quantity += recipe.result.quantity
-      } else {
-        newInventory.push({
-          id: recipe.result.itemId,
-          name: recipe.result.name,
-          type: recipe.result.type,
-          quantity: recipe.result.quantity,
-          description: recipe.result.description,
-          sprite: recipe.result.sprite,
-        })
-      }
-
-      return { ...prev, player: { ...prev.player, inventory: newInventory } }
-    })
-  }, [])
-
-  const handleImportCreature = useCallback((creature: CapturedCreature) => {
-    setGameState(prev => {
-      if (prev.player.team.length >= 6) return prev
-      return {
-        ...prev,
-        player: {
-          ...prev.player, team: [...prev.player.team, creature],
-          catalog: [...new Set([...prev.player.catalog, creature.id])],
-          captured: [...new Set([...prev.player.captured, creature.id])],
-        },
-      }
-    })
-  }, [])
-
-  const handleTradeRemoveCreature = useCallback((index: number) => {
-    setGameState(prev => {
-      const newTeam = prev.player.team.filter((_, i) => i !== index)
-      return { ...prev, player: { ...prev.player, team: newTeam } }
-    })
-  }, [])
+  const handleTrade = useCallback((tradeId: string) => { setGameState(prev => applyTrade(prev, tradeId)) }, [])
+  const handleCraft = useCallback((recipeId: string) => { setGameState(prev => applyCraft(prev, recipeId)) }, [])
+  const handleImportCreature = useCallback((creature: CapturedCreature) => { setGameState(prev => importCreature(prev, creature)) }, [])
+  const handleTradeRemoveCreature = useCallback((index: number) => { setGameState(prev => removeTeamMember(prev, index)) }, [])
 
   // Breeding handlers
   const handleStartBreeding = useCallback((slot: BreedingSlot, _idx1: number, _idx2: number) => {
