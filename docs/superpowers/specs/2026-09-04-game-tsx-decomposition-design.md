@@ -77,14 +77,19 @@ Move handler transforms into `src/game/features/<name>/logic.ts` with tests.
 `Game.tsx` keeps state, effects, and thin handlers. Done in feature-sized commits.
 
 ### Phase 3 — screen split
-Replace the JSX switchboard with `ScreenRouter` + `GameContext`. `Game.tsx`
-ends as a shell of roughly 300 lines.
+Replace the JSX switchboard with `ScreenRouter` + `GameContext`. Keyboard
+handling and the four world-proximity effects move to hooks. `Game.tsx` ends
+as a shell containing state declarations, effects, thin handlers, and
+providers. Realistic target is under 900 lines (48 state declarations and
+~50 thin handlers with their in-updater effect blocks account for most of
+it); the hard rule is *no JSX beyond providers, the router, and the overlay
+components*, and no function longer than ~40 lines.
 
 ## 2. Target layout
 
 ```
 src/game/
-  Game.tsx                     ~300 lines: state, effects, wiring, providers
+  Game.tsx                     <900 lines: state, effects, thin handlers, providers
   core/
     state.ts                   createInitialState + GameState helpers (from gameState.ts)
     persistence.ts             slot saves + the 4 loose keys from Game.tsx
@@ -104,6 +109,12 @@ src/game/
     bosses/logic.ts            lunar/shadow challenge + flee, alcatrazBattle/Complete, fusion
     minigames/logic.ts         fishCatch, diveEncounter, diveCollect, friendlyGift
     <each dir also has logic.test.ts>
+    progression/logic.ts       applyPlayerXp, addToInventory, awardTeamXp, halveTeamHp,
+                               EMPTY_BATTLE, recordStepStats, recordRangerDefeat (shared by features)
+  hooks/
+    useKeyboardControls.ts     the two keyboard effects (shortcuts + hold-to-move)
+    useWorldProximity.ts       ranger / landmark / dock / signpost detection effects
+  testHook.ts                  test-only window hook the replay oracle drives (no-op outside vitest)
   screens/
     ScreenRouter.tsx           switch on gameState.screen
     WorldScreen.tsx            world render + the 21 world-only overlays
@@ -140,9 +151,29 @@ Rules:
 - Callers pass `{ rng: Math.random, now: () => new Date().toISOString() }` so
   runtime behavior is identical. A `defaultDeps` constant lives in `core/state.ts`.
 - Side effects that today run *inside* a `setGameState` updater (e.g.
-  `setCaptureNotif` inside `handleCapture`'s updater) move to *after* the
-  `setGameState` call, driven by the result fields. Ordering relative to other
-  setters in the handler is preserved.
+  `setCaptureNotif` inside `handleCapture`'s updater) **stay inside the
+  updater**, but move out of the logic function: the updater becomes
+  `prev => { const r = captureCreature(prev, creature, deps); /* effects using r */; return r.state }`.
+  Rationale: React 18 runs functional updaters either eagerly or at render
+  time, so an effect placed *after* `setGameState` could observe a different
+  ordering than today. Keeping effects in the updater is byte-for-byte the
+  current timing; only the pure math leaves.
+- `deps.rng` must be `() => Math.random()` (a thunk, not a bound reference)
+  so a test that stubs `Math.random` also stubs every logic function.
+- Logic functions may call existing game modules that roll internally
+  (`rollMaterialDrops`, `getRandomEncounter`, `rollWeather`,
+  `rollTrainerEncounter`, `checkHerdEncounter`). These calls, and every
+  `deps.rng()` call, must occur in exactly the order the original handler
+  made them, including short-circuit conditions, so a seeded run produces the
+  same sequence.
+- Inventory mutations become immutable. Today several handlers do
+  `existing.quantity += n` on item objects shared with the previous state.
+  The new code returns new item objects with the same values. Final state is
+  identical. The one observable difference is dev-only: React StrictMode
+  double-invokes updaters in development, and the in-place mutation currently
+  double-applies drops and reward items there. Production has no
+  double-invocation. This is an accepted deviation and is noted in
+  `ARCHITECTURE.md`.
 - Handlers keep their current names, argument lists, and `useCallback`
   dependency arrays. Only their bodies change.
 - `movePlayer` is the one handler that is restructured rather than lifted: it
@@ -234,22 +265,34 @@ it (nothing else in `CLAUDE.md` changes).
    and the component's keyboard/handler surface). After Phases 2 and 3 the same
    script must produce a byte-identical snapshot. Any diff is a regression
    until proven otherwise.
-3. **Save round-trip.** A realistic mid-game save exported from the browser
-   before the refactor is committed under `src/test/fixtures/save-v-prerefactor/`
-   (one JSON per key). A test loads it through the new persistence module and
-   asserts deep equality with what the old loader returned (captured as a
-   snapshot in Phase 1).
+3. **Save round-trip.** Two fixtures, both committed in Phase 1:
+   (a) the localStorage contents the replay oracle leaves behind (a real
+   save written by the real code), snapshotted; and (b) a hand-written
+   legacy save missing every optional field (`gameDay`, `nursery`,
+   `reserves`, `coins`, `journal`, `questProgress`, `timeOfDay`, `weather`,
+   `gameMinutes`, `activeRangerId`) with `battle.active = true` and the
+   player on a water tile, run through `applyBackwardCompat` and
+   snapshotted. After Phases 2 and 3 both snapshots must be unchanged. A
+   browser-exported mid-game save is exercised by the manual smoke (item 4)
+   rather than committed.
 4. **Manual smoke** at the end of each phase in the browser: title → starter →
    world movement → one wild encounter → one ranger battle → one minigame →
    save → reload → verify state. Recorded as a GIF for review.
 
 ## 8. Risks
 
-- **Side effects inside updaters.** Moving `setCaptureNotif` etc. out of the
-  updater changes *when* they fire relative to React's batching. In React 18
-  both happen in the same batch, so the rendered result is the same. The replay
-  oracle would not catch a timing-only difference; the manual smoke is the
-  check.
+- **Side effects inside updaters.** Kept exactly where they are today (see
+  §3). The residual risk is that a pure function now computes *everything*
+  before any effect fires, whereas today effects are interleaved with the
+  math. Effects are `setState` calls on other atoms, timers, and SFX, none of
+  which feed back into the same updater, so the result is unchanged. The
+  replay oracle checks the state; the manual smoke checks the timers and
+  audio.
+- **Closure vs `prev`.** `handleBossChallenge` and `handleShadowBossChallenge`
+  compute the new catalog from the closed-over `gameState` rather than
+  `prev`. The extracted versions use `prev`. These differ only if the catalog
+  changes in the same batch as the boss challenge, which the blocking popup
+  makes impossible. Accepted normalization.
 - **`useCallback` dependency arrays.** If a handler's body now calls a pure
   function that closes over nothing, some deps become unnecessary. They are
   left as-is in this pass (harmless; removing them is a behavior-adjacent
