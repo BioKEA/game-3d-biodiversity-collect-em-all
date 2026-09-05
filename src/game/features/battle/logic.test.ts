@@ -2,7 +2,8 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { applyBattleWin, applyBattleLose, endBattle, applyUseItem, applyBattleSwitch, applyFriendlyGift } from './logic'
 import { makeBattle } from '@/game/features/progression/logic'
 import { makeState, makeCaptured, makeCreature } from '@/test/fixtures'
-import { LUNAR_BOSSES } from '@/game/creatures'
+import { ALL_CREATURES, LUNAR_BOSSES } from '@/game/creatures'
+import { EVOLUTIONS } from '@/game/evolutions'
 
 afterEach(() => vi.restoreAllMocks())
 
@@ -42,6 +43,34 @@ describe('applyBattleWin', () => {
     s.battle.wildCreature = makeCreature({ id: 'inv', conservationStatus: 'INV' })
     expect(applyBattleWin(s, 1, { alcatrazEscapeActive: false }).state.player.invasivesRemoved).toBe(1)
   })
+
+  describe('evolveReadyHint', () => {
+    const evo = EVOLUTIONS[0]
+    // A lead that levels up to one level below its evolution target.
+    const nearlyThere = (level: number) => {
+      const s = makeState({}, { team: [makeCaptured({ id: evo.fromId, level, xp: level * 50 - 1 })] })
+      return { ...s, screen: 'battle' as const, battle: makeBattle(makeCreature({ id: 'wild' }), s.player.team[0]) }
+    }
+
+    it('fires when the lead levels up to within 2 levels of its evolution without evolving', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.01)
+      const r = applyBattleWin(nearlyThere(evo.level - 2), 1, { alcatrazEscapeActive: false })
+      expect(r.evolution).toBeNull()
+      expect(r.state.player.team[0].level).toBe(evo.level - 1)
+      expect(r.state.player.team[0].id).toBe(evo.fromId)
+      expect(r.evolveReadyHint).not.toBeNull()
+      expect(r.evolveReadyHint?.gap).toBe(1)
+      expect(r.evolveReadyHint?.toName).toBe(ALL_CREATURES.find(c => c.id === evo.toId)?.name)
+    })
+
+    it('does not fire when the lead evolves in the same call', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.01)
+      const r = applyBattleWin(nearlyThere(evo.level - 1), 1, { alcatrazEscapeActive: false })
+      expect(r.evolution?.teamIndex).toBe(0)
+      expect(r.state.player.team[0].id).toBe(evo.toId)
+      expect(r.evolveReadyHint).toBeNull()
+    })
+  })
 })
 
 describe('applyBattleLose / endBattle', () => {
@@ -56,10 +85,13 @@ describe('applyBattleLose / endBattle', () => {
 })
 
 describe('inventory & switch', () => {
-  it('applyUseItem decrements to a floor of 0', () => {
+  it('applyUseItem decrements the matching item and floors it at 0', () => {
     const s = makeState()
     const once = applyUseItem(s, 'energy-berry')
     expect(once.player.inventory.find(i => i.id === 'energy-berry')?.quantity).toBe(2)
+    // An already-empty stack stays at 0 rather than going negative.
+    const empty = makeState({}, { inventory: [{ id: 'energy-berry', name: 'Energy Berry', type: 'boost', quantity: 0, description: '', sprite: '🫐' }] })
+    expect(applyUseItem(empty, 'energy-berry').player.inventory[0].quantity).toBe(0)
   })
   it('applyBattleSwitch swaps lead and updates battle.playerCreature; ignores bad index', () => {
     const s = inBattle()

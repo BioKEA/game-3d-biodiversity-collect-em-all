@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { GameState, MapTile } from '@/types/game'
 import type { BoatDock } from '../bayAreaMap'
+import type { getBartStationAt } from '../BartSystem'
 
 // When a text input/textarea/contentEditable element is focused, game keyboard
 // shortcuts must not fire — otherwise typing "w" or "d" moves the player, and
@@ -30,7 +31,7 @@ export interface KeyboardControlsArgs {
   map: MapTile[][]
   nearbyDock: BoatDock | null
   boatAnimating: boolean
-  nearbyBartStation: unknown
+  nearbyBartStation: ReturnType<typeof getBartStationAt>
   atSteamerLane: boolean
   atBoardwalk: boolean
   nearbyRangerId: string | null

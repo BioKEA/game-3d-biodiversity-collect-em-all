@@ -90,7 +90,8 @@ src/game/
     WorldPrompts.tsx          contextual world prompts (dock, BART, signpost, ranger, ...)
     WorldPanels.tsx           world-level floating panels (calendar, field notes, trophies, ...)
     GlobalOverlays.tsx        overlays that render on every screen (toasts, popups, prompts)
-    overlayStyles.ts          shared overlay class strings
+    overlayStyles.ts          exports the `@keyframes` + `.menu-screen-enter` CSS
+                               string that GlobalOverlays injects into a <style> tag
     <Name>ScreenWrapper.tsx   one thin (<40 line) wrapper per non-world screen —
                                Achievements, Adoption, Alcatraz, Arena, Bart, Battle,
                                BayDex, Boardwalk, Breeding, Catalog, Crafting,
@@ -219,8 +220,9 @@ reveal the word.
   defeated trainers, fish log, and the three persisted slot-1 blobs.
   `GameProbe` (`__replay__/GameProbe.tsx`) is a test-only child that
   republishes the live `GameStateValue` / `GameActions` after every commit —
-  the oracle therefore exercises the exact context the real screens consume,
-  and no test surface ships in production code.
+  the oracle therefore exercises the exact context the real screens consume.
+  The only test-only surface in production code is `Game`'s optional
+  `children` prop, which is what the oracle uses to mount `GameProbe`.
 - **Never run the oracle with `vitest -u`** (or otherwise update its snapshot)
   without a reviewed reason. An unreviewed `-u` silently repins whatever the
   new code produces, defeating its purpose.
@@ -244,9 +246,14 @@ reveal the word.
    (`progression/logic.ts: addToInventory`, `incrementIfPresent`). Production
    values are identical, and two dev-only defects are gone: React StrictMode
    double-invokes updaters in development, so the in-place mutation
-   double-applied drops there; and it aliased the `DEFAULT_INVENTORY` item
-   objects into every new game, so a drop collected in one game could leak
-   into a later new game started in the same browser session.
+   double-applied drops there; and the `DEFAULT_INVENTORY` aliasing defect,
+   where a drop collected in one game could leak into a later new game
+   started in the same browser session. Note that the second one is gone by
+   convention, not by construction: `createInitialState` still does
+   `inventory: [...DEFAULT_INVENTORY]`, a shallow copy whose item objects are
+   the very objects held by the module constant. Nothing mutates an inventory
+   item in place any more, so the aliasing is harmless today — but any future
+   in-place mutation of an inventory item would reintroduce the leak.
 2. **`savedStats.highestLevel` is never updated.** `PlayerStats.highestLevel`
    (`src/game/achievements.ts`) is initialized to `1` and never written again
    anywhere in `src/game`, even as the player levels up. Pre-existing, pinned
@@ -275,6 +282,13 @@ reveal the word.
    `deps.now()` unconditionally rather than only when a journal entry is
    created. `now()` has no state effect (it neither advances the seeded RNG
    nor writes anything), so the produced state is unchanged.
+8. **Effect declaration order in `Game.tsx` changed.** When the ranger /
+   landmark / dock / signpost proximity effects moved into
+   `hooks/useWorldProximity`, they moved above the keyboard effects, so they
+   now run before them on every commit (previously they ran after). Verified
+   unobservable: no two of these effects write the same state atom, and the
+   registration order of the two keyboard effects relative to each other is
+   unchanged, so listener order is unchanged too.
 
 ## 8. Recipes
 

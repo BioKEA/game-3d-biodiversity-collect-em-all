@@ -63,6 +63,15 @@ export default function ScreenRouter() {
     case 'trainer_encounter': return <TrainerEncounterScreenWrapper />
     case 'title': return <TitleScreenWrapper />
     case 'starter': return <StarterScreenWrapper />
-    default: return null
+    // The world screen renders outside the router (see Game.tsx), and
+    // 'arena_battle' was never routed in the pre-refactor switch either.
+    case 'world': return null
+    case 'arena_battle': return null
+    default: return assertNever(gameState.screen)
   }
+}
+
+/** Makes adding a value to the `screen` union a compile error until it is routed. */
+function assertNever(x: never): never {
+  throw new Error(`unrouted screen: ${String(x)}`)
 }

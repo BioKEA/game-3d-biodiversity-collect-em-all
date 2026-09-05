@@ -65,11 +65,22 @@ describe('stepPlayer', () => {
     expect(back.state.player.x).toBe(1)
   })
   it('rolls a wild encounter when cooldown is 0 and rng is low', () => {
-    const s = at(0, 1); s.encounterCooldown = 0
+    // 'Marin Headlands' is a real Bay Area subregion with grassland creatures
+    // (see the `subregions` arrays in creatures.ts), so getRandomEncounter
+    // returns a creature for daytime/clear rather than null.
+    const map = tinyMap()
+    map[1][1] = makeTile({ x: 1, y: 1, biome: 'grassland', subregion: 'Marin Headlands', isWalkable: true })
+    const s = makeState({ currentSubregion: 'Presidio', encounterCooldown: 0 }, { x: 0, y: 1 })
+    // Math.random drives getRandomEncounter's pick out of the weighted pool.
     vi.spyOn(Math, 'random').mockReturnValue(0.01)
-    const r = stepPlayer(s, tinyMap(), 1, 0, ctx, { rng: () => 0.01, now: () => FIXED_NOW })
-    if (r.events.kind === 'moved') expect(r.events.encounter === 'wild' || r.events.trainer !== null || r.events.encounter === null).toBe(true)
-    expect(r.state.encounterCooldown === 5 || r.state.encounterCooldown === 10 || r.state.encounterCooldown === 0).toBe(true)
+    const r = stepPlayer(s, map, 1, 0, ctx, { rng: () => 0.01, now: () => FIXED_NOW })
+    expect(r.events.kind).toBe('moved')
+    if (r.events.kind !== 'moved') throw new Error('expected a moved event')
+    expect(r.events.encounter).toBe('wild')
+    expect(r.events.trainer).toBeNull()
+    expect(r.state.screen).toBe('encounter')
+    expect(r.state.battle.wildCreature).not.toBeNull()
+    expect(r.state.encounterCooldown).toBe(5)
   })
 })
 
