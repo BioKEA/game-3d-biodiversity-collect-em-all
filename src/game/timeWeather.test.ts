@@ -31,7 +31,7 @@ describe('Time System', () => {
 
 describe('Weather System', () => {
   it('rollWeather returns valid weather types', () => {
-    const validWeathers = ['clear', 'fog', 'rain', 'wind', 'sunny']
+    const validWeathers = ['clear', 'fog', 'rain', 'wind', 'sunny', 'thunderstorm']
     for (let i = 0; i < 100; i++) {
       const weather = rollWeather('clear', 'forest')
       expect(validWeathers).toContain(weather)

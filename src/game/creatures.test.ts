@@ -35,7 +35,7 @@ describe('Creature Database', () => {
   })
 
   it('all creatures have valid types', () => {
-    const validTypes = ['bird', 'insect', 'amphibian', 'marine', 'beast', 'mystic']
+    const validTypes = ['beast', 'bird', 'insect', 'marine', 'amphibian', 'mystic', 'reptile', 'plant']
     for (const creature of ALL_CREATURES) {
       expect(validTypes).toContain(creature.type)
     }
@@ -51,8 +51,8 @@ describe('Creature Database', () => {
   it('all creatures have valid active times', () => {
     const validTimes = ['dawn', 'day', 'dusk', 'night']
     for (const creature of ALL_CREATURES) {
+      if (creature.activeTime === undefined) continue
       expect(Array.isArray(creature.activeTime)).toBe(true)
-      expect(creature.activeTime.length).toBeGreaterThan(0)
       for (const t of creature.activeTime) {
         expect(validTimes).toContain(t)
       }

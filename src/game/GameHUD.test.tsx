@@ -2,6 +2,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import GameHUD from './GameHUD'
+import { ALL_CREATURES } from './creatures'
 import type { PlayerState, CapturedCreature } from '@/types/game'
 
 const mockCreatureOnTeam: CapturedCreature = {
@@ -44,6 +45,7 @@ const defaultProps = {
   timeOfDay: 'day' as const,
   weather: 'clear' as const,
   gameMinutes: 720,
+  gameDay: 75,
   onOpenCatalog: vi.fn(),
   onOpenTeam: vi.fn(),
   onOpenJournal: vi.fn(),
@@ -73,8 +75,8 @@ describe('GameHUD', () => {
 
   it('renders species count', () => {
     render(<GameHUD {...defaultProps} />)
-    // Should show "2/34 species" or similar
-    const speciesText = screen.getByText(/species/)
+    // Shows "<captured>/<total species>" (e.g. "2/185")
+    const speciesText = screen.getByText(`${mockPlayer.captured.length}/${ALL_CREATURES.length}`)
     expect(speciesText).toBeInTheDocument()
   })
 

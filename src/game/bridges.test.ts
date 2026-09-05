@@ -4,8 +4,8 @@ import { generateMap, getBridgeAt } from './bayAreaMap'
 describe('Bay Area Bridges', () => {
   it('Golden Gate Bridge tiles exist', () => {
     let found = false
-    for (let x = 12; x <= 15; x++) {
-      for (let y = 13; y <= 17; y++) {
+    for (let x = 48; x <= 50; x++) {
+      for (let y = 212; y <= 219; y++) {
         if (getBridgeAt(x, y) === 'Golden Gate Bridge') { found = true; break }
       }
       if (found) break
@@ -15,8 +15,8 @@ describe('Bay Area Bridges', () => {
 
   it('Bay Bridge tiles exist', () => {
     let found = false
-    for (let x = 16; x <= 32; x++) {
-      for (let y = 13; y <= 16; y++) {
+    for (let x = 49; x <= 65; x++) {
+      for (let y = 217; y <= 219; y++) {
         if (getBridgeAt(x, y) === 'Bay Bridge') { found = true; break }
       }
       if (found) break
@@ -26,8 +26,8 @@ describe('Bay Area Bridges', () => {
 
   it('Richmond-San Rafael Bridge tiles exist', () => {
     let found = false
-    for (let x = 21; x <= 31; x++) {
-      for (let y = 6; y <= 9; y++) {
+    for (let x = 54; x <= 63; x++) {
+      for (let y = 209; y <= 211; y++) {
         if (getBridgeAt(x, y) === 'Richmond-San Rafael Bridge') { found = true; break }
       }
       if (found) break
@@ -37,16 +37,19 @@ describe('Bay Area Bridges', () => {
 
   it('San Mateo Bridge tiles exist', () => {
     let found = false
-    for (let x = 22; x <= 30; x++) {
-      if (getBridgeAt(x, 24) === 'San Mateo Bridge') { found = true; break }
+    for (let x = 52; x <= 65; x++) {
+      for (let y = 225; y <= 227; y++) {
+        if (getBridgeAt(x, y) === 'San Mateo Bridge') { found = true; break }
+      }
+      if (found) break
     }
     expect(found).toBe(true)
   })
 
   it('Dumbarton Bridge tiles exist', () => {
     let found = false
-    for (let x = 22; x <= 30; x++) {
-      for (let y = 31; y <= 33; y++) {
+    for (let x = 53; x <= 64; x++) {
+      for (let y = 228; y <= 230; y++) {
         if (getBridgeAt(x, y) === 'Dumbarton Bridge') { found = true; break }
       }
       if (found) break
@@ -64,7 +67,8 @@ describe('Bay Area Bridges', () => {
           expect(tile.isWalkable).toBe(true)
           expect(tile.biome).not.toBe('water')
           expect(tile.bridge).toBeTruthy()
-          expect(tile.subregion).toBe(tile.bridge)
+          // An island (e.g. Treasure Island) sitting on a bridge span takes over the subregion label
+          expect([tile.bridge, 'Treasure Island']).toContain(tile.subregion)
         }
       }
     }
