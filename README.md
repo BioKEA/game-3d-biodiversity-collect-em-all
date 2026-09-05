@@ -30,12 +30,12 @@ Every creature you log is a real California species in a real biome — woodland
 ## Tech
 
 - React 18 + TypeScript + Vite
-- **three.js** with **@react-three/fiber** + **@react-three/drei** for the 3D world
+- 2D Canvas isometric world renderer (`src/game/IsometricRenderer.tsx`)
 - Tailwind + shadcn/radix for HUD and menus
-- Zustand-style local state + `localStorage` save slots (see `gameState.ts`)
+- React `useState` game state + `localStorage` save slots (see `src/game/core/`)
 - Supabase for the optional online leaderboard (silently no-ops without env vars)
 - Vitest + Testing Library for unit tests
-- Bun as package manager and runtime
+- See `docs/ARCHITECTURE.md` for the code map
 
 ## Local dev
 
