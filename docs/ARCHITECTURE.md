@@ -263,26 +263,19 @@ reveal the word.
    not at selection time. The oracle mocks the module to freeze that timestamp
    so runs are reproducible; that is a test accommodation, not a production
    fix.
-4. **The border-peek three-step cap is effectively unreachable.**
-   `movePlayer` reads `borderPeek` through a stale closure — its deps are
-   deliberately `[map, defeatedTrainers, triggerTutorial]` to preserve
-   pre-refactor behavior — so `stepPlayer` almost always sees a stale peek
-   state and the `MAX_BORDER_STEPS` cap never fires. Enabling the cap means
-   adding `borderPeek` to those deps, which is a gameplay change and was
-   deliberately deferred.
-5. **`handleBossChallenge` / `handleShadowBossChallenge` read from `prev`.**
+4. **`handleBossChallenge` / `handleShadowBossChallenge` read from `prev`.**
    They now take the creature catalog from the `prev` argument of the
    `setGameState` updater rather than from the closed-over `gameState`.
    Identical unless the catalog changes in the same React batch, which the
    blocking boss popup prevents.
-6. **`handleClaimReward`'s reward popup setter moved inside the updater.**
+5. **`handleClaimReward`'s reward popup setter moved inside the updater.**
    `setQuestReward` now fires inside the `setGameState` updater rather than
    just before it. Same batch; nothing observable changes.
-7. **`deps.now()` is evaluated on every step.** `stepPlayer` calls
+6. **`deps.now()` is evaluated on every step.** `stepPlayer` calls
    `deps.now()` unconditionally rather than only when a journal entry is
    created. `now()` has no state effect (it neither advances the seeded RNG
    nor writes anything), so the produced state is unchanged.
-8. **Effect declaration order in `Game.tsx` changed.** When the ranger /
+7. **Effect declaration order in `Game.tsx` changed.** When the ranger /
    landmark / dock / signpost proximity effects moved into
    `hooks/useWorldProximity`, they moved above the keyboard effects, so they
    now run before them on every commit (previously they ran after). Verified
