@@ -1,5 +1,5 @@
 import type { Creature, CapturedCreature, GameState, MapTile, PlayerState } from '@/types/game'
-import { createInitialState } from '@/game/gameState'
+import { createInitialState } from '@/game/core/state'
 import type { LogicDeps } from '@/game/core/state'
 
 export function mulberry32(seed: number): () => number {

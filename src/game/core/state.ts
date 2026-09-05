@@ -1,4 +1,4 @@
-import type { GameState, MapTile } from '@/types/game'
+import type { GameState, InventoryItem, MapTile } from '@/types/game'
 
 /** Injected randomness and clock so feature logic is pure and testable. */
 export interface LogicDeps {
@@ -10,6 +10,55 @@ export interface LogicDeps {
 export const runtimeDeps: LogicDeps = {
   rng: () => Math.random(),
   now: () => new Date().toISOString(),
+}
+
+export const DEFAULT_INVENTORY: InventoryItem[] = [
+  { id: 'bio-capsule', name: 'Bio Capsule', type: 'capture', quantity: 10, description: 'A standard capture device for creatures.', sprite: '🔮' },
+  { id: 'herb-potion', name: 'Herb Potion', type: 'heal', quantity: 5, description: 'Restores 30 HP to one creature.', sprite: '🧪' },
+  { id: 'energy-berry', name: 'Energy Berry', type: 'boost', quantity: 3, description: 'Boosts attack for the next battle.', sprite: '🫐' },
+]
+
+// createInitialState now creates a state WITHOUT a starter creature.
+// The starter is picked in the StarterSelect screen and set via setStarter.
+export function createInitialState(): GameState {
+  return {
+    screen: 'title',
+    player: {
+      x: 52,
+      y: 219,
+      level: 1,
+      xp: 0,
+      maxXp: 100,
+      hp: 100,
+      maxHp: 100,
+      coins: 100,
+      inventory: [...DEFAULT_INVENTORY],
+      team: [], // empty until starter is chosen
+      catalog: [],
+      captured: [],
+      journal: {},
+      nursery: null,
+      reserves: [],
+    },
+    battle: {
+      active: false,
+      wildCreature: null,
+      playerCreature: null,
+      turn: 'player',
+      log: [],
+      captureChance: 0,
+    },
+    currentBiome: 'grassland',
+    currentSubregion: '',
+    encounterCooldown: 0,
+    activeRangerId: null,
+    questProgress: {},
+    timeOfDay: 'day',
+    weather: 'clear',
+    gameMinutes: 480,
+    gameDay: 75, // mid-spring (mid-March)
+    arenaWins: { bronze: 0, silver: 0, gold: 0 },
+  }
 }
 
 /**

@@ -19,7 +19,11 @@ function isEditableTarget(target: EventTarget | null): boolean {
   }
   return target.isContentEditable
 }
-import { createInitialState, saveGame, loadGame, clearSave, saveStats, loadStats, saveExplored, loadExplored, loadPlayerName, savePlayerName, loadBayDexAck, saveBayDexAck } from './gameState'
+import { createInitialState } from './core/state'
+import {
+  saveGame, loadGame, clearSave, saveStats, loadStats, saveExplored, loadExplored, loadPlayerName, savePlayerName, loadBayDexAck, saveBayDexAck,
+  loadAlcatrazEscaped, saveAlcatrazEscaped, loadDefeatedTrainers, saveDefeatedTrainers, loadFishLog, saveFishLog, loadConservationDismissed, saveConservationDismissed,
+} from './core/persistence'
 import { applyBackwardCompat, runtimeDeps } from './core/state'
 import { captureCreature } from './features/capture/logic'
 import { applyBattleWin, applyBattleLose, endBattle, applyUseItem, applyBattleSwitch, applyFriendlyGift } from './features/battle/logic'
@@ -35,7 +39,7 @@ import { applyFishCatch, startDiveEncounter, applyDiveCollect } from './features
 import { challengeBoss, startAlcatrazBattle, applyAlcatrazComplete, applyFusion } from './features/bosses/logic'
 import { BiokeaLeaderboardPrompt } from '@/components/BiokeaLeaderboardPrompt'
 import { reportCreatureEncountered } from '@/lib/golden-sample'
-import type { SaveSlotIndex } from './gameState'
+import type { SaveSlotIndex } from './core/persistence'
 import { generateMap, getBoatDockAt, getSignpostAt, type BoatDock } from './bayAreaMap'
 import { RANGERS, getNearbyRanger } from './rangers'
 import { getRangerActivity, getRangerPosition, type RangerActivity } from './npcSchedules'
@@ -229,24 +233,12 @@ export default function Game() {
   const [alcatrazEscapeActive, setAlcatrazEscapeActive] = useState(false)
   const [alcatrazStage, setAlcatrazStage] = useState<EscapeStage>('lockdown')
   const [alcatrazCellProgress, setAlcatrazCellProgress] = useState(0)
-  const [alcatrazCompleted, setAlcatrazCompleted] = useState(() => {
-    try { return localStorage.getItem('bioquest-bay-alcatraz-escaped') === 'true' } catch { return false }
-  })
+  const [alcatrazCompleted, setAlcatrazCompleted] = useState(() => loadAlcatrazEscaped())
 
   // Roaming trainer state
   const [pendingTrainer, setPendingTrainer] = useState<RoamingTrainer | null>(null)
-  const [defeatedTrainers, setDefeatedTrainers] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('bioquest-bay-defeated-trainers')
-      return saved ? JSON.parse(saved) as string[] : []
-    } catch { return [] }
-  })
-  const [fishLog, setFishLog] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('bioquest-bay-fish-log')
-      return saved ? JSON.parse(saved) as string[] : []
-    } catch { return [] }
-  })
+  const [defeatedTrainers, setDefeatedTrainers] = useState<string[]>(() => loadDefeatedTrainers())
+  const [fishLog, setFishLog] = useState<string[]>(() => loadFishLog())
 
   // Overlay panels (render on top of whatever screen is active)
   const [showMigrationCalendar, setShowMigrationCalendar] = useState(false)
@@ -273,9 +265,7 @@ export default function Game() {
 
   // Conservation prompt — show after sustained engagement, up to 3 times total
   const [showConservation, setShowConservation] = useState(false)
-  const conservationDismissals = useRef<number>(
-    (() => { try { return parseInt(localStorage.getItem('bioquest-conservation-dismissed') ?? '0', 10) } catch { return 0 } })()
-  )
+  const conservationDismissals = useRef<number>(loadConservationDismissed())
   const sessionStartRef = useRef(Date.now())
   const conservationShownThisSession = useRef(false)
 
@@ -345,10 +335,10 @@ export default function Game() {
 
   // Persist trainer/fish data
   useEffect(() => {
-    try { localStorage.setItem('bioquest-bay-defeated-trainers', JSON.stringify(defeatedTrainers)) } catch { /* ignore */ }
+    saveDefeatedTrainers(defeatedTrainers)
   }, [defeatedTrainers])
   useEffect(() => {
-    try { localStorage.setItem('bioquest-bay-fish-log', JSON.stringify(fishLog)) } catch { /* ignore */ }
+    saveFishLog(fishLog)
   }, [fishLog])
 
   // Save stats & check achievements
@@ -1029,7 +1019,7 @@ export default function Game() {
   const handleAlcatrazComplete = useCallback((rewards: { xp: number; item?: { id: string; name: string; type: 'capture' | 'heal' | 'boost' | 'material'; quantity: number; description: string; sprite: string } }) => {
     setAlcatrazEscapeActive(false)
     setAlcatrazCompleted(true)
-    try { localStorage.setItem('bioquest-bay-alcatraz-escaped', 'true') } catch { /* ignore */ }
+    saveAlcatrazEscaped()
     setPlayerStats(ps => ({ ...ps, totalBattlesWon: ps.totalBattlesWon + 1 }))
     setGameState(prev => applyAlcatrazComplete(prev, rewards))
   }, [])
@@ -2431,7 +2421,7 @@ export default function Game() {
         <ConservationPrompt onDismiss={() => {
           setShowConservation(false)
           conservationDismissals.current += 1
-          try { localStorage.setItem('bioquest-conservation-dismissed', String(conservationDismissals.current)) } catch {}
+          saveConservationDismissed(conservationDismissals.current)
         }} />
       )}
       {biokeaPromptOpen && (
