@@ -23,6 +23,8 @@ import { createInitialState, saveGame, loadGame, clearSave, saveStats, loadStats
 import { applyBackwardCompat, runtimeDeps } from './core/state'
 import { captureCreature } from './features/capture/logic'
 import { applyBattleWin, applyBattleLose, endBattle, applyUseItem, applyBattleSwitch, applyFriendlyGift } from './features/battle/logic'
+import { startRangerBattle, applyRangerBattleWin, applyRangerBattleLose, leaveRangerScreen, applyArenaWin, applyArenaLose, applyDeclineTrainer, applyTrainerBattleWin } from './features/trainers/logic'
+import { recordRangerDefeat } from './features/progression/logic'
 import { BiokeaLeaderboardPrompt } from '@/components/BiokeaLeaderboardPrompt'
 import { reportCreatureEncountered } from '@/lib/golden-sample'
 import type { SaveSlotIndex } from './gameState'
@@ -993,11 +995,7 @@ export default function Game() {
 
   // Ranger battle handlers
   const handleStartRangerBattle = useCallback((rangerId: string) => {
-    setGameState(prev => ({
-      ...prev,
-      screen: 'ranger_battle',
-      activeRangerId: rangerId,
-    }))
+    setGameState(prev => startRangerBattle(prev, rangerId))
   }, [])
 
   const handleRangerBattleWin = useCallback((xp: number) => {
@@ -1006,36 +1004,9 @@ export default function Game() {
     const isGrandChampion = gameState.activeRangerId === GRAND_CHAMPION_ID
     const alreadyChampion = (playerStats.defeatedRangers ?? []).includes(FINAL_BOSS_ID)
     const alreadyGrandChampion = (playerStats.defeatedRangers ?? []).includes(GRAND_CHAMPION_ID)
-    setPlayerStats(ps => {
-      const rangerId = gameState.activeRangerId
-      const defeated = ps.defeatedRangers ?? []
-      const newDefeated = rangerId && !defeated.includes(rangerId)
-        ? [...defeated, rangerId] : defeated
-      return {
-        ...ps,
-        rangerBattlesWon: (ps.rangerBattlesWon ?? 0) + 1,
-        defeatedRangers: newDefeated,
-      }
-    })
+    setPlayerStats(ps => recordRangerDefeat(ps, gameState.activeRangerId))
     setDailyState(ds => updateChallengeProgress(ds, 'battle'))
-    setGameState(prev => {
-      let newXp = prev.player.xp + xp
-      let newLevel = prev.player.level
-      let newMaxXp = prev.player.maxXp
-      while (newXp >= newMaxXp) { newXp -= newMaxXp; newLevel++; newMaxXp = Math.floor(newMaxXp * 1.3) }
-      return {
-        ...prev,
-        screen: 'world',
-        activeRangerId: null,
-        player: {
-          ...prev.player,
-          xp: newXp,
-          level: newLevel,
-          maxXp: newMaxXp,
-          coins: (prev.player.coins ?? 0) + 30 + newLevel * 3,
-        },
-      }
-    })
+    setGameState(prev => applyRangerBattleWin(prev, xp))
     // Show champion screen on first final/grand boss defeat
     if ((isFinalBoss && !alreadyChampion) || (isGrandChampion && !alreadyGrandChampion)) {
       setTimeout(() => setShowChampion(true), 500)
@@ -1043,63 +1014,20 @@ export default function Game() {
   }, [gameState.activeRangerId, playerStats.defeatedRangers])
 
   const handleRangerBattleLose = useCallback(() => {
-    setGameState(prev => {
-      const newTeam = prev.player.team.map(c => ({
-        ...c,
-        stats: { ...c.stats, hp: Math.floor(c.stats.maxHp * 0.5) },
-      }))
-      return {
-        ...prev,
-        screen: 'world',
-        activeRangerId: null,
-        player: { ...prev.player, team: newTeam },
-      }
-    })
+    setGameState(prev => applyRangerBattleLose(prev))
   }, [])
 
   const handleRangerBattleClose = useCallback(() => {
-    setGameState(prev => ({
-      ...prev,
-      screen: 'world',
-      activeRangerId: null,
-    }))
+    setGameState(prev => leaveRangerScreen(prev))
   }, [])
 
   const handleArenaWin = useCallback((xp: number, coins: number, tier: ArenaTier) => {
     SFX.victory()
-    setGameState(prev => {
-      let newXp = prev.player.xp + xp
-      let newLevel = prev.player.level
-      let newMaxXp = prev.player.maxXp
-      while (newXp >= newMaxXp) { newXp -= newMaxXp; newLevel++; newMaxXp = Math.floor(newMaxXp * 1.3) }
-      return {
-        ...prev,
-        player: {
-          ...prev.player,
-          xp: newXp,
-          level: newLevel,
-          maxXp: newMaxXp,
-          coins: (prev.player.coins ?? 0) + coins,
-        },
-        arenaWins: {
-          ...prev.arenaWins,
-          [tier]: (prev.arenaWins[tier] ?? 0) + 1,
-        },
-      }
-    })
+    setGameState(prev => applyArenaWin(prev, xp, coins, tier))
   }, [])
 
   const handleArenaLose = useCallback(() => {
-    setGameState(prev => {
-      const newTeam = prev.player.team.map(c => ({
-        ...c,
-        stats: { ...c.stats, hp: Math.floor(c.stats.maxHp * 0.5) },
-      }))
-      return {
-        ...prev,
-        player: { ...prev.player, team: newTeam },
-      }
-    })
+    setGameState(prev => applyArenaLose(prev))
   }, [])
 
   const handleTeachMove = useCallback((creatureIndex: number, updatedCreature: import('@/types/game').CapturedCreature, cost: number) => {
@@ -1433,23 +1361,14 @@ export default function Game() {
   // Accept trainer challenge → go to ranger battle
   const handleAcceptTrainer = useCallback(() => {
     if (!pendingTrainer) return
-    // Create a temporary ranger from the roaming trainer
-    setGameState(prev => ({
-      ...prev,
-      screen: 'ranger_battle',
-      activeRangerId: pendingTrainer.id,
-    }))
+    setGameState(prev => startRangerBattle(prev, pendingTrainer.id))
   }, [pendingTrainer])
 
   // Decline trainer challenge
   const handleDeclineTrainer = useCallback(() => {
     SFX.flee()
     setPendingTrainer(null)
-    setGameState(prev => ({
-      ...prev,
-      screen: 'world',
-      encounterCooldown: 8,
-    }))
+    setGameState(prev => applyDeclineTrainer(prev))
   }, [])
 
   // After winning a roaming trainer battle
@@ -1467,64 +1386,9 @@ export default function Game() {
       rangerBattlesWon: (ps.rangerBattlesWon ?? 0) + 1,
     }))
     setGameState(prev => {
-      let newXp = prev.player.xp + xp
-      let newLevel = prev.player.level
-      let newMaxXp = prev.player.maxXp
-      while (newXp >= newMaxXp) { newXp -= newMaxXp; newLevel++; newMaxXp = Math.floor(newMaxXp * 1.3) }
-
-      // Add reward item if trainer has one
-      const newInventory = [...prev.player.inventory]
-      if (trainer?.rewardItem) {
-        const existing = newInventory.find(i => i.id === trainer.rewardItem!.id)
-        if (existing) {
-          existing.quantity += trainer.rewardItem.quantity
-        } else {
-          newInventory.push({
-            id: trainer.rewardItem.id,
-            name: trainer.rewardItem.name,
-            type: trainer.rewardItem.type,
-            quantity: trainer.rewardItem.quantity,
-            description: trainer.rewardItem.description,
-            sprite: trainer.rewardItem.sprite,
-          })
-        }
-      }
-
-      // Check evolutions for all team members
-      const newTeam = [...prev.player.team]
-      let evoData: typeof pendingEvolution = null
-      for (let i = 0; i < newTeam.length; i++) {
-        const member = { ...newTeam[i] }
-        member.xp += Math.floor(xp * (i === 0 ? 1 : 0.5))
-        if (member.xp >= member.level * 50) {
-          member.xp = 0
-          member.level++
-          member.stats = {
-            ...member.stats,
-            maxHp: member.stats.maxHp + 3,
-            hp: Math.min(member.stats.hp + 3, member.stats.maxHp + 3),
-            attack: member.stats.attack + 2,
-            defense: member.stats.defense + 1,
-            speed: member.stats.speed + 1,
-          }
-          const evo = getEvolution(member.id, member.level)
-          if (evo) {
-            const beforeEvo = { ...member }
-            const evolved = evolveCreature(member, evo)
-            if (!evoData) {
-              evoData = { from: beforeEvo, to: evolved, description: evo.description, teamIndex: i }
-            }
-            newTeam[i] = evolved
-          } else {
-            newTeam[i] = member
-          }
-        } else {
-          newTeam[i] = member
-        }
-      }
-
-      if (evoData) {
-        pendingEvolutionRef.current = evoData
+      const r = applyTrainerBattleWin(prev, xp, trainer)
+      if (r.evolution) {
+        pendingEvolutionRef.current = r.evolution
         setPlayerStats(ps2 => ({ ...ps2, totalEvolutions: ps2.totalEvolutions + 1 }))
         SFX.evolution()
         setTimeout(() => {
@@ -1534,13 +1398,7 @@ export default function Game() {
           }
         }, 100)
       }
-
-      return {
-        ...prev,
-        screen: 'world',
-        activeRangerId: null,
-        player: { ...prev.player, xp: newXp, level: newLevel, maxXp: newMaxXp, coins: (prev.player.coins ?? 0) + 30 + newLevel * 3, team: newTeam, inventory: newInventory },
-      }
+      return r.state
     })
     setPendingTrainer(null)
   }, [pendingTrainer])
