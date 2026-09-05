@@ -111,6 +111,8 @@ import LunarBossPopup from './LunarBossPopup'
 import ShadowBossPopup from './ShadowBossPopup'
 import BossTrophyRoom from './BossTrophyRoom'
 import ConservationPrompt from './ConservationPrompt'
+import { GameStateContext, GameActionsContext } from './core/GameContext'
+import type { GameStateValue, GameActions } from './core/GameContext'
 
 // Curated fast-travel destinations — only unlocks once the tile has been explored.
 // Coordinates and subregion names match getSubregion() in bayAreaMap.ts.
@@ -1086,6 +1088,14 @@ export default function Game() {
     setGameState(prev => selectStarter(prev, map, creature))
   }, [map])
 
+  // Conservation prompt dismissal — closes the prompt and bumps the
+  // persisted dismissal counter (the prompt shows at most 3 times).
+  const dismissConservation = useCallback(() => {
+    setShowConservation(false)
+    conservationDismissals.current += 1
+    saveConservationDismissed(conservationDismissals.current)
+  }, [])
+
   useEffect(() => {
     exposeTestHook({
       getState: () => gameState,
@@ -1105,27 +1115,98 @@ export default function Game() {
     })
   })
 
+  // ---- Context values -------------------------------------------------
+  // Built once, before the early returns, so every screen (title, starter
+  // and the main tree) is wrapped in the same providers.
+  const stateValue: GameStateValue = {
+    gameState, playerStats, dailyState, map: memoizedMap, exploredTiles, activeSlot, playerName,
+    unlockedAchievements, bayDexNewCount, rangerPositions, worldEvents, grandChampionUnlocked,
+    ui: {
+      nearbyRangerId, currentLandmark, nearbyDock, boatAnimating, nearbyBartStation,
+      atSteamerLane, atBoardwalk, nearbySignpost, borderMessage, borderPeek,
+      captureNotif, giftNotif, nicknamePrompt, nicknameInput, battleReward, screenTransition,
+      pendingEvolution, pendingTrainer, defeatedTrainers, fishLog,
+      alcatrazEscapeActive, alcatrazStage, alcatrazCellProgress, alcatrazCompleted,
+      showMigrationCalendar, showFieldNotes, showTrophyRoom, showHotkeys, showFastTravel,
+      showChampion, showConservation, showTutorialDialog, tutorialTip,
+      achievementToast, evolveReadyToast, questReward, lunarBoss, shadowBoss,
+      encounterMood, encounterType, biokeaPromptOpen,
+    },
+  }
+
+  // React setters are stable, but they are listed in the dependency array
+  // alongside the handlers so the list mirrors the object exactly.
+  const actions = useMemo<GameActions>(() => ({
+    movePlayer, openScreen, closeOverlay, handleBoatTravel, handleFastTravel, triggerTutorial,
+    handleNewGame, handleLoadSlot, handleDeleteSlot, handleSelectStarter, handleRenamePlayer,
+    handleEncounterComplete, handleBattleWin, handleBattleLose, handleCapture, handleFlee,
+    handleCreatureFled, handleFriendlyGift, handleUseItem, handleBattleSwitch,
+    handleBossChallenge, handleBossFlee, handleShadowBossChallenge,
+    handleStartRangerBattle, handleRangerBattleWin, handleRangerBattleLose, handleRangerBattleClose,
+    handleAcceptTrainer, handleDeclineTrainer, handleTrainerBattleWin, handleArenaWin, handleArenaLose,
+    handleSwapLead, handleTeachMove, handleLearnAbility, handleManualEvolve, handleReleaseFromTeam,
+    handleSwapFromReserve, handleAdoptFromReserve, handleReleaseFromReserve,
+    handleAcceptQuest, handleClaimReward, handleTrade, handleCraft, handleImportCreature,
+    handleTradeRemoveCreature, handleStartBreeding, handleHatchCreature, handleCancelBreeding,
+    handleFishCatch, handleDiveEncounter, handleDiveCollect,
+    handleAlcatrazBattle, handleAlcatrazComplete, handleFusion, dismissConservation,
+    setGameState, setDailyState, setNicknameInput, setNicknamePrompt, setCaptureNotif,
+    setPendingEvolution, setPendingTrainer, setQuestReward,
+    setShowMigrationCalendar, setShowFieldNotes, setShowTrophyRoom, setShowHotkeys, setShowFastTravel,
+    setShowChampion, setShowConservation, setShowTutorialDialog, setTutorialTip, setBiokeaPromptOpen,
+    setAlcatrazStage, setAlcatrazCellProgress, setAlcatrazEscapeActive, setBayDexAck,
+  }), [
+    movePlayer, openScreen, closeOverlay, handleBoatTravel, handleFastTravel, triggerTutorial,
+    handleNewGame, handleLoadSlot, handleDeleteSlot, handleSelectStarter, handleRenamePlayer,
+    handleEncounterComplete, handleBattleWin, handleBattleLose, handleCapture, handleFlee,
+    handleCreatureFled, handleFriendlyGift, handleUseItem, handleBattleSwitch,
+    handleBossChallenge, handleBossFlee, handleShadowBossChallenge,
+    handleStartRangerBattle, handleRangerBattleWin, handleRangerBattleLose, handleRangerBattleClose,
+    handleAcceptTrainer, handleDeclineTrainer, handleTrainerBattleWin, handleArenaWin, handleArenaLose,
+    handleSwapLead, handleTeachMove, handleLearnAbility, handleManualEvolve, handleReleaseFromTeam,
+    handleSwapFromReserve, handleAdoptFromReserve, handleReleaseFromReserve,
+    handleAcceptQuest, handleClaimReward, handleTrade, handleCraft, handleImportCreature,
+    handleTradeRemoveCreature, handleStartBreeding, handleHatchCreature, handleCancelBreeding,
+    handleFishCatch, handleDiveEncounter, handleDiveCollect,
+    handleAlcatrazBattle, handleAlcatrazComplete, handleFusion, dismissConservation,
+    setGameState, setDailyState, setNicknameInput, setNicknamePrompt, setCaptureNotif,
+    setPendingEvolution, setPendingTrainer, setQuestReward,
+    setShowMigrationCalendar, setShowFieldNotes, setShowTrophyRoom, setShowHotkeys, setShowFastTravel,
+    setShowChampion, setShowConservation, setShowTutorialDialog, setTutorialTip, setBiokeaPromptOpen,
+    setAlcatrazStage, setAlcatrazCellProgress, setAlcatrazEscapeActive, setBayDexAck,
+  ])
+
   // Title screen
   if (gameState.screen === 'title') {
     return (
+      <GameStateContext.Provider value={stateValue}>
+      <GameActionsContext.Provider value={actions}>
       <TitleScreen
         onLoadSlot={handleLoadSlot}
         onNewGame={handleNewGame}
         onDeleteSlot={handleDeleteSlot}
       />
+      </GameActionsContext.Provider>
+      </GameStateContext.Provider>
     )
   }
 
   // Starter selection screen
   if (gameState.screen === 'starter') {
     return (
+      <GameStateContext.Provider value={stateValue}>
+      <GameActionsContext.Provider value={actions}>
       <StarterSelect
         onSelect={handleSelectStarter}
       />
+      </GameActionsContext.Provider>
+      </GameStateContext.Provider>
     )
   }
 
   return (
+    <GameStateContext.Provider value={stateValue}>
+    <GameActionsContext.Provider value={actions}>
     <div className="w-full h-screen bg-[#0e1a2e] relative overflow-hidden select-none">
       <IsometricRenderer map={memoizedMap} playerX={gameState.player.x} playerY={gameState.player.y} rangers={rangerPositions} timeOfDay={gameState.timeOfDay} weather={gameState.weather} gameMinutes={gameState.gameMinutes} />
       <DayNightSky gameMinutes={gameState.gameMinutes} gameDay={gameState.gameDay ?? 75} />
@@ -2418,11 +2499,7 @@ export default function Game() {
         />
       )}
       {showConservation && (
-        <ConservationPrompt onDismiss={() => {
-          setShowConservation(false)
-          conservationDismissals.current += 1
-          saveConservationDismissed(conservationDismissals.current)
-        }} />
+        <ConservationPrompt onDismiss={dismissConservation} />
       )}
       {biokeaPromptOpen && (
         <BiokeaLeaderboardPrompt
@@ -2437,5 +2514,7 @@ export default function Game() {
         />
       )}
     </div>
+    </GameActionsContext.Provider>
+    </GameStateContext.Provider>
   )
 }
