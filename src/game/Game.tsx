@@ -49,24 +49,16 @@ import {
 } from './encounterSystem'
 import IsometricRenderer from './IsometricRenderer'
 import BattleScreen from './BattleScreen'
-import CatalogScreen from './CatalogScreen'
 import TeamScreen, { getHealAmount } from './TeamScreen'
 import TitleScreen from './TitleScreen'
 import StarterSelect from './StarterSelect'
 import GameHUD from './GameHUD'
 import Minimap from './Minimap'
-import FieldJournal from './FieldJournal'
 import RangerDialog from './RangerDialog'
-import TradeCenter from './TradeCenter'
 import EvolutionScreen from './EvolutionScreen'
-import BayDex from './BayDex'
-import BreedingScreen from './BreedingScreen'
 import { createInitialStats, getNewAchievements, getUnlockedAchievements, type PlayerStats } from './achievements'
-import AchievementsScreen from './AchievementsScreen'
-import QuestLog from './QuestLog'
 import MigrationCalendar from './MigrationCalendar'
 import BiomeFieldNotesPanel from './BiomeFieldNotesPanel'
-import CraftingScreen from './CraftingScreen'
 import EncounterTransition from './EncounterTransition'
 import QuestTracker from './QuestTracker'
 import FishingScreen from './FishingScreen'
@@ -77,12 +69,10 @@ import { getLandmarkAt, LANDMARK_INFO } from './landmarks'
 import { FINAL_BOSS_ID, GRAND_CHAMPION_ID, canChallengeGrandChampion } from './rangers'
 import WorldEventBanner, { useWorldEvents } from './WorldEvents'
 import { SFX, Music } from './sounds'
-import HabitatMap from './HabitatMap'
 import TrainerEncounter from './TrainerEncounter'
 import { type RoamingTrainer } from './roamingTrainers'
-import AdoptionCenter from './AdoptionCenter'
-import Leaderboard from './Leaderboard'
 import AlcatrazEscape from './AlcatrazEscape'
+import ScreenRouter from './screens/ScreenRouter'
 import type { EscapeStage } from './AlcatrazEscape'
 import FusionLab from './FusionLab'
 import DivingMinigame from './DivingMinigame'
@@ -1628,17 +1618,7 @@ export default function Game() {
         />
       )}
 
-      {gameState.screen === 'catalog' && (
-        <div className="menu-screen-enter">
-        <CatalogScreen catalogSeen={gameState.player.catalog} catalogCaptured={gameState.player.captured} onClose={() => openScreen('world')} />
-        </div>
-      )}
-
-      {gameState.screen === 'baydex' && (
-        <div className="menu-screen-enter">
-        <BayDex catalogSeen={gameState.player.catalog} catalogCaptured={gameState.player.captured} defaultSelectedId={gameState.player.team[0]?.id ?? null} playerTeam={gameState.player.team} onClose={() => openScreen('world')} />
-        </div>
-      )}
+      <ScreenRouter />
 
       {gameState.screen === 'inventory' && (
         <div className="menu-screen-enter">
@@ -1728,22 +1708,6 @@ export default function Game() {
             return { ...prev, player: { ...prev.player, inventory: newInventory, team: newTeam } }
           })
         }} />
-        </div>
-      )}
-
-      {gameState.screen === 'journal' && (
-        <div className="menu-screen-enter">
-        <FieldJournal journal={gameState.player.journal} currentSubregion={gameState.currentSubregion} onClose={() => openScreen('world')} weatherAlmanac={gameState.weatherAlmanac} currentWeather={gameState.weather} gameDay={gameState.gameDay} visitedLandmarks={gameState.visitedLandmarks} />
-        </div>
-      )}
-
-      {gameState.screen === 'breeding' && (
-        <div className="menu-screen-enter">
-        <BreedingScreen
-          team={gameState.player.team} nursery={gameState.player.nursery}
-          onClose={() => openScreen('world')}
-          onStartBreeding={handleStartBreeding} onHatch={handleHatchCreature} onCancelBreeding={handleCancelBreeding}
-        />
         </div>
       )}
 
@@ -2032,26 +1996,6 @@ export default function Game() {
         return null
       })()}
 
-      {gameState.screen === 'trade' && (
-        <div className="menu-screen-enter">
-        <TradeCenter
-          team={gameState.player.team}
-          onClose={() => openScreen('world')}
-          onImportCreature={handleImportCreature} onRemoveCreature={handleTradeRemoveCreature}
-        />
-        </div>
-      )}
-
-      {gameState.screen === 'questlog' && (
-        <div className="menu-screen-enter">
-        <QuestLog
-          questProgress={gameState.questProgress}
-          player={gameState.player}
-          onClose={() => openScreen('world')}
-        />
-        </div>
-      )}
-
       {gameState.screen === 'fishing' && (
         <FishingScreen
           biome={gameState.currentBiome}
@@ -2061,46 +2005,12 @@ export default function Game() {
         />
       )}
 
-      {gameState.screen === 'habitat_map' && (
-        <HabitatMap
-          catalogSeen={gameState.player.catalog}
-          catalogCaptured={gameState.player.captured}
-          onClose={() => openScreen('world')}
-        />
-      )}
-
       {gameState.screen === 'trainer_encounter' && pendingTrainer && (
         <TrainerEncounter
           trainer={pendingTrainer}
           onAccept={handleAcceptTrainer}
           onDecline={handleDeclineTrainer}
         />
-      )}
-
-      {gameState.screen === 'adoption' && (
-        <AdoptionCenter
-          team={gameState.player.team}
-          reserves={gameState.player.reserves}
-          onClose={() => openScreen('world')}
-          onRelease={handleReleaseFromTeam}
-          onSwapFromReserve={handleSwapFromReserve}
-          onAdoptFromReserve={handleAdoptFromReserve}
-          onReleaseFromReserve={handleReleaseFromReserve}
-        />
-      )}
-
-      {gameState.screen === 'leaderboard' && (
-        <div className="menu-screen-enter">
-        <Leaderboard
-          playerName={playerName}
-          playerLevel={gameState.player.level}
-          speciesCaught={gameState.player.captured.length}
-          totalSpecies={56}
-          stats={playerStats}
-          onClose={() => openScreen('world')}
-          onRename={handleRenamePlayer}
-        />
-        </div>
       )}
 
       {gameState.screen === 'alcatraz_escape' && (
@@ -2114,28 +2024,6 @@ export default function Game() {
           onClose={() => { setAlcatrazEscapeActive(false); openScreen('world') }}
           onStartBattle={handleAlcatrazBattle}
         />
-      )}
-
-      {gameState.screen === 'crafting' && (
-        <div className="menu-screen-enter">
-        <CraftingScreen
-          inventory={gameState.player.inventory}
-          playerLevel={gameState.player.level}
-          onCraft={handleCraft}
-          onClose={() => openScreen('world')}
-        />
-        </div>
-      )}
-
-      {gameState.screen === 'achievements' && (
-        <div className="menu-screen-enter">
-        <AchievementsScreen
-          gameState={gameState}
-          stats={playerStats}
-          unlockedIds={unlockedAchievements}
-          onClose={() => openScreen('world')}
-        />
-        </div>
       )}
 
       {gameState.screen === 'fusion' && (
