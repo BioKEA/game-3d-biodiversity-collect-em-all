@@ -1,24 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import type { GameState, Creature, CapturedCreature, MapTile, BreedingSlot } from '@/types/game'
-
-// When a text input/textarea/contentEditable element is focused, game keyboard
-// shortcuts must not fire — otherwise typing "w" or "d" moves the player, and
-// letters like "c"/"j"/"t" open menus instead of being typed into the field.
-function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false
-  const tag = target.tagName
-  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
-    // Range/checkbox inputs don't consume character keys — let the game handler run for those.
-    if (tag === 'INPUT') {
-      const type = (target as HTMLInputElement).type
-      if (type === 'range' || type === 'checkbox' || type === 'radio' || type === 'button' || type === 'submit') {
-        return false
-      }
-    }
-    return true
-  }
-  return target.isContentEditable
-}
 import { createInitialState } from './core/state'
 import {
   saveGame, loadGame, clearSave, saveStats, loadStats, saveExplored, loadExplored, loadPlayerName, savePlayerName, loadBayDexAck,
@@ -39,8 +20,8 @@ import { applyFishCatch, startDiveEncounter, applyDiveCollect } from './features
 import { challengeBoss, startAlcatrazBattle, applyAlcatrazComplete, applyFusion } from './features/bosses/logic'
 import { reportCreatureEncountered } from '@/lib/golden-sample'
 import type { SaveSlotIndex } from './core/persistence'
-import { generateMap, getBoatDockAt, getSignpostAt, type BoatDock } from './bayAreaMap'
-import { RANGERS, getNearbyRanger } from './rangers'
+import { generateMap } from './bayAreaMap'
+import { RANGERS } from './rangers'
 import { getRangerActivity, getRangerPosition, type RangerActivity } from './npcSchedules'
 import {
   rollMood, rollEncounterType, type CreatureMood, type EncounterType,
@@ -48,7 +29,6 @@ import {
 } from './encounterSystem'
 import { createInitialStats, getNewAchievements, getUnlockedAchievements, type PlayerStats } from './achievements'
 import type { FishDef } from './FishingScreen'
-import { getLandmarkAt } from './landmarks'
 import { FINAL_BOSS_ID, GRAND_CHAMPION_ID, canChallengeGrandChampion } from './rangers'
 import { useWorldEvents } from './WorldEvents'
 import { SFX, Music } from './sounds'
@@ -65,6 +45,8 @@ import { loadDailyState, updateChallengeProgress, type DailyState } from './dail
 import { exposeTestHook } from './testHook'
 import { GameStateContext, GameActionsContext } from './core/GameContext'
 import type { GameStateValue, GameActions } from './core/GameContext'
+import { useKeyboardControls } from './hooks/useKeyboardControls'
+import { useWorldProximity } from './hooks/useWorldProximity'
 
 // Screens that Escape should back out of, returning to the world map.
 const OVERLAY_SCREENS: GameState['screen'][] = ['catalog', 'inventory', 'journal', 'ranger', 'trade', 'baydex', 'breeding', 'questlog', 'crafting', 'fishing', 'ranger_battle', 'habitat_map', 'adoption', 'leaderboard', 'fusion', 'diving', 'bart', 'boardwalk', 'surfing', 'shop', 'daily_challenges', 'arena', 'move_tutor']
@@ -88,6 +70,12 @@ export default function Game() {
     setGameState(prev => OVERLAY_SCREENS.includes(prev.screen) ? { ...prev, screen: 'world', activeRangerId: null } : prev)
   }, [])
 
+  const openRanger = useCallback((id: string) => {
+    setGameState(prev => ({ ...prev, screen: 'ranger', activeRangerId: id }))
+  }, [])
+
+  const toggleMusic = useCallback(() => { Music.toggle() }, [])
+
   // BiokeaLeaderboardPrompt at game-start when the player still has the
   // default 'Explorer' handle. Captures handle (required) + optional
   // email subscription, same as the arcade games' game-end prompt.
@@ -110,10 +98,9 @@ export default function Game() {
   const [map] = useState<MapTile[][]>(() => generateMap())
   const [exploredTiles, setExploredTiles] = useState<Set<string>>(() => new Set<string>())
   const worldEvents = useWorldEvents(gameState.gameMinutes, gameState.gameDay ?? 75)
-  const [nearbyRangerId, setNearbyRangerId] = useState<string | null>(null)
-  const [currentLandmark, setCurrentLandmark] = useState<string | null>(null)
+  // `nearbyRangerId`, `currentLandmark`, `nearbyDock` and `nearbySignpost` now
+  // live in `useWorldProximity` (called below, before `handleBoatTravel`).
   const [showChampion, setShowChampion] = useState(false)
-  const [nearbyDock, setNearbyDock] = useState<BoatDock | null>(null)
   const [boatAnimating, setBoatAnimating] = useState(false)
   const [pendingEvolution, setPendingEvolution] = useState<{
     from: CapturedCreature
@@ -164,7 +151,6 @@ export default function Game() {
   const [showFastTravel, setShowFastTravel] = useState(false)
   const [borderMessage, setBorderMessage] = useState<string | null>(null)
   const [borderPeek, setBorderPeek] = useState<{ state: string; stepsLeft: number; returnX: number; returnY: number } | null>(null)
-  const [nearbySignpost, setNearbySignpost] = useState<{ state: string; message: string; fact: string } | null>(null)
 
   // Daily challenges
   const [dailyState, setDailyState] = useState<DailyState>(() => loadDailyState())
@@ -209,7 +195,6 @@ export default function Game() {
     }))
   }, [])
 
-  const moveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastMoveTime = useRef(0)
   const pendingEvolutionRef = useRef<typeof pendingEvolution>(null)
   const lastWeatherChange = useRef(gameState.gameMinutes)
@@ -359,6 +344,38 @@ export default function Game() {
     setGameState(prev => ({ ...prev, screen: 'battle' as const }))
   }, [])
 
+  const grandChampionUnlocked = canChallengeGrandChampion(
+    playerStats.defeatedRangers ?? [],
+    playerStats.uniqueSubregionsVisited ?? [],
+  )
+
+  // Auto-open Ranger Tomás's tutorial dialog the first time the player comes
+  // within his radius. The one-shot guard stays here (it owns
+  // `tutorialFlagsRef`); `useWorldProximity` only reports the proximity.
+  const onFirstRangerProximity = useCallback(() => {
+    if (tutorialFlagsRef.current.has('ranger_tutorial')) return
+    tutorialFlagsRef.current.add('ranger_tutorial')
+    setShowTutorialDialog(true)
+    setGameState(prev => ({
+      ...prev,
+      screen: 'ranger',
+      activeRangerId: 'ranger-golden-gate',
+      tutorialFlags: [...(prev.tutorialFlags ?? []), 'ranger_tutorial'],
+    }))
+  }, [])
+
+  // Proximity detection (ranger / landmark / dock / signpost). Declared here
+  // because `handleBoatTravel` and the keyboard shortcuts below read
+  // `nearbyDock` and `nearbyRangerId`.
+  const { nearbyRangerId, currentLandmark, nearbyDock, nearbySignpost } = useWorldProximity({
+    screen: gameState.screen,
+    x: gameState.player.x,
+    y: gameState.player.y,
+    timeOfDay: gameState.timeOfDay,
+    grandChampionUnlocked,
+    onFirstRangerProximity,
+  })
+
   const handleBoatTravel = useCallback(() => {
     if (!nearbyDock || boatAnimating) return
     setBoatAnimating(true)
@@ -394,138 +411,29 @@ export default function Game() {
   const atSteamerLane = gameState.screen === 'world' &&
     gameState.player.x === 8 && gameState.player.y === 57
 
-  // Keyboard controls
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't capture keys when the user is typing in a text field
-      if (isEditableTarget(e.target)) return
-
-      // Allow Escape from overlay screens
-      if (e.key === 'Escape') {
-        closeOverlay()
-        return
-      }
-
-      if (gameState.screen !== 'world' || gameState.battle.active) return
-
-      switch (e.key) {
-        case 'ArrowUp': case 'w': case 'W':
-          e.preventDefault(); movePlayer(0, -1); break
-        case 'ArrowDown': case 's': case 'S':
-          e.preventDefault(); movePlayer(0, 1); break
-        case 'ArrowLeft': case 'a': case 'A':
-          e.preventDefault(); movePlayer(-1, 0); break
-        case 'ArrowRight': case 'd': case 'D':
-          e.preventDefault(); movePlayer(1, 0); break
-        case 'c': case 'C':
-          setGameState(prev => ({ ...prev, screen: 'catalog' })); break
-        case 'b': case 'B':
-          setGameState(prev => ({ ...prev, screen: 'baydex' })); break
-        case 'j': case 'J':
-          setGameState(prev => ({ ...prev, screen: 'journal' })); break
-        case 'n': case 'N':
-          setGameState(prev => ({ ...prev, screen: 'breeding' })); break
-        case 't': case 'T':
-          setGameState(prev => ({ ...prev, screen: 'trade' })); break
-        case 'q': case 'Q':
-          setGameState(prev => ({ ...prev, screen: 'questlog' })); break
-        case 'm': case 'M':
-          Music.toggle(); break
-        case 'r': case 'R':
-          setGameState(prev => ({ ...prev, screen: 'crafting' })); break
-        case 'h': case 'H':
-          setGameState(prev => ({ ...prev, screen: 'habitat_map' })); break
-        case 'l': case 'L':
-          setGameState(prev => ({ ...prev, screen: 'leaderboard' })); break
-        case 'g': case 'G':
-          if (gameState.player.team.length >= 2) {
-            setGameState(prev => ({ ...prev, screen: 'fusion' }))
-          }
-          break
-        case 'f': case 'F': {
-          // Fishing — only near water tiles
-          const px = gameState.player.x
-          const py = gameState.player.y
-          const nearWater = [[-1,0],[1,0],[0,-1],[0,1]].some(([dx,dy]) => {
-            const t = map[py+dy]?.[px+dx]
-            return t && t.biome === 'water'
-          }) || map[py]?.[px]?.biome === 'beach' || map[py]?.[px]?.biome === 'marsh'
-          if (nearWater) {
-            setGameState(prev => ({ ...prev, screen: 'fishing' }))
-          }
-          break
-        }
-        case ' ': case 'Enter':
-          // Exact-tile interactions (dock, BART, Steamer Lane, Boardwalk) take
-          // precedence over radius-based ranger interactions — otherwise rangers
-          // sitting on/next to these tiles make the activity unreachable.
-          if (nearbyDock && !boatAnimating) {
-            e.preventDefault()
-            handleBoatTravel()
-          } else if (nearbyBartStation) {
-            e.preventDefault()
-            setGameState(prev => ({ ...prev, screen: 'bart' }))
-          } else if (atSteamerLane) {
-            e.preventDefault()
-            setGameState(prev => ({ ...prev, screen: 'surfing' }))
-          } else if (atBoardwalk) {
-            e.preventDefault()
-            setGameState(prev => ({ ...prev, screen: 'boardwalk' }))
-          } else if (nearbyRangerId) {
-            e.preventDefault()
-            setGameState(prev => ({ ...prev, screen: 'ranger', activeRangerId: nearbyRangerId }))
-          }
-          break
-        // Escape handled above the guard
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [gameState.screen, gameState.battle.active, movePlayer, nearbyRangerId, nearbyBartStation, atSteamerLane, atBoardwalk, nearbyDock, boatAnimating, handleBoatTravel, closeOverlay])
-
-
-  // Hold-to-move for keyboard
-  useEffect(() => {
-    if (gameState.screen !== 'world' || gameState.battle.active) return
-
-    const keysDown = new Set<string>()
-
-    const process = () => {
-      if (keysDown.has('ArrowUp') || keysDown.has('w')) movePlayer(0, -1)
-      else if (keysDown.has('ArrowDown') || keysDown.has('s')) movePlayer(0, 1)
-      else if (keysDown.has('ArrowLeft') || keysDown.has('a')) movePlayer(-1, 0)
-      else if (keysDown.has('ArrowRight') || keysDown.has('d')) movePlayer(1, 0)
-
-      if (keysDown.size > 0) moveTimeout.current = setTimeout(process, 130)
-    }
-
-    const handleDown = (e: KeyboardEvent) => {
-      if (isEditableTarget(e.target)) return
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'].includes(e.key)) {
-        if (!keysDown.has(e.key)) {
-          keysDown.add(e.key)
-          if (keysDown.size === 1) process()
-        }
-      }
-    }
-
-    const handleUp = (e: KeyboardEvent) => {
-      keysDown.delete(e.key)
-      if (keysDown.size === 0 && moveTimeout.current) {
-        clearTimeout(moveTimeout.current)
-        moveTimeout.current = null
-      }
-    }
-
-    window.addEventListener('keydown', handleDown)
-    window.addEventListener('keyup', handleUp)
-    return () => {
-      window.removeEventListener('keydown', handleDown)
-      window.removeEventListener('keyup', handleUp)
-      if (moveTimeout.current) clearTimeout(moveTimeout.current)
-    }
-  }, [gameState.screen, gameState.battle.active, movePlayer])
+  // Keyboard controls (shortcuts + hold-to-move). Both effects moved verbatim
+  // into the hook; `teamSize`/`playerX`/`playerY`/`map` keep their original
+  // stale-closure semantics (see the note in useKeyboardControls).
+  useKeyboardControls({
+    screen: gameState.screen,
+    battleActive: gameState.battle.active,
+    teamSize: gameState.player.team.length,
+    playerX: gameState.player.x,
+    playerY: gameState.player.y,
+    map,
+    nearbyDock,
+    boatAnimating,
+    nearbyBartStation,
+    atSteamerLane,
+    atBoardwalk,
+    nearbyRangerId,
+    movePlayer,
+    openScreen,
+    closeOverlay,
+    handleBoatTravel,
+    openRanger,
+    toggleMusic,
+  })
 
   const handleBattleWin = useCallback((xpGained: number) => {
     SFX.victory()
@@ -697,10 +605,6 @@ export default function Game() {
   }, [])
 
   const memoizedMap = useMemo(() => map, [map])
-  const grandChampionUnlocked = canChallengeGrandChampion(
-    playerStats.defeatedRangers ?? [],
-    playerStats.uniqueSubregionsVisited ?? [],
-  )
   const rangerPositions = useMemo(() =>
     RANGERS
       .filter(r => r.id !== GRAND_CHAMPION_ID || grandChampionUnlocked)
@@ -716,25 +620,6 @@ export default function Game() {
     return gameState.player.catalog.filter(id => !ackSet.has(id)).length
   }, [gameState.player.catalog, bayDexAck])
 
-  // Ranger interaction
-  useEffect(() => {
-    if (gameState.screen !== 'world') return
-    const nearby = getNearbyRanger(gameState.player.x, gameState.player.y, gameState.timeOfDay)
-    const isHiddenGrandChampion = nearby?.id === GRAND_CHAMPION_ID && !grandChampionUnlocked
-    setNearbyRangerId(isHiddenGrandChampion ? null : (nearby?.id ?? null))
-    // Auto-open Ranger Tomás tutorial dialog on first proximity
-    if (nearby?.id === 'ranger-golden-gate' && !tutorialFlagsRef.current.has('ranger_tutorial')) {
-      tutorialFlagsRef.current.add('ranger_tutorial')
-      setShowTutorialDialog(true)
-      setGameState(prev => ({
-        ...prev,
-        screen: 'ranger',
-        activeRangerId: 'ranger-golden-gate',
-        tutorialFlags: [...(prev.tutorialFlags ?? []), 'ranger_tutorial'],
-      }))
-    }
-  }, [gameState.player.x, gameState.player.y, gameState.screen, gameState.timeOfDay])
-
   // Footprint proximity tutorial tip
   useEffect(() => {
     if (gameState.screen !== 'world' || tutorialFlagsRef.current.has('footprints')) return
@@ -748,27 +633,6 @@ export default function Game() {
       }
     }
   }, [gameState.player.x, gameState.player.y, gameState.screen, map, triggerTutorial])
-
-  // Landmark detection
-  useEffect(() => {
-    if (gameState.screen !== 'world') return
-    const lm = getLandmarkAt(gameState.player.x, gameState.player.y)
-    setCurrentLandmark(lm?.name ?? null)
-  }, [gameState.player.x, gameState.player.y, gameState.screen])
-
-  // Boat dock detection
-  useEffect(() => {
-    if (gameState.screen !== 'world') return
-    const dock = getBoatDockAt(gameState.player.x, gameState.player.y)
-    setNearbyDock(dock ?? null)
-  }, [gameState.player.x, gameState.player.y, gameState.screen])
-
-  // Signpost detection
-  useEffect(() => {
-    if (gameState.screen !== 'world') return
-    const sp = getSignpostAt(gameState.player.x, gameState.player.y)
-    setNearbySignpost(sp ? { state: sp.state, message: sp.message, fact: sp.fact } : null)
-  }, [gameState.player.x, gameState.player.y, gameState.screen])
 
   // World event tutorial tip
   useEffect(() => {
