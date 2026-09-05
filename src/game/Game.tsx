@@ -49,7 +49,6 @@ import {
 } from './encounterSystem'
 import IsometricRenderer from './IsometricRenderer'
 import BattleScreen from './BattleScreen'
-import TeamScreen, { getHealAmount } from './TeamScreen'
 import TitleScreen from './TitleScreen'
 import StarterSelect from './StarterSelect'
 import GameHUD from './GameHUD'
@@ -61,7 +60,6 @@ import MigrationCalendar from './MigrationCalendar'
 import BiomeFieldNotesPanel from './BiomeFieldNotesPanel'
 import EncounterTransition from './EncounterTransition'
 import QuestTracker from './QuestTracker'
-import FishingScreen from './FishingScreen'
 import type { FishDef } from './FishingScreen'
 import RangerBattleScreen from './RangerBattleScreen'
 import ChampionScreen from './ChampionScreen'
@@ -71,22 +69,11 @@ import WorldEventBanner, { useWorldEvents } from './WorldEvents'
 import { SFX, Music } from './sounds'
 import TrainerEncounter from './TrainerEncounter'
 import { type RoamingTrainer } from './roamingTrainers'
-import AlcatrazEscape from './AlcatrazEscape'
 import ScreenRouter from './screens/ScreenRouter'
 import type { EscapeStage } from './AlcatrazEscape'
-import FusionLab from './FusionLab'
-import DivingMinigame from './DivingMinigame'
-import BartSystem, { getBartStationAt } from './BartSystem'
-import Shop from './Shop'
-import DailyChallenges from './DailyChallenges'
-import ArenaScreen from './ArenaScreen'
-import MoveTutorScreen from './MoveTutorScreen'
-import { HELD_ITEMS } from './heldItems'
-import { adjustHappiness, PET_GAIN } from './happiness'
+import { getBartStationAt } from './BartSystem'
 import type { ArenaTier } from './arena'
-import { loadDailyState, updateChallengeProgress, claimChallengeReward, getClaimableCount, type DailyState } from './dailyChallengesData'
-import BoardwalkMinigame from './BoardwalkMinigame'
-import SurfingMinigame from './SurfingMinigame'
+import { loadDailyState, updateChallengeProgress, getClaimableCount, type DailyState } from './dailyChallengesData'
 import WeatherEffects from './WeatherEffects'
 import BiomeParticles from './BiomeParticles'
 import BiomeTransition from './BiomeTransition'
@@ -1620,97 +1607,6 @@ export default function Game() {
 
       <ScreenRouter />
 
-      {gameState.screen === 'inventory' && (
-        <div className="menu-screen-enter">
-        <TeamScreen team={gameState.player.team} inventory={gameState.player.inventory} coins={gameState.player.coins ?? 0} onClose={() => openScreen('world')} onSwapLead={handleSwapLead} onNickname={(idx, name) => {
-          setGameState(prev => ({
-            ...prev,
-            player: {
-              ...prev.player,
-              team: prev.player.team.map((c, i) => i === idx ? { ...c, nickname: name } : c),
-            },
-          }))
-        }} onEvolve={handleManualEvolve} onHealAll={() => {
-          setGameState(prev => {
-            if ((prev.player.coins ?? 0) < 50) return prev
-            return {
-              ...prev,
-              player: {
-                ...prev.player,
-                coins: (prev.player.coins ?? 0) - 50,
-                team: prev.player.team.map(c => ({ ...c, stats: { ...c.stats, hp: c.stats.maxHp } })),
-              },
-            }
-          })
-        }} onAssignHeldItem={(creatureIdx, itemId) => {
-          setGameState(prev => {
-            const creature = prev.player.team[creatureIdx]
-            if (!creature) return prev
-            const previouslyHeld = creature.heldItem ?? null
-            // Build new inventory: refund previous, consume new
-            const newInventory = prev.player.inventory.map(it => ({ ...it }))
-            if (previouslyHeld) {
-              const existing = newInventory.find(it => it.id === previouslyHeld)
-              if (existing) {
-                existing.quantity += 1
-              } else {
-                // Look up the held item def to recreate the inventory entry
-                // (could happen if the user used the last copy and we filtered the slot)
-                const meta = HELD_ITEMS[previouslyHeld]
-                if (meta) {
-                  newInventory.push({
-                    id: meta.id,
-                    name: meta.name,
-                    type: 'held',
-                    quantity: 1,
-                    description: meta.description,
-                    sprite: meta.sprite,
-                  })
-                }
-              }
-            }
-            if (itemId) {
-              const slot = newInventory.find(it => it.id === itemId)
-              if (!slot || slot.quantity < 1) return prev
-              slot.quantity -= 1
-            }
-            // Drop empty held-item slots so they don't show as "x0"
-            const filteredInventory = newInventory.filter(it => it.quantity > 0 || it.type !== 'held')
-            const newTeam = prev.player.team.map((c, i) => i === creatureIdx ? { ...c, heldItem: itemId ?? undefined } : c)
-            return { ...prev, player: { ...prev.player, inventory: filteredInventory, team: newTeam } }
-          })
-        }} onPetCreature={(idx) => {
-          setGameState(prev => ({
-            ...prev,
-            player: {
-              ...prev.player,
-              team: prev.player.team.map((c, i) => i === idx ? adjustHappiness(c, PET_GAIN) : c),
-            },
-          }))
-        }} onUseHealItem={(itemId, creatureIndex) => {
-          setGameState(prev => {
-            const item = prev.player.inventory.find(i => i.id === itemId)
-            if (!item || item.quantity <= 0) return prev
-            const target = prev.player.team[creatureIndex]
-            if (!target) return prev
-            if (target.stats.hp >= target.stats.maxHp) return prev
-
-            const { hp, fullHeal } = getHealAmount(itemId)
-            const newHp = fullHeal ? target.stats.maxHp : Math.min(target.stats.maxHp, target.stats.hp + hp)
-            if (newHp <= target.stats.hp) return prev
-
-            const newInventory = prev.player.inventory
-              .map(it => it.id === itemId ? { ...it, quantity: it.quantity - 1 } : it)
-              .filter(it => it.quantity > 0 || it.type === 'held')
-            const newTeam = prev.player.team.map((c, i) =>
-              i === creatureIndex ? { ...c, stats: { ...c.stats, hp: newHp } } : c
-            )
-            return { ...prev, player: { ...prev.player, inventory: newInventory, team: newTeam } }
-          })
-        }} />
-        </div>
-      )}
-
       {/* Interaction prompts — priority matches the Space-key handler:
           dock > BART > surf > ranger > boardwalk */}
       {gameState.screen === 'world' && nearbyDock && !boatAnimating && (
@@ -1996,196 +1892,11 @@ export default function Game() {
         return null
       })()}
 
-      {gameState.screen === 'fishing' && (
-        <FishingScreen
-          biome={gameState.currentBiome}
-          onClose={() => openScreen('world')}
-          onCatch={handleFishCatch}
-          fishLog={fishLog}
-        />
-      )}
-
       {gameState.screen === 'trainer_encounter' && pendingTrainer && (
         <TrainerEncounter
           trainer={pendingTrainer}
           onAccept={handleAcceptTrainer}
           onDecline={handleDeclineTrainer}
-        />
-      )}
-
-      {gameState.screen === 'alcatraz_escape' && (
-        <AlcatrazEscape
-          playerTeam={gameState.player.team}
-          playerLevel={gameState.player.level}
-          stage={alcatrazStage}
-          cellBlockProgress={alcatrazCellProgress}
-          onSetStage={setAlcatrazStage}
-          onComplete={handleAlcatrazComplete}
-          onClose={() => { setAlcatrazEscapeActive(false); openScreen('world') }}
-          onStartBattle={handleAlcatrazBattle}
-        />
-      )}
-
-      {gameState.screen === 'fusion' && (
-        <FusionLab
-          team={gameState.player.team}
-          onFuse={handleFusion}
-          onClose={() => openScreen('world')}
-        />
-      )}
-
-      {gameState.screen === 'diving' && (
-        <DivingMinigame
-          playerLevel={gameState.player.level}
-          onClose={() => openScreen('world')}
-          onEncounter={handleDiveEncounter}
-          onCollect={handleDiveCollect}
-          captured={gameState.player.captured}
-        />
-      )}
-
-      {gameState.screen === 'bart' && (
-        <BartSystem
-          playerX={gameState.player.x}
-          playerY={gameState.player.y}
-          playerCoins={gameState.player.coins ?? 0}
-          onTravel={(destX, destY, destName, fare) => {
-            setGameState(prev => ({
-              ...prev,
-              screen: 'world',
-              player: { ...prev.player, x: destX, y: destY, coins: Math.max(0, (prev.player.coins ?? 0) - fare) },
-              currentSubregion: destName,
-            }))
-          }}
-          onClose={() => openScreen('world')}
-        />
-      )}
-
-      {gameState.screen === 'shop' && (
-        <Shop
-          coins={gameState.player.coins ?? 0}
-          inventory={gameState.player.inventory}
-          onBuy={(item, totalPrice) => {
-            setGameState(prev => {
-              const newInventory = [...prev.player.inventory]
-              const existing = newInventory.find(i => i.id === item.id)
-              if (existing) {
-                existing.quantity += item.quantity
-              } else {
-                newInventory.push({ ...item })
-              }
-              return {
-                ...prev,
-                player: {
-                  ...prev.player,
-                  coins: Math.max(0, (prev.player.coins ?? 0) - totalPrice),
-                  inventory: newInventory,
-                },
-              }
-            })
-          }}
-          onClose={() => openScreen('world')}
-        />
-      )}
-
-      {gameState.screen === 'arena' && (
-        <ArenaScreen
-          team={gameState.player.team}
-          weather={gameState.weather}
-          timeOfDay={gameState.timeOfDay}
-          arenaWins={gameState.arenaWins as Record<ArenaTier, number>}
-          onWin={handleArenaWin}
-          onLose={handleArenaLose}
-          onClose={() => openScreen('world')}
-        />
-      )}
-
-      {gameState.screen === 'move_tutor' && (
-        <MoveTutorScreen
-          team={gameState.player.team}
-          coins={gameState.player.coins ?? 0}
-          onTeachMove={handleTeachMove}
-          onLearnAbility={handleLearnAbility}
-          onClose={() => openScreen('world')}
-        />
-      )}
-
-      {gameState.screen === 'daily_challenges' && (
-        <DailyChallenges
-          dailyState={dailyState}
-          onClaimReward={(challengeId) => {
-            const { newState, reward } = claimChallengeReward(dailyState, challengeId)
-            setDailyState(newState)
-            if (reward > 0) {
-              setGameState(prev => ({
-                ...prev,
-                player: { ...prev.player, coins: (prev.player.coins ?? 0) + reward },
-              }))
-            }
-          }}
-          onClose={() => openScreen('world')}
-        />
-      )}
-
-      {gameState.screen === 'surfing' && (
-        <SurfingMinigame
-          playerLevel={gameState.player.level}
-          onClose={() => openScreen('world')}
-          onReward={(item) => {
-            setGameState(prev => {
-              const existing = prev.player.inventory.find(i => i.name === item.name)
-              return {
-                ...prev,
-                player: {
-                  ...prev.player,
-                  inventory: existing
-                    ? prev.player.inventory.map(i => i.name === item.name ? { ...i, quantity: i.quantity + 1 } : i)
-                    : [...prev.player.inventory, item],
-                },
-              }
-            })
-          }}
-          onXp={(amount) => {
-            setGameState(prev => ({
-              ...prev,
-              player: { ...prev.player, xp: prev.player.xp + amount },
-            }))
-          }}
-        />
-      )}
-
-      {gameState.screen === 'boardwalk' && (
-        <BoardwalkMinigame
-          playerLevel={gameState.player.level}
-          team={gameState.player.team}
-          inventory={gameState.player.inventory}
-          onClose={() => openScreen('world')}
-          onWinPrize={(item) => {
-            setGameState(prev => {
-              const existing = prev.player.inventory.find(i => i.name === item.name)
-              return {
-                ...prev,
-                player: {
-                  ...prev.player,
-                  inventory: existing
-                    ? prev.player.inventory.map(i => i.name === item.name ? { ...i, quantity: i.quantity + 1 } : i)
-                    : [...prev.player.inventory, item],
-                },
-              }
-            })
-          }}
-          onHealTeam={() => {
-            setGameState(prev => ({
-              ...prev,
-              player: {
-                ...prev.player,
-                team: prev.player.team.map(c => ({
-                  ...c,
-                  stats: { ...c.stats, hp: c.stats.maxHp },
-                })),
-              },
-            }))
-          }}
         />
       )}
 

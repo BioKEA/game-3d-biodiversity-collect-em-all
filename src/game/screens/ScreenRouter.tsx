@@ -10,6 +10,18 @@ import AchievementsScreenWrapper from './AchievementsScreenWrapper'
 import HabitatMapScreenWrapper from './HabitatMapScreenWrapper'
 import AdoptionScreenWrapper from './AdoptionScreenWrapper'
 import LeaderboardScreenWrapper from './LeaderboardScreenWrapper'
+import FishingScreenWrapper from './FishingScreenWrapper'
+import FusionScreenWrapper from './FusionScreenWrapper'
+import DivingScreenWrapper from './DivingScreenWrapper'
+import BartScreenWrapper from './BartScreenWrapper'
+import ShopScreenWrapper from './ShopScreenWrapper'
+import ArenaScreenWrapper from './ArenaScreenWrapper'
+import MoveTutorScreenWrapper from './MoveTutorScreenWrapper'
+import DailyChallengesScreenWrapper from './DailyChallengesScreenWrapper'
+import SurfingScreenWrapper from './SurfingScreenWrapper'
+import BoardwalkScreenWrapper from './BoardwalkScreenWrapper'
+import AlcatrazScreenWrapper from './AlcatrazScreenWrapper'
+import InventoryScreenWrapper from './InventoryScreenWrapper'
 
 export default function ScreenRouter() {
   const { gameState } = useGameState()
@@ -25,6 +37,18 @@ export default function ScreenRouter() {
     case 'habitat_map': return <HabitatMapScreenWrapper />
     case 'adoption': return <AdoptionScreenWrapper />
     case 'leaderboard': return <LeaderboardScreenWrapper />
+    case 'fishing': return <FishingScreenWrapper />
+    case 'fusion': return <FusionScreenWrapper />
+    case 'diving': return <DivingScreenWrapper />
+    case 'bart': return <BartScreenWrapper />
+    case 'shop': return <ShopScreenWrapper />
+    case 'arena': return <ArenaScreenWrapper />
+    case 'move_tutor': return <MoveTutorScreenWrapper />
+    case 'daily_challenges': return <DailyChallengesScreenWrapper />
+    case 'surfing': return <SurfingScreenWrapper />
+    case 'boardwalk': return <BoardwalkScreenWrapper />
+    case 'alcatraz_escape': return <AlcatrazScreenWrapper />
+    case 'inventory': return <InventoryScreenWrapper />
     default: return null
   }
 }
