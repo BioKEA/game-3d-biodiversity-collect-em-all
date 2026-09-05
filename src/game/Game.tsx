@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import type { GameState, Creature, CapturedCreature, MapTile, JournalEntry, BreedingSlot } from '@/types/game'
+import type { GameState, Creature, CapturedCreature, MapTile, BreedingSlot } from '@/types/game'
 
 // When a text input/textarea/contentEditable element is focused, game keyboard
 // shortcuts must not fire — otherwise typing "w" or "d" moves the player, and
@@ -24,7 +24,8 @@ import { applyBackwardCompat, runtimeDeps } from './core/state'
 import { captureCreature } from './features/capture/logic'
 import { applyBattleWin, applyBattleLose, endBattle, applyUseItem, applyBattleSwitch, applyFriendlyGift } from './features/battle/logic'
 import { startRangerBattle, applyRangerBattleWin, applyRangerBattleLose, leaveRangerScreen, applyArenaWin, applyArenaLose, applyDeclineTrainer, applyTrainerBattleWin } from './features/trainers/logic'
-import { recordRangerDefeat } from './features/progression/logic'
+import { recordRangerDefeat, recordStepStats } from './features/progression/logic'
+import { stepPlayer, revealTiles, boatTravel, fastTravel, selectStarter } from './features/world/logic'
 import { acceptQuest, claimQuestReward } from './features/quests/logic'
 import { applyTrade, importCreature, removeTeamMember } from './features/trade/logic'
 import { applyCraft } from './features/crafting/logic'
@@ -36,10 +37,8 @@ import { BiokeaLeaderboardPrompt } from '@/components/BiokeaLeaderboardPrompt'
 import { reportCreatureEncountered } from '@/lib/golden-sample'
 import type { SaveSlotIndex } from './gameState'
 import { generateMap, getBoatDockAt, getSignpostAt, type BoatDock } from './bayAreaMap'
-import { getRandomEncounter, ALL_CREATURES, isFullMoon, isNewMoon, getLunarBoss, getShadowBoss } from './creatures'
 import { RANGERS, getNearbyRanger } from './rangers'
 import { getRangerActivity, getRangerPosition, type RangerActivity } from './npcSchedules'
-import { advanceTime, rollWeather } from './timeWeather'
 import {
   rollMood, rollEncounterType, type CreatureMood, type EncounterType,
   type FriendlyGift, type Personality,
@@ -70,13 +69,13 @@ import FishingScreen from './FishingScreen'
 import type { FishDef } from './FishingScreen'
 import RangerBattleScreen from './RangerBattleScreen'
 import ChampionScreen from './ChampionScreen'
-import { getLandmarkAt, getNearbyLandmark, LANDMARK_INFO } from './landmarks'
+import { getLandmarkAt, LANDMARK_INFO } from './landmarks'
 import { FINAL_BOSS_ID, GRAND_CHAMPION_ID, canChallengeGrandChampion } from './rangers'
 import WorldEventBanner, { useWorldEvents } from './WorldEvents'
 import { SFX, Music } from './sounds'
 import HabitatMap from './HabitatMap'
 import TrainerEncounter from './TrainerEncounter'
-import { rollTrainerEncounter, type RoamingTrainer } from './roamingTrainers'
+import { type RoamingTrainer } from './roamingTrainers'
 import AdoptionCenter from './AdoptionCenter'
 import Leaderboard from './Leaderboard'
 import AlcatrazEscape from './AlcatrazEscape'
@@ -92,7 +91,6 @@ import { HELD_ITEMS } from './heldItems'
 import { adjustHappiness, PET_GAIN } from './happiness'
 import type { ArenaTier } from './arena'
 import { loadDailyState, updateChallengeProgress, claimChallengeReward, getClaimableCount, type DailyState } from './dailyChallengesData'
-import { checkHerdEncounter } from './migration'
 import BoardwalkMinigame from './BoardwalkMinigame'
 import SurfingMinigame from './SurfingMinigame'
 import WeatherEffects from './WeatherEffects'
@@ -373,304 +371,68 @@ export default function Game() {
     prevUnlockedRef.current = getUnlockedAchievements(gameState, playerStats)
   }, [playerStats, gameState])
 
-  const updateJournal = useCallback((
-    journal: Record<string, JournalEntry>,
-    subregion: string,
-    biome: MapTile['biome'],
-    prevSubregion: string
-  ): Record<string, JournalEntry> => {
-    if (!subregion) return journal
-    const existing = journal[subregion]
-    const isNewVisit = subregion !== prevSubregion
-    if (existing) {
-      if (!isNewVisit) return journal
-      return { ...journal, [subregion]: { ...existing, visitCount: existing.visitCount + 1 } }
-    }
-    return {
-      ...journal,
-      [subregion]: {
-        subregion, biome,
-        firstVisited: new Date().toISOString(),
-        creaturesEncountered: [], creaturesCaptured: [],
-        visitCount: 1,
-      },
-    }
-  }, [])
-
   const movePlayer = useCallback((dx: number, dy: number) => {
     const now = Date.now()
     if (now - lastMoveTime.current < 120) return
     lastMoveTime.current = now
 
     setGameState(prev => {
-      if (prev.screen !== 'world' || prev.battle.active) return prev
+      const { state: next, events: ev } = stepPlayer(prev, map, dx, dy, {
+        borderPeek,
+        lastWeatherChange: lastWeatherChange.current,
+        lunarTriggeredDay: lunarBossTriggeredRef.current,
+        shadowTriggeredDay: shadowBossTriggeredRef.current,
+        defeatedTrainers,
+      }, runtimeDeps)
 
-      const newX = prev.player.x + dx
-      const newY = prev.player.y + dy
-
-      if (newX < 0 || newX >= (map[0]?.length ?? 0) || newY < 0 || newY >= map.length) return prev
-
-      const tile = map[newY]?.[newX]
-      if (!tile) return prev
-
-      // Border peek system — allow 3 steps into neighboring states
-      if (tile.borderState && !tile.isWalkable) {
-        const MAX_BORDER_STEPS = 3
-        if (!borderPeek) {
-          // Entering border for the first time
-          setBorderPeek({ state: tile.borderState, stepsLeft: MAX_BORDER_STEPS - 1, returnX: prev.player.x, returnY: prev.player.y })
-          setBorderMessage(`Entering ${tile.borderState}... ${MAX_BORDER_STEPS - 1} steps before you turn back.`)
+      switch (ev.kind) {
+        case 'blocked':
+          if (ev.clearBorderPeek) setBorderPeek(null)
+          // Same reference as the input: skips a rerender, as the original did.
+          return prev
+        case 'border-enter':
+          setBorderPeek({ state: ev.state, stepsLeft: ev.stepsLeft, returnX: prev.player.x, returnY: prev.player.y })
+          setBorderMessage(ev.message)
           setTimeout(() => setBorderMessage(null), 2500)
-          return { ...prev, player: { ...prev.player, x: newX, y: newY } }
-        } else if (borderPeek.stepsLeft > 0) {
-          // Still have steps left
+          return next
+        case 'border-step':
           setBorderPeek(bp => bp ? { ...bp, stepsLeft: bp.stepsLeft - 1 } : null)
-          setBorderMessage(borderPeek.stepsLeft === 1
-            ? `Last step in ${borderPeek.state}! Turning back...`
-            : `${borderPeek.stepsLeft - 1} step${borderPeek.stepsLeft - 1 !== 1 ? 's' : ''} left in ${borderPeek.state}.`)
+          setBorderMessage(ev.message)
           setTimeout(() => setBorderMessage(null), 2000)
-          return { ...prev, player: { ...prev.player, x: newX, y: newY } }
-        } else {
-          // Out of steps — teleport back to California
-          const rx = borderPeek.returnX, ry = borderPeek.returnY
+          return next
+        case 'border-return':
           setBorderPeek(null)
-          setBorderMessage(`Back in California! Your journey continues in the Golden State.`)
+          setBorderMessage(ev.message)
           setTimeout(() => setBorderMessage(null), 3000)
-          return { ...prev, player: { ...prev.player, x: rx, y: ry } }
-        }
-      }
-
-      // If returning to CA from a border peek, clear the peek state
-      if (borderPeek && !tile.borderState) {
-        setBorderPeek(null)
-      }
-
-      if (!tile.isWalkable) return prev
-
-      // Track step stats & daily challenges
-      setDailyState(ds => updateChallengeProgress(ds, 'steps'))
-      setPlayerStats(ps => {
-        const newBiomes = ps.uniqueBiomesVisited.includes(tile.biome)
-          ? ps.uniqueBiomesVisited
-          : [...ps.uniqueBiomesVisited, tile.biome]
-        const sub = tile.subregion || ''
-        const newSubs = sub && !ps.uniqueSubregionsVisited.includes(sub)
-          ? [...ps.uniqueSubregionsVisited, sub]
-          : ps.uniqueSubregionsVisited
-        return { ...ps, totalStepsWalked: ps.totalStepsWalked + 1, uniqueBiomesVisited: newBiomes, uniqueSubregionsVisited: newSubs }
-      })
-
-      // Reveal nearby tiles on minimap (5-tile radius)
-      setExploredTiles(prev => {
-        const next = new Set(prev)
-        const revealR = 5
-        let changed = false
-        for (let ry = -revealR; ry <= revealR; ry++) {
-          for (let rx = -revealR; rx <= revealR; rx++) {
-            if (rx * rx + ry * ry > revealR * revealR) continue
-            const key = `${newX + rx},${newY + ry}`
-            if (!next.has(key)) { next.add(key); changed = true }
+          return next
+        case 'moved': {
+          if (ev.clearBorderPeek) setBorderPeek(null)
+          setDailyState(ds => updateChallengeProgress(ds, 'steps'))
+          setPlayerStats(ps => recordStepStats(ps, ev.tile))
+          setExploredTiles(explored => {
+            const { next: revealed, changed } = revealTiles(explored, next.player.x, next.player.y)
+            if (!changed) return explored
+            // Persist periodically (every ~20 new tiles)
+            if (revealed.size % 20 < 5) saveExplored(revealed, activeSlot)
+            return revealed
+          })
+          if (ev.sfxStep) SFX.step()
+          if (ev.enteredNewSubregion) {
+            setDailyState(ds => updateChallengeProgress(ds, 'explore'))
+            if (ev.enteredNewBiome) {
+              triggerTutorial('new_biome', `You entered ${ev.tile.biome.replace('_', ' ')} terrain. Different biomes have different creatures!`)
+            }
           }
-        }
-        if (changed) {
-          // Persist periodically (every ~20 new tiles)
-          if (next.size % 20 < 5) {
-            saveExplored(next, activeSlot)
-          }
+          if (ev.weatherChangedAt !== null) lastWeatherChange.current = ev.weatherChangedAt
+          if (ev.encounter) SFX.battleStart()
+          if (ev.lunarBoss) { lunarBossTriggeredRef.current = next.gameDay ?? 0; setLunarBoss(ev.lunarBoss) }
+          if (ev.shadowBoss) { shadowBossTriggeredRef.current = next.gameDay ?? 0; setShadowBoss(ev.shadowBoss) }
+          if (ev.trainer) setPendingTrainer(ev.trainer)
           return next
         }
-        return prev
-      })
-
-      if (Math.random() < 0.3) SFX.step()
-
-      const newJournal = updateJournal(prev.player.journal, tile.subregion || '', tile.biome, prev.currentSubregion)
-
-      // Track explore challenge when entering new tile
-      if (tile.subregion && tile.subregion !== prev.currentSubregion) {
-        setDailyState(ds => updateChallengeProgress(ds, 'explore'))
-        if (tile.biome !== prev.currentBiome) {
-          triggerTutorial('new_biome', `You entered ${tile.biome.replace('_', ' ')} terrain. Different biomes have different creatures!`)
-        }
       }
-
-      // Advance game clock
-      const timeUpdate = advanceTime(prev.gameMinutes, 3)
-      // Detect day wrap (clock went backward = new day rollover)
-      const dayWrapped = timeUpdate.gameMinutes < prev.gameMinutes
-      const newGameDay = (prev.gameDay ?? 0) + (dayWrapped ? 1 : 0)
-
-      // Weather changes roughly every 60 game-minutes
-      let newWeather = prev.weather
-      if (Math.abs(timeUpdate.gameMinutes - lastWeatherChange.current) > 60 || timeUpdate.gameMinutes < lastWeatherChange.current) {
-        newWeather = rollWeather(prev.weather, tile.biome, newGameDay)
-        lastWeatherChange.current = timeUpdate.gameMinutes
-      }
-
-      // Track weather in almanac
-      let newAlmanac = prev.weatherAlmanac
-      if (newWeather !== prev.weather) {
-        newAlmanac = { ...(prev.weatherAlmanac ?? {}), [newWeather]: ((prev.weatherAlmanac ?? {})[newWeather] ?? 0) + 1 } as GameState['weatherAlmanac']
-      }
-
-      // Track landmark visits (within 2 tiles)
-      let newVisitedLandmarks = prev.visitedLandmarks
-      const nearbyLandmark = getNearbyLandmark(newX, newY)
-      if (nearbyLandmark && !(prev.visitedLandmarks ?? []).includes(nearbyLandmark.name)) {
-        newVisitedLandmarks = [...(prev.visitedLandmarks ?? []), nearbyLandmark.name]
-      }
-
-      const newState: GameState = {
-        ...prev,
-        player: { ...prev.player, x: newX, y: newY, journal: newJournal },
-        currentBiome: tile.biome,
-        currentSubregion: tile.subregion || '',
-        encounterCooldown: Math.max(0, prev.encounterCooldown - 1),
-        timeOfDay: timeUpdate.timeOfDay,
-        gameMinutes: timeUpdate.gameMinutes,
-        gameDay: newGameDay,
-        weather: newWeather,
-        weatherAlmanac: newAlmanac,
-        visitedLandmarks: newVisitedLandmarks,
-      }
-
-      // Migration herd encounter check
-      if (newState.encounterCooldown <= 0 && newState.player.team.length > 0) {
-        const herd = checkHerdEncounter(newX, newY, timeUpdate.gameMinutes, timeUpdate.timeOfDay)
-        if (herd) {
-          const herdCreature = ALL_CREATURES.find(c => c.id === herd.creatureId)
-          if (herdCreature) {
-            SFX.battleStart()
-            const newCatalog = [...new Set([...newState.player.catalog, herdCreature.id])]
-            return {
-              ...newState,
-              screen: 'encounter' as const,
-              battle: {
-                active: true,
-                wildCreature: herdCreature,
-                playerCreature: newState.player.team[0],
-                turn: 'player' as const,
-                log: [`A migrating ${herd.name} crosses your path! A ${herdCreature.name} faces you!`],
-                captureChance: 0.5,
-              },
-              encounterCooldown: 8,
-              player: { ...newState.player, catalog: newCatalog },
-            }
-          }
-        }
-      }
-
-      // Lunar boss check — full moon + night + not already triggered this game day
-      if (
-        newState.encounterCooldown <= 0 &&
-        tile.biome !== 'water' &&
-        timeUpdate.timeOfDay === 'night' &&
-        isFullMoon(newState.gameDay ?? 0) &&
-        lunarBossTriggeredRef.current !== (newState.gameDay ?? 0) &&
-        newState.player.team.length > 0 &&
-        Math.random() < 0.12
-      ) {
-        const boss = getLunarBoss(tile.biome, tile.subregion)
-        if (boss) {
-          lunarBossTriggeredRef.current = newState.gameDay ?? 0
-          setLunarBoss(boss)
-          return { ...newState, encounterCooldown: 8 }
-        }
-      }
-
-      // Shadow boss check — new moon + night
-      if (
-        newState.encounterCooldown <= 0 &&
-        tile.biome !== 'water' &&
-        timeUpdate.timeOfDay === 'night' &&
-        isNewMoon(newState.gameDay ?? 0) &&
-        shadowBossTriggeredRef.current !== (newState.gameDay ?? 0) &&
-        newState.player.team.length > 0 &&
-        Math.random() < 0.12
-      ) {
-        const boss = getShadowBoss(tile.biome, tile.subregion)
-        if (boss) {
-          shadowBossTriggeredRef.current = newState.gameDay ?? 0
-          setShadowBoss(boss)
-          return { ...newState, encounterCooldown: 8 }
-        }
-      }
-
-      // Random encounter check
-      if (newState.encounterCooldown <= 0 && tile.biome !== 'water') {
-        const encounterRoll = Math.random()
-        const encounterChance = tile.hasCreature ? 0.25 : 0.08
-
-        if (encounterRoll < encounterChance) {
-          let creature = getRandomEncounter(tile.biome, tile.subregion, timeUpdate.timeOfDay, newWeather, newState.gameDay, { x: newState.player.x, y: newState.player.y })
-          if (creature && newState.player.team.length > 0) {
-            // Roll for alpha (5%) or shiny (1/200) variants
-            const alphaRoll = Math.random()
-            const shinyRoll = Math.random()
-            const isAlpha = alphaRoll < 0.05
-            const isShiny = shinyRoll < 0.005
-            if (isAlpha || isShiny) {
-              creature = {
-                ...creature,
-                isAlpha,
-                isShiny,
-                name: isAlpha ? `Alpha ${creature.name}` : creature.name,
-                stats: isAlpha ? {
-                  hp: Math.floor(creature.stats.hp * 1.5),
-                  maxHp: Math.floor(creature.stats.maxHp * 1.5),
-                  attack: Math.floor(creature.stats.attack * 1.4),
-                  defense: Math.floor(creature.stats.defense * 1.3),
-                  speed: Math.floor(creature.stats.speed * 1.2),
-                } : creature.stats,
-              } as typeof creature
-            }
-            SFX.battleStart()
-            const newCatalog = [...new Set([...newState.player.catalog, creature.id])]
-            const subregion = tile.subregion || ''
-            const journalWithCreature = { ...newState.player.journal }
-            if (subregion && journalWithCreature[subregion]) {
-              const entry = journalWithCreature[subregion]
-              if (!entry.creaturesEncountered.includes(creature.id)) {
-                journalWithCreature[subregion] = {
-                  ...entry,
-                  creaturesEncountered: [...entry.creaturesEncountered, creature.id],
-                }
-              }
-            }
-            return {
-              ...newState,
-              player: { ...newState.player, catalog: newCatalog, journal: journalWithCreature },
-              screen: 'encounter' as const,
-              battle: {
-                active: true,
-                wildCreature: creature,
-                playerCreature: newState.player.team[0],
-                turn: 'player' as const,
-                log: [],
-                captureChance: 0,
-              },
-              encounterCooldown: 5,
-            }
-          }
-        }
-
-        // Roaming trainer encounter (3% chance, separate from creature encounters)
-        if (Math.random() < 0.03) {
-          const trainer = rollTrainerEncounter(tile.biome, newState.player.level, defeatedTrainers)
-          if (trainer && newState.player.team.length > 0) {
-            setPendingTrainer(trainer)
-            return {
-              ...newState,
-              screen: 'trainer_encounter' as const,
-              encounterCooldown: 10,
-            }
-          }
-        }
-      }
-
-      return newState
     })
-  }, [map, updateJournal, defeatedTrainers, triggerTutorial])
+  }, [map, defeatedTrainers, triggerTutorial, borderPeek, activeSlot])
 
   // When encounter starts, roll mood and encounter type
   useEffect(() => {
@@ -693,11 +455,7 @@ export default function Game() {
     setBoatAnimating(true)
     SFX.step()
     setTimeout(() => {
-      setGameState(prev => ({
-        ...prev,
-        player: { ...prev.player, x: nearbyDock.destX, y: nearbyDock.destY },
-        currentSubregion: nearbyDock.destinationName,
-      }))
+      setGameState(prev => boatTravel(prev, nearbyDock))
       setBoatAnimating(false)
 
       // Trigger Alcatraz Escape quest when arriving on Alcatraz
@@ -1294,27 +1052,9 @@ export default function Game() {
     setBoatAnimating(true)
     SFX.step()
     setTimeout(() => {
-      setGameState(prev => {
-        const tile = map[y]?.[x]
-        return {
-          ...prev,
-          player: { ...prev.player, x, y },
-          currentSubregion: subregion,
-          currentBiome: tile?.biome ?? prev.currentBiome,
-        }
-      })
+      setGameState(prev => fastTravel(prev, map, x, y, subregion))
       // Reveal tiles around destination
-      setExploredTiles(prev => {
-        const next = new Set(prev)
-        const revealR = 5
-        for (let ry = -revealR; ry <= revealR; ry++) {
-          for (let rx = -revealR; rx <= revealR; rx++) {
-            if (rx * rx + ry * ry > revealR * revealR) continue
-            next.add(`${x + rx},${y + ry}`)
-          }
-        }
-        return next
-      })
+      setExploredTiles(prev => revealTiles(prev, x, y).next)
       setBoatAnimating(false)
     }, 1500)
   }, [map, exploredTiles, playerStats.uniqueSubregionsVisited])
@@ -1350,19 +1090,7 @@ export default function Game() {
   }, [])
 
   const handleSelectStarter = useCallback((creature: CapturedCreature) => {
-    const tile = map[gameState.player.y]?.[gameState.player.x]
-    setGameState(prev => ({
-      ...prev,
-      screen: 'world',
-      player: {
-        ...prev.player,
-        team: [{ ...creature, happiness: 70 }],
-        catalog: [creature.id],
-        captured: [creature.id],
-      },
-      currentBiome: tile?.biome ?? 'grassland',
-      currentSubregion: tile?.subregion ?? '',
-    }))
+    setGameState(prev => selectStarter(prev, map, creature))
   }, [map])
 
   useEffect(() => {
