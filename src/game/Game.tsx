@@ -29,6 +29,9 @@ import { acceptQuest, claimQuestReward } from './features/quests/logic'
 import { applyTrade, importCreature, removeTeamMember } from './features/trade/logic'
 import { applyCraft } from './features/crafting/logic'
 import { swapLead, teachMove, learnAbility, manualEvolve, releaseFromTeam, swapFromReserve, adoptFromReserve, releaseFromReserve } from './features/team/logic'
+import { startBreeding, hatchCreature, cancelBreeding } from './features/breeding/logic'
+import { applyFishCatch, startDiveEncounter, applyDiveCollect } from './features/minigames/logic'
+import { challengeBoss, startAlcatrazBattle, applyAlcatrazComplete, applyFusion } from './features/bosses/logic'
 import { BiokeaLeaderboardPrompt } from '@/components/BiokeaLeaderboardPrompt'
 import { reportCreatureEncountered } from '@/lib/golden-sample'
 import type { SaveSlotIndex } from './gameState'
@@ -946,22 +949,9 @@ export default function Game() {
   const handleBossChallenge = useCallback(() => {
     if (!lunarBoss) return
     SFX.battleStart()
-    const newCatalog = [...new Set([...gameState.player.catalog, lunarBoss.id])]
-    setGameState(prev => ({
-      ...prev,
-      player: { ...prev.player, catalog: newCatalog },
-      screen: 'encounter' as const,
-      battle: {
-        active: true,
-        wildCreature: lunarBoss,
-        playerCreature: prev.player.team[0],
-        turn: 'player' as const,
-        log: [],
-        captureChance: 0,
-      },
-    }))
+    setGameState(prev => challengeBoss(prev, lunarBoss))
     setLunarBoss(null)
-  }, [lunarBoss, gameState.player.catalog])
+  }, [lunarBoss])
 
   const handleBossFlee = useCallback(() => {
     SFX.flee()
@@ -972,22 +962,9 @@ export default function Game() {
   const handleShadowBossChallenge = useCallback(() => {
     if (!shadowBoss) return
     SFX.battleStart()
-    const newCatalog = [...new Set([...gameState.player.catalog, shadowBoss.id])]
-    setGameState(prev => ({
-      ...prev,
-      player: { ...prev.player, catalog: newCatalog },
-      screen: 'encounter' as const,
-      battle: {
-        active: true,
-        wildCreature: shadowBoss,
-        playerCreature: prev.player.team[0],
-        turn: 'player' as const,
-        log: [],
-        captureChance: 0,
-      },
-    }))
+    setGameState(prev => challengeBoss(prev, shadowBoss))
     setShadowBoss(null)
-  }, [shadowBoss, gameState.player.catalog])
+  }, [shadowBoss])
 
   const handleFriendlyGift = useCallback((gift: FriendlyGift) => {
     setGameState(prev => applyFriendlyGift(prev, gift))
@@ -1181,29 +1158,17 @@ export default function Game() {
 
   // Breeding handlers
   const handleStartBreeding = useCallback((slot: BreedingSlot, _idx1: number, _idx2: number) => {
-    setGameState(prev => ({ ...prev, player: { ...prev.player, nursery: slot } }))
+    setGameState(prev => startBreeding(prev, slot))
   }, [])
 
   const handleHatchCreature = useCallback((creature: CapturedCreature) => {
     SFX.hatch()
     setPlayerStats(ps => ({ ...ps, totalBreedsCompleted: ps.totalBreedsCompleted + 1 }))
-    setGameState(prev => {
-      if (prev.player.team.length >= 6) return prev
-      return {
-        ...prev,
-        player: {
-          ...prev.player,
-          team: [...prev.player.team, creature],
-          catalog: [...new Set([...prev.player.catalog, creature.id])],
-          captured: [...new Set([...prev.player.captured, creature.id])],
-          nursery: null,
-        },
-      }
-    })
+    setGameState(prev => hatchCreature(prev, creature))
   }, [])
 
   const handleCancelBreeding = useCallback(() => {
-    setGameState(prev => ({ ...prev, player: { ...prev.player, nursery: null } }))
+    setGameState(prev => cancelBreeding(prev))
   }, [])
 
   const handleFishCatch = useCallback((fish: FishDef) => {
@@ -1211,16 +1176,7 @@ export default function Game() {
     setPlayerStats(ps => ({ ...ps, totalFishCaught: (ps.totalFishCaught ?? 0) + 1 }))
     setDailyState(ds => updateChallengeProgress(ds, 'fish'))
     setFishLog(prev => [...new Set([...prev, fish.id])])
-    setGameState(prev => {
-      let newXp = prev.player.xp + fish.xpReward
-      let newLevel = prev.player.level
-      let newMaxXp = prev.player.maxXp
-      while (newXp >= newMaxXp) { newXp -= newMaxXp; newLevel++; newMaxXp = Math.floor(newMaxXp * 1.3) }
-      return {
-        ...prev,
-        player: { ...prev.player, xp: newXp, level: newLevel, maxXp: newMaxXp, coins: (prev.player.coins ?? 0) + fish.xpReward },
-      }
-    })
+    setGameState(prev => applyFishCatch(prev, fish))
   }, [])
 
   // Accept trainer challenge → go to ranger battle
@@ -1306,18 +1262,7 @@ export default function Game() {
 
   // Alcatraz escape handlers
   const handleAlcatrazBattle = useCallback((creature: Creature) => {
-    setGameState(prev => ({
-      ...prev,
-      screen: 'battle' as const,
-      battle: {
-        active: true,
-        wildCreature: creature,
-        playerCreature: prev.player.team[0],
-        turn: 'player' as const,
-        log: [],
-        captureChance: 0,
-      },
-    }))
+    setGameState(prev => startAlcatrazBattle(prev, creature))
   }, [])
 
   const handleAlcatrazComplete = useCallback((rewards: { xp: number; item?: { id: string; name: string; type: 'capture' | 'heal' | 'boost' | 'material'; quantity: number; description: string; sprite: string } }) => {
@@ -1325,68 +1270,21 @@ export default function Game() {
     setAlcatrazCompleted(true)
     try { localStorage.setItem('bioquest-bay-alcatraz-escaped', 'true') } catch { /* ignore */ }
     setPlayerStats(ps => ({ ...ps, totalBattlesWon: ps.totalBattlesWon + 1 }))
-    setGameState(prev => {
-      let newXp = prev.player.xp + rewards.xp
-      let newLevel = prev.player.level
-      let newMaxXp = prev.player.maxXp
-      while (newXp >= newMaxXp) { newXp -= newMaxXp; newLevel++; newMaxXp = Math.floor(newMaxXp * 1.3) }
-      const newInventory = [...prev.player.inventory]
-      if (rewards.item) {
-        const existing = newInventory.find(i => i.id === rewards.item!.id)
-        if (existing) { existing.quantity += rewards.item.quantity }
-        else { newInventory.push({ ...rewards.item }) }
-      }
-      return {
-        ...prev,
-        screen: 'world',
-        player: { ...prev.player, xp: newXp, level: newLevel, maxXp: newMaxXp, inventory: newInventory },
-      }
-    })
+    setGameState(prev => applyAlcatrazComplete(prev, rewards))
   }, [])
 
   // Fusion handler
   const handleFusion = useCallback((idx1: number, idx2: number, result: CapturedCreature) => {
-    setGameState(prev => {
-      const newTeam = prev.player.team.filter((_, i) => i !== idx1 && i !== idx2)
-      newTeam.push(result)
-      const newCaptured = prev.player.captured.includes(result.id)
-        ? prev.player.captured : [...prev.player.captured, result.id]
-      const newCatalog = prev.player.catalog.includes(result.id)
-        ? prev.player.catalog : [...prev.player.catalog, result.id]
-      return {
-        ...prev,
-        screen: 'world' as const,
-        player: { ...prev.player, team: newTeam, captured: newCaptured, catalog: newCatalog },
-      }
-    })
+    setGameState(prev => applyFusion(prev, idx1, idx2, result))
   }, [])
 
   // Diving handlers
   const handleDiveEncounter = useCallback((creature: Creature) => {
-    setGameState(prev => {
-      if (!prev.player.team[0]) return prev
-      return {
-        ...prev,
-        screen: 'battle' as const,
-        battle: {
-          active: true,
-          wildCreature: creature,
-          playerCreature: prev.player.team[0],
-          turn: 'player' as const,
-        log: [],
-        captureChance: 0,
-      },
-    }})
+    setGameState(prev => startDiveEncounter(prev, creature))
   }, [])
 
   const handleDiveCollect = useCallback((item: { id: string; name: string; type: 'material' | 'heal'; quantity: number; description: string; sprite: string }) => {
-    setGameState(prev => {
-      const newInventory = [...prev.player.inventory]
-      const existing = newInventory.find(i => i.id === item.id)
-      if (existing) { existing.quantity += item.quantity }
-      else { newInventory.push({ ...item, sprite: item.sprite || '📦', description: item.description }) }
-      return { ...prev, player: { ...prev.player, inventory: newInventory } }
-    })
+    setGameState(prev => applyDiveCollect(prev, item))
   }, [])
 
   const handleFastTravel = useCallback((x: number, y: number, subregion: string) => {
