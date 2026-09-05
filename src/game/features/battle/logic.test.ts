@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { applyBattleWin, applyBattleLose, endBattle, applyUseItem, applyBattleSwitch, applyFriendlyGift, makeBattle } from './logic'
+import { applyBattleWin, applyBattleLose, endBattle, applyUseItem, applyBattleSwitch, applyFriendlyGift } from './logic'
+import { makeBattle } from '@/game/features/progression/logic'
 import { makeState, makeCaptured, makeCreature } from '@/test/fixtures'
 import { LUNAR_BOSSES } from '@/game/creatures'
 

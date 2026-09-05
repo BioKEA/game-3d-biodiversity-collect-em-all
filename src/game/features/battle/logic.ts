@@ -1,14 +1,10 @@
-import type { BattleState, CapturedCreature, Creature, GameState } from '@/types/game'
+import type { CapturedCreature, GameState } from '@/types/game'
 import type { FriendlyGift } from '@/game/encounterSystem'
 import { ALL_CREATURES } from '@/game/creatures'
 import { getEvolutionTarget } from '@/game/evolutions'
 import { rollMaterialDrops, MATERIALS } from '@/game/crafting'
 import { EMPTY_BATTLE, applyPlayerXp, awardTeamXp, halveTeamHp, addToInventory, incrementIfPresent, type EvolutionData } from '@/game/features/progression/logic'
 import { BOSS_IDS, recordBossDefeat } from '@/game/features/bosses/logic'
-
-export function makeBattle(creature: Creature, lead: CapturedCreature, log: string[] = [], captureChance = 0): BattleState {
-  return { active: true, wildCreature: creature, playerCreature: lead, turn: 'player', log, captureChance }
-}
 
 export interface EvolveReadyHint { name: string; sprite: string; toName: string; gap: number }
 export interface BattleWinResult {

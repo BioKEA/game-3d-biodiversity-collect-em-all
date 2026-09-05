@@ -1,7 +1,6 @@
 import type { BossDefeat, CapturedCreature, Creature, GameState, InventoryItem } from '@/types/game'
 import { LUNAR_BOSSES, SHADOW_BOSSES } from '@/game/creatures'
-import { applyPlayerXp, addToInventory } from '@/game/features/progression/logic'
-import { makeBattle } from '@/game/features/battle/logic'
+import { applyPlayerXp, addToInventory, makeBattle } from '@/game/features/progression/logic'
 
 export const BOSS_IDS = new Set([...LUNAR_BOSSES.map(b => b.id), ...SHADOW_BOSSES.map(b => b.id)])
 
@@ -19,12 +18,12 @@ export function challengeBoss(state: GameState, boss: Creature): GameState {
     ...state,
     player: { ...state.player, catalog: [...new Set([...state.player.catalog, boss.id])] },
     screen: 'encounter',
-    battle: makeBattle(boss, state.player.team[0] as CapturedCreature),
+    battle: makeBattle(boss, state.player.team[0]),
   }
 }
 
 export function startAlcatrazBattle(state: GameState, creature: Creature): GameState {
-  return { ...state, screen: 'battle', battle: makeBattle(creature, state.player.team[0] as CapturedCreature) }
+  return { ...state, screen: 'battle', battle: makeBattle(creature, state.player.team[0]) }
 }
 
 export function applyAlcatrazComplete(state: GameState, rewards: { xp: number; item?: InventoryItem }): GameState {

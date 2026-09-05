@@ -1,6 +1,5 @@
 import type { Creature, GameState } from '@/types/game'
-import { applyPlayerXp, addToInventory } from '@/game/features/progression/logic'
-import { makeBattle } from '@/game/features/battle/logic'
+import { applyPlayerXp, addToInventory, makeBattle } from '@/game/features/progression/logic'
 
 export function applyFishCatch(state: GameState, fish: { xpReward: number }): GameState {
   const { player } = applyPlayerXp(state.player, fish.xpReward)

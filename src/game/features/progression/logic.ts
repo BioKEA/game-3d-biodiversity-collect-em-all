@@ -1,10 +1,14 @@
-import type { BattleState, CapturedCreature, CreatureStats, InventoryItem, MapTile, PlayerState } from '@/types/game'
+import type { BattleState, CapturedCreature, Creature, CreatureStats, InventoryItem, MapTile, PlayerState } from '@/types/game'
 import type { PlayerStats } from '@/game/achievements'
 import { adjustHappiness, BATTLE_WIN_LEAD_GAIN, BATTLE_WIN_BENCH_GAIN, LEVEL_UP_GAIN } from '@/game/happiness'
 import { getEvolution, evolveCreature } from '@/game/evolutions'
 
 export const EMPTY_BATTLE: BattleState = {
   active: false, wildCreature: null, playerCreature: null, turn: 'player', log: [], captureChance: 0,
+}
+
+export function makeBattle(creature: Creature, lead: CapturedCreature, log: string[] = [], captureChance = 0): BattleState {
+  return { active: true, wildCreature: creature, playerCreature: lead, turn: 'player', log, captureChance }
 }
 
 export function applyPlayerXp(player: PlayerState, xpGained: number) {
