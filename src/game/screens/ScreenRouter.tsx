@@ -22,6 +22,13 @@ import SurfingScreenWrapper from './SurfingScreenWrapper'
 import BoardwalkScreenWrapper from './BoardwalkScreenWrapper'
 import AlcatrazScreenWrapper from './AlcatrazScreenWrapper'
 import InventoryScreenWrapper from './InventoryScreenWrapper'
+import EncounterScreenWrapper from './EncounterScreenWrapper'
+import BattleScreenWrapper from './BattleScreenWrapper'
+import RangerScreenWrapper from './RangerScreenWrapper'
+import RangerBattleScreenWrapper from './RangerBattleScreenWrapper'
+import TrainerEncounterScreenWrapper from './TrainerEncounterScreenWrapper'
+import TitleScreenWrapper from './TitleScreenWrapper'
+import StarterScreenWrapper from './StarterScreenWrapper'
 
 export default function ScreenRouter() {
   const { gameState } = useGameState()
@@ -49,6 +56,13 @@ export default function ScreenRouter() {
     case 'boardwalk': return <BoardwalkScreenWrapper />
     case 'alcatraz_escape': return <AlcatrazScreenWrapper />
     case 'inventory': return <InventoryScreenWrapper />
+    case 'encounter': return <EncounterScreenWrapper />
+    case 'battle': return <BattleScreenWrapper />
+    case 'ranger': return <RangerScreenWrapper />
+    case 'ranger_battle': return <RangerBattleScreenWrapper />
+    case 'trainer_encounter': return <TrainerEncounterScreenWrapper />
+    case 'title': return <TitleScreenWrapper />
+    case 'starter': return <StarterScreenWrapper />
     default: return null
   }
 }

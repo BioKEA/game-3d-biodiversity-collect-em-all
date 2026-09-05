@@ -48,26 +48,19 @@ import {
   type FriendlyGift, type Personality,
 } from './encounterSystem'
 import IsometricRenderer from './IsometricRenderer'
-import BattleScreen from './BattleScreen'
-import TitleScreen from './TitleScreen'
-import StarterSelect from './StarterSelect'
 import GameHUD from './GameHUD'
 import Minimap from './Minimap'
-import RangerDialog from './RangerDialog'
 import EvolutionScreen from './EvolutionScreen'
 import { createInitialStats, getNewAchievements, getUnlockedAchievements, type PlayerStats } from './achievements'
 import MigrationCalendar from './MigrationCalendar'
 import BiomeFieldNotesPanel from './BiomeFieldNotesPanel'
-import EncounterTransition from './EncounterTransition'
 import QuestTracker from './QuestTracker'
 import type { FishDef } from './FishingScreen'
-import RangerBattleScreen from './RangerBattleScreen'
 import ChampionScreen from './ChampionScreen'
 import { getLandmarkAt, LANDMARK_INFO } from './landmarks'
 import { FINAL_BOSS_ID, GRAND_CHAMPION_ID, canChallengeGrandChampion } from './rangers'
 import WorldEventBanner, { useWorldEvents } from './WorldEvents'
 import { SFX, Music } from './sounds'
-import TrainerEncounter from './TrainerEncounter'
 import { type RoamingTrainer } from './roamingTrainers'
 import ScreenRouter from './screens/ScreenRouter'
 import type { EscapeStage } from './AlcatrazEscape'
@@ -1153,29 +1146,13 @@ export default function Game() {
     setAlcatrazStage, setAlcatrazCellProgress, setAlcatrazEscapeActive, setBayDexAck,
   ])
 
-  // Title screen
-  if (gameState.screen === 'title') {
+  // Title / starter selection screens — render before the world canvas, HUD
+  // and world effects mount so they never appear behind these screens.
+  if (gameState.screen === 'title' || gameState.screen === 'starter') {
     return (
       <GameStateContext.Provider value={stateValue}>
       <GameActionsContext.Provider value={actions}>
-      <TitleScreen
-        onLoadSlot={handleLoadSlot}
-        onNewGame={handleNewGame}
-        onDeleteSlot={handleDeleteSlot}
-      />
-      </GameActionsContext.Provider>
-      </GameStateContext.Provider>
-    )
-  }
-
-  // Starter selection screen
-  if (gameState.screen === 'starter') {
-    return (
-      <GameStateContext.Provider value={stateValue}>
-      <GameActionsContext.Provider value={actions}>
-      <StarterSelect
-        onSelect={handleSelectStarter}
-      />
+      <ScreenRouter />
       </GameActionsContext.Provider>
       </GameStateContext.Provider>
     )
@@ -1571,40 +1548,6 @@ export default function Game() {
         )
       })()}
 
-      {/* Encounter transition */}
-      {gameState.screen === 'encounter' && gameState.battle.wildCreature && (
-        <EncounterTransition
-          creature={gameState.battle.wildCreature}
-          biome={gameState.currentBiome}
-          timeOfDay={gameState.timeOfDay}
-          onComplete={handleEncounterComplete}
-        />
-      )}
-
-      {/* Battle overlay */}
-      {gameState.screen === 'battle' && gameState.battle.wildCreature && gameState.player.team[0] && (
-        <BattleScreen
-          wildCreature={gameState.battle.wildCreature}
-          playerCreature={gameState.player.team[0]}
-          team={gameState.player.team}
-          inventory={gameState.player.inventory}
-          weather={gameState.weather}
-          timeOfDay={gameState.timeOfDay}
-          mood={encounterMood}
-          encounterType={encounterType}
-          onWin={handleBattleWin}
-          onLose={handleBattleLose}
-          onCapture={handleCapture}
-          onFlee={handleFlee}
-          onUseItem={handleUseItem}
-          onSwitch={handleBattleSwitch}
-          onFriendlyGift={handleFriendlyGift}
-          onCreatureFled={handleCreatureFled}
-          biome={gameState.currentBiome}
-          subregion={gameState.currentSubregion}
-        />
-      )}
-
       <ScreenRouter />
 
       {/* Interaction prompts — priority matches the Space-key handler:
@@ -1812,92 +1755,6 @@ export default function Game() {
             </div>
           </div>
         </div>
-      )}
-
-      {gameState.screen === 'ranger' && gameState.activeRangerId && (() => {
-        const ranger = RANGERS.find(r => r.id === gameState.activeRangerId)
-        if (!ranger) return null
-        const isTutorial = showTutorialDialog && ranger.id === 'ranger-golden-gate'
-        return (
-          <RangerDialog
-            ranger={ranger} questProgress={gameState.questProgress} player={gameState.player}
-            onClose={() => {
-              setShowTutorialDialog(false)
-              setGameState(prev => ({ ...prev, screen: 'world', activeRangerId: null }))
-            }}
-            onAcceptQuest={handleAcceptQuest} onClaimReward={handleClaimReward} onTrade={handleTrade}
-            onChallenge={ranger.battleTeam ? () => handleStartRangerBattle(ranger.id) : undefined}
-            defeated={(playerStats.defeatedRangers ?? []).includes(ranger.id)}
-            defeatedRangers={playerStats.defeatedRangers ?? []}
-            subregionsVisited={playerStats.uniqueSubregionsVisited ?? []}
-            timeOfDay={gameState.timeOfDay}
-            isTutorial={isTutorial}
-            starterName={isTutorial ? gameState.player.team[0]?.name : undefined}
-            onTutorialComplete={isTutorial ? () => {
-              setShowTutorialDialog(false)
-              handleAcceptQuest('tutorial-first-catch')
-              setTimeout(() => {
-                triggerTutorial('move_hint', 'Use arrow keys or WASD to explore. Follow the paw prints!')
-              }, 500)
-            } : undefined}
-          />
-        )
-      })()}
-
-      {gameState.screen === 'ranger_battle' && gameState.activeRangerId && (() => {
-        // Check if this is a roaming trainer or a regular ranger
-        const ranger = RANGERS.find(r => r.id === gameState.activeRangerId)
-        if (ranger && ranger.battleTeam) {
-          return (
-            <RangerBattleScreen
-              ranger={ranger}
-              playerTeam={gameState.player.team}
-              weather={gameState.weather}
-              timeOfDay={gameState.timeOfDay}
-              onWin={handleRangerBattleWin}
-              onLose={handleRangerBattleLose}
-              onClose={handleRangerBattleClose}
-            />
-          )
-        }
-        // Roaming trainer battle
-        if (pendingTrainer) {
-          const trainerAsRanger = {
-            id: pendingTrainer.id,
-            name: pendingTrainer.name,
-            title: pendingTrainer.title,
-            greeting: pendingTrainer.quote,
-            sprite: pendingTrainer.sprite,
-            x: 0, y: 0,
-            subregion: '',
-            quests: [],
-            trades: [],
-            battleTeam: pendingTrainer.team,
-            battleQuote: pendingTrainer.quote,
-            defeatQuote: pendingTrainer.defeatQuote,
-            battleReward: { xp: pendingTrainer.rewardXp },
-          } satisfies import('@/types/game').Ranger
-          return (
-            <RangerBattleScreen
-              ranger={trainerAsRanger}
-              playerTeam={gameState.player.team}
-              weather={gameState.weather}
-              timeOfDay={gameState.timeOfDay}
-              onWin={handleTrainerBattleWin}
-              onLose={() => { handleRangerBattleLose(); setPendingTrainer(null) }}
-              onClose={() => { handleRangerBattleClose(); setPendingTrainer(null) }}
-            />
-          )
-        }
-        return null
-      })()}
-
-      {gameState.screen === 'trainer_encounter' && pendingTrainer && (
-        <TrainerEncounter
-          trainer={pendingTrainer}
-          onAccept={handleAcceptTrainer}
-          onDecline={handleDeclineTrainer}
-        />
       )}
 
       {pendingEvolution && (
