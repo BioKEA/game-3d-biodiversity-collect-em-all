@@ -28,6 +28,7 @@ import { recordRangerDefeat } from './features/progression/logic'
 import { acceptQuest, claimQuestReward } from './features/quests/logic'
 import { applyTrade, importCreature, removeTeamMember } from './features/trade/logic'
 import { applyCraft } from './features/crafting/logic'
+import { swapLead, teachMove, learnAbility, manualEvolve, releaseFromTeam, swapFromReserve, adoptFromReserve, releaseFromReserve } from './features/team/logic'
 import { BiokeaLeaderboardPrompt } from '@/components/BiokeaLeaderboardPrompt'
 import { reportCreatureEncountered } from '@/lib/golden-sample'
 import type { SaveSlotIndex } from './gameState'
@@ -54,7 +55,6 @@ import TradeCenter from './TradeCenter'
 import EvolutionScreen from './EvolutionScreen'
 import BayDex from './BayDex'
 import BreedingScreen from './BreedingScreen'
-import { getEvolution, evolveCreature } from './evolutions'
 import { createInitialStats, getNewAchievements, getUnlockedAchievements, type PlayerStats } from './achievements'
 import AchievementsScreen from './AchievementsScreen'
 import QuestLog from './QuestLog'
@@ -1033,35 +1033,11 @@ export default function Game() {
   }, [])
 
   const handleTeachMove = useCallback((creatureIndex: number, updatedCreature: import('@/types/game').CapturedCreature, cost: number) => {
-    setGameState(prev => {
-      const newTeam = [...prev.player.team]
-      newTeam[creatureIndex] = updatedCreature
-      return {
-        ...prev,
-        player: {
-          ...prev.player,
-          team: newTeam,
-          coins: Math.max(0, (prev.player.coins ?? 0) - cost),
-        },
-      }
-    })
+    setGameState(prev => teachMove(prev, creatureIndex, updatedCreature, cost))
   }, [])
 
   const handleLearnAbility = useCallback((creatureIndex: number, abilityId: string, cost: number) => {
-    setGameState(prev => {
-      const newTeam = [...prev.player.team]
-      const creature = newTeam[creatureIndex]
-      if (!creature) return prev
-      newTeam[creatureIndex] = { ...creature, learnedAbility: abilityId }
-      return {
-        ...prev,
-        player: {
-          ...prev.player,
-          team: newTeam,
-          coins: Math.max(0, (prev.player.coins ?? 0) - cost),
-        },
-      }
-    })
+    setGameState(prev => learnAbility(prev, creatureIndex, abilityId, cost))
   }, [])
 
   const handleUseItem = useCallback((itemId: string) => {
@@ -1073,13 +1049,7 @@ export default function Game() {
   }, [])
 
   const handleSwapLead = useCallback((index: number) => {
-    setGameState(prev => {
-      const newTeam = [...prev.player.team]
-      const temp = newTeam[0]
-      newTeam[0] = newTeam[index]
-      newTeam[index] = temp
-      return { ...prev, player: { ...prev.player, team: newTeam } }
-    })
+    setGameState(prev => swapLead(prev, index))
   }, [])
 
   const memoizedMap = useMemo(() => map, [map])
@@ -1301,72 +1271,37 @@ export default function Game() {
   // Manual evolution from team screen
   const handleManualEvolve = useCallback((teamIndex: number) => {
     setGameState(prev => {
-      const creature = prev.player.team[teamIndex]
-      if (!creature) return prev
-      const evo = getEvolution(creature.id, creature.level)
-      if (!evo) return prev
-
-      const beforeEvo = { ...creature }
-      const evolved = evolveCreature(creature, evo)
-      const newTeam = [...prev.player.team]
-      newTeam[teamIndex] = evolved
-
-      pendingEvolutionRef.current = { from: beforeEvo, to: evolved, description: evo.description, teamIndex }
-      setPlayerStats(ps => ({ ...ps, totalEvolutions: ps.totalEvolutions + 1 }))
-      SFX.evolution()
-      setTimeout(() => {
-        if (pendingEvolutionRef.current) {
-          setPendingEvolution(pendingEvolutionRef.current)
-          pendingEvolutionRef.current = null
-        }
-      }, 100)
-
-      return {
-        ...prev,
-        player: { ...prev.player, team: newTeam },
+      const r = manualEvolve(prev, teamIndex)
+      if (r.evolution) {
+        pendingEvolutionRef.current = r.evolution
+        setPlayerStats(ps => ({ ...ps, totalEvolutions: ps.totalEvolutions + 1 }))
+        SFX.evolution()
+        setTimeout(() => {
+          if (pendingEvolutionRef.current) {
+            setPendingEvolution(pendingEvolutionRef.current)
+            pendingEvolutionRef.current = null
+          }
+        }, 100)
       }
+      return r.state
     })
   }, [])
 
   // Adoption center handlers
   const handleReleaseFromTeam = useCallback((index: number) => {
-    setGameState(prev => {
-      if (index === 0 || prev.player.team.length <= 1) return prev
-      return { ...prev, player: { ...prev.player, team: prev.player.team.filter((_, i) => i !== index) } }
-    })
+    setGameState(prev => releaseFromTeam(prev, index))
   }, [])
 
   const handleSwapFromReserve = useCallback((reserveIndex: number, teamIndex: number) => {
-    setGameState(prev => {
-      const newTeam = [...prev.player.team]
-      const newReserves = [...prev.player.reserves]
-      const swapped = newTeam[teamIndex]
-      newTeam[teamIndex] = newReserves[reserveIndex]
-      newReserves[reserveIndex] = swapped
-      return { ...prev, player: { ...prev.player, team: newTeam, reserves: newReserves } }
-    })
+    setGameState(prev => swapFromReserve(prev, reserveIndex, teamIndex))
   }, [])
 
   const handleAdoptFromReserve = useCallback((reserveIndex: number) => {
-    setGameState(prev => {
-      if (prev.player.team.length >= 6) return prev
-      const creature = prev.player.reserves[reserveIndex]
-      return {
-        ...prev,
-        player: {
-          ...prev.player,
-          team: [...prev.player.team, creature],
-          reserves: prev.player.reserves.filter((_, i) => i !== reserveIndex),
-        },
-      }
-    })
+    setGameState(prev => adoptFromReserve(prev, reserveIndex))
   }, [])
 
   const handleReleaseFromReserve = useCallback((reserveIndex: number) => {
-    setGameState(prev => ({
-      ...prev,
-      player: { ...prev.player, reserves: prev.player.reserves.filter((_, i) => i !== reserveIndex) },
-    }))
+    setGameState(prev => releaseFromReserve(prev, reserveIndex))
   }, [])
 
   // Alcatraz escape handlers
