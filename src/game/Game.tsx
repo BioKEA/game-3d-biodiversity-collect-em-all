@@ -96,6 +96,7 @@ import NightAtmosphere from './NightAtmosphere'
 import WalkParticles from './WalkParticles'
 import CreatureFootprints from './CreatureFootprints'
 import TutorialTip from './TutorialTip'
+import { exposeTestHook } from './testHook'
 import QuestRewardPopup from './QuestRewardPopup'
 import LunarBossPopup from './LunarBossPopup'
 import ShadowBossPopup from './ShadowBossPopup'
@@ -140,6 +141,9 @@ const FAST_TRAVEL_DESTINATIONS: { name: string; emoji: string; x: number; y: num
   { name: 'Mojave Basecamp', emoji: '🦅', x: 188, y: 420, region: 'Border', subregion: 'California Wilderness', description: 'Ranger Solana\'s camp, condors and Gila monsters' },
 ]
 
+// Screens that Escape should back out of, returning to the world map.
+const OVERLAY_SCREENS: GameState['screen'][] = ['catalog', 'inventory', 'journal', 'ranger', 'trade', 'baydex', 'breeding', 'questlog', 'crafting', 'fishing', 'ranger_battle', 'habitat_map', 'adoption', 'leaderboard', 'fusion', 'diving', 'bart', 'boardwalk', 'surfing', 'shop', 'daily_challenges', 'arena', 'move_tutor']
+
 export default function Game() {
   const [activeSlot, setActiveSlot] = useState<SaveSlotIndex>(1)
   const [gameState, setGameState] = useState<GameState>(() => createInitialState())
@@ -149,6 +153,14 @@ export default function Game() {
   const handleRenamePlayer = useCallback((name: string) => {
     savePlayerName(name)
     setPlayerName(name)
+  }, [])
+
+  const openScreen = useCallback((screen: GameState['screen']) => {
+    setGameState(prev => ({ ...prev, screen }))
+  }, [])
+
+  const closeOverlay = useCallback(() => {
+    setGameState(prev => OVERLAY_SCREENS.includes(prev.screen) ? { ...prev, screen: 'world', activeRangerId: null } : prev)
   }, [])
 
   // BiokeaLeaderboardPrompt at game-start when the player still has the
@@ -716,12 +728,7 @@ export default function Game() {
 
       // Allow Escape from overlay screens
       if (e.key === 'Escape') {
-        setGameState(prev => {
-          if (['catalog', 'inventory', 'journal', 'ranger', 'trade', 'baydex', 'breeding', 'questlog', 'crafting', 'fishing', 'ranger_battle', 'habitat_map', 'adoption', 'leaderboard', 'fusion', 'diving', 'bart', 'boardwalk', 'surfing', 'shop', 'daily_challenges', 'arena', 'move_tutor'].includes(prev.screen)) {
-            return { ...prev, screen: 'world', activeRangerId: null }
-          }
-          return prev
-        })
+        closeOverlay()
         return
       }
 
@@ -801,7 +808,7 @@ export default function Game() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [gameState.screen, gameState.battle.active, movePlayer, nearbyRangerId, nearbyBartStation, atSteamerLane, atBoardwalk, nearbyDock, boatAnimating, handleBoatTravel])
+  }, [gameState.screen, gameState.battle.active, movePlayer, nearbyRangerId, nearbyBartStation, atSteamerLane, atBoardwalk, nearbyDock, boatAnimating, handleBoatTravel, closeOverlay])
 
 
   // Hold-to-move for keyboard
@@ -1954,37 +1961,78 @@ export default function Game() {
     }, 1500)
   }, [map, exploredTiles, playerStats.uniqueSubregionsVisited])
 
+  const handleLoadSlot = useCallback((slot: SaveSlotIndex) => {
+    setActiveSlot(slot)
+    const saved = loadGame(slot)
+    if (saved) {
+      const loaded = { ...applyBackwardCompat(saved, map), screen: 'world' as const }
+      setGameState(loaded)
+      tutorialFlagsRef.current = new Set(loaded.tutorialFlags ?? [])
+      const stats = loadStats(slot)
+      if (stats) setPlayerStats({ ...createInitialStats(), ...stats })
+      setExploredTiles(loadExplored(slot))
+      setBayDexAck(loadBayDexAck(slot))
+    }
+  }, [map])
+
+  const handleNewGame = useCallback((slot: SaveSlotIndex) => {
+    setActiveSlot(slot)
+    clearSave(slot)
+    setExploredTiles(new Set())
+    setPlayerStats(createInitialStats())
+    tutorialFlagsRef.current = new Set()
+    setShowTutorialDialog(false)
+    const fresh = createInitialState()
+    setGameState({ ...fresh, screen: 'starter' })
+    setBayDexAck([])
+  }, [])
+
+  const handleDeleteSlot = useCallback((slot: SaveSlotIndex) => {
+    clearSave(slot)
+  }, [])
+
+  const handleSelectStarter = useCallback((creature: CapturedCreature) => {
+    const tile = map[gameState.player.y]?.[gameState.player.x]
+    setGameState(prev => ({
+      ...prev,
+      screen: 'world',
+      player: {
+        ...prev.player,
+        team: [{ ...creature, happiness: 70 }],
+        catalog: [creature.id],
+        captured: [creature.id],
+      },
+      currentBiome: tile?.biome ?? 'grassland',
+      currentSubregion: tile?.subregion ?? '',
+    }))
+  }, [map])
+
+  useEffect(() => {
+    exposeTestHook({
+      getState: () => gameState,
+      getStats: () => playerStats,
+      getExploredCount: () => exploredTiles.size,
+      getDefeatedTrainers: () => defeatedTrainers,
+      getFishLog: () => fishLog,
+      handleNewGame, handleLoadSlot, handleSelectStarter, movePlayer, openScreen, closeOverlay,
+      handleEncounterComplete, handleBattleWin, handleBattleLose, handleCapture, handleFlee, handleCreatureFled,
+      handleFriendlyGift, handleAcceptTrainer, handleDeclineTrainer, handleTrainerBattleWin,
+      handleStartRangerBattle, handleRangerBattleWin, handleRangerBattleLose, handleArenaWin, handleArenaLose,
+      handleAcceptQuest, handleClaimReward, handleTrade, handleCraft, handleUseItem, handleSwapLead, handleBattleSwitch,
+      handleFishCatch, handleStartBreeding, handleHatchCreature, handleCancelBreeding, handleImportCreature,
+      handleTradeRemoveCreature, handleManualEvolve, handleReleaseFromTeam, handleSwapFromReserve,
+      handleAdoptFromReserve, handleReleaseFromReserve, handleAlcatrazComplete, handleFusion, handleDiveCollect,
+      handleDiveEncounter, handleFastTravel, handleTeachMove, handleLearnAbility,
+    })
+  })
+
   // Title screen
   if (gameState.screen === 'title') {
     return (
       <TitleScreen
-        onLoadSlot={(slot) => {
-          setActiveSlot(slot)
-          const saved = loadGame(slot)
-          if (saved) {
-            const loaded = { ...applyBackwardCompat(saved, map), screen: 'world' as const }
-            setGameState(loaded)
-            tutorialFlagsRef.current = new Set(loaded.tutorialFlags ?? [])
-            const stats = loadStats(slot)
-            if (stats) setPlayerStats({ ...createInitialStats(), ...stats })
-            setExploredTiles(loadExplored(slot))
-            setBayDexAck(loadBayDexAck(slot))
-          }
-        }}
-        onNewGame={(slot) => {
-          setActiveSlot(slot)
-          clearSave(slot)
-          setExploredTiles(new Set())
-          setPlayerStats(createInitialStats())
-          tutorialFlagsRef.current = new Set()
-          setShowTutorialDialog(false)
-          const fresh = createInitialState()
-          setGameState({ ...fresh, screen: 'starter' })
-          setBayDexAck([])
-        }}
-        onDeleteSlot={(slot) => {
-          clearSave(slot)
-        }}
+        onLoadSlot={handleLoadSlot}
+        onNewGame={handleNewGame}
+        onDeleteSlot={handleDeleteSlot}
       />
     )
   }
@@ -1993,21 +2041,7 @@ export default function Game() {
   if (gameState.screen === 'starter') {
     return (
       <StarterSelect
-        onSelect={(creature) => {
-          const tile = map[gameState.player.y]?.[gameState.player.x]
-          setGameState(prev => ({
-            ...prev,
-            screen: 'world',
-            player: {
-              ...prev.player,
-              team: [{ ...creature, happiness: 70 }],
-              catalog: [creature.id],
-              captured: [creature.id],
-            },
-            currentBiome: tile?.biome ?? 'grassland',
-            currentSubregion: tile?.subregion ?? '',
-          }))
-        }}
+        onSelect={handleSelectStarter}
       />
     )
   }
@@ -2057,36 +2091,36 @@ export default function Game() {
         weather={gameState.weather}
         gameMinutes={gameState.gameMinutes}
         gameDay={gameState.gameDay ?? 75}
-        onOpenCatalog={() => setGameState(prev => ({ ...prev, screen: 'catalog' }))}
-        onOpenTeam={() => setGameState(prev => ({ ...prev, screen: 'inventory' }))}
-        onOpenJournal={() => setGameState(prev => ({ ...prev, screen: 'journal' }))}
-        onOpenTrade={() => setGameState(prev => ({ ...prev, screen: 'trade' }))}
+        onOpenCatalog={() => openScreen('catalog')}
+        onOpenTeam={() => openScreen('inventory')}
+        onOpenJournal={() => openScreen('journal')}
+        onOpenTrade={() => openScreen('trade')}
         bayDexNewCount={bayDexNewCount}
         onOpenBayDex={() => {
-          setGameState(prev => ({ ...prev, screen: 'baydex' }))
+          openScreen('baydex')
           const ids = gameState.player.catalog
           setBayDexAck(ids)
           saveBayDexAck(activeSlot, ids)
         }}
-        onOpenBreeding={() => setGameState(prev => ({ ...prev, screen: 'breeding' }))}
-        onOpenQuestLog={() => setGameState(prev => ({ ...prev, screen: 'questlog' }))}
+        onOpenBreeding={() => openScreen('breeding')}
+        onOpenQuestLog={() => openScreen('questlog')}
         onMove={movePlayer}
-        onOpenCrafting={() => setGameState(prev => ({ ...prev, screen: 'crafting' }))}
-        onOpenAchievements={() => setGameState(prev => ({ ...prev, screen: 'achievements' }))}
-        onOpenHabitatMap={() => setGameState(prev => ({ ...prev, screen: 'habitat_map' }))}
-        onOpenAdoption={() => setGameState(prev => ({ ...prev, screen: 'adoption' }))}
-        onOpenLeaderboard={() => setGameState(prev => ({ ...prev, screen: 'leaderboard' }))}
-        onOpenFusion={() => setGameState(prev => ({ ...prev, screen: 'fusion' }))}
+        onOpenCrafting={() => openScreen('crafting')}
+        onOpenAchievements={() => openScreen('achievements')}
+        onOpenHabitatMap={() => openScreen('habitat_map')}
+        onOpenAdoption={() => openScreen('adoption')}
+        onOpenLeaderboard={() => openScreen('leaderboard')}
+        onOpenFusion={() => openScreen('fusion')}
         onOpenDiving={() => {
           const tile = map[gameState.player.y]?.[gameState.player.x]
           if (tile?.biome === 'water' || tile?.biome === 'beach') {
-            setGameState(prev => ({ ...prev, screen: 'diving' }))
+            openScreen('diving')
           }
         }}
-        onOpenShop={() => setGameState(prev => ({ ...prev, screen: 'shop' }))}
-        onOpenDailyChallenges={() => setGameState(prev => ({ ...prev, screen: 'daily_challenges' }))}
-        onOpenArena={() => setGameState(prev => ({ ...prev, screen: 'arena' }))}
-        onOpenMoveTutor={() => setGameState(prev => ({ ...prev, screen: 'move_tutor' }))}
+        onOpenShop={() => openScreen('shop')}
+        onOpenDailyChallenges={() => openScreen('daily_challenges')}
+        onOpenArena={() => openScreen('arena')}
+        onOpenMoveTutor={() => openScreen('move_tutor')}
         onOpenMigrationCalendar={() => setShowMigrationCalendar(true)}
         onOpenFieldNotes={() => setShowFieldNotes(true)}
         onOpenTrophyRoom={() => setShowTrophyRoom(true)}
@@ -2104,7 +2138,7 @@ export default function Game() {
         <QuestTracker
           questProgress={gameState.questProgress}
           player={gameState.player}
-          onOpenQuestLog={() => setGameState(prev => ({ ...prev, screen: 'questlog' }))}
+          onOpenQuestLog={() => openScreen('questlog')}
         />
       )}
 
@@ -2436,19 +2470,19 @@ export default function Game() {
 
       {gameState.screen === 'catalog' && (
         <div className="menu-screen-enter">
-        <CatalogScreen catalogSeen={gameState.player.catalog} catalogCaptured={gameState.player.captured} onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))} />
+        <CatalogScreen catalogSeen={gameState.player.catalog} catalogCaptured={gameState.player.captured} onClose={() => openScreen('world')} />
         </div>
       )}
 
       {gameState.screen === 'baydex' && (
         <div className="menu-screen-enter">
-        <BayDex catalogSeen={gameState.player.catalog} catalogCaptured={gameState.player.captured} defaultSelectedId={gameState.player.team[0]?.id ?? null} playerTeam={gameState.player.team} onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))} />
+        <BayDex catalogSeen={gameState.player.catalog} catalogCaptured={gameState.player.captured} defaultSelectedId={gameState.player.team[0]?.id ?? null} playerTeam={gameState.player.team} onClose={() => openScreen('world')} />
         </div>
       )}
 
       {gameState.screen === 'inventory' && (
         <div className="menu-screen-enter">
-        <TeamScreen team={gameState.player.team} inventory={gameState.player.inventory} coins={gameState.player.coins ?? 0} onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))} onSwapLead={handleSwapLead} onNickname={(idx, name) => {
+        <TeamScreen team={gameState.player.team} inventory={gameState.player.inventory} coins={gameState.player.coins ?? 0} onClose={() => openScreen('world')} onSwapLead={handleSwapLead} onNickname={(idx, name) => {
           setGameState(prev => ({
             ...prev,
             player: {
@@ -2539,7 +2573,7 @@ export default function Game() {
 
       {gameState.screen === 'journal' && (
         <div className="menu-screen-enter">
-        <FieldJournal journal={gameState.player.journal} currentSubregion={gameState.currentSubregion} onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))} weatherAlmanac={gameState.weatherAlmanac} currentWeather={gameState.weather} gameDay={gameState.gameDay} visitedLandmarks={gameState.visitedLandmarks} />
+        <FieldJournal journal={gameState.player.journal} currentSubregion={gameState.currentSubregion} onClose={() => openScreen('world')} weatherAlmanac={gameState.weatherAlmanac} currentWeather={gameState.weather} gameDay={gameState.gameDay} visitedLandmarks={gameState.visitedLandmarks} />
         </div>
       )}
 
@@ -2547,7 +2581,7 @@ export default function Game() {
         <div className="menu-screen-enter">
         <BreedingScreen
           team={gameState.player.team} nursery={gameState.player.nursery}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
           onStartBreeding={handleStartBreeding} onHatch={handleHatchCreature} onCancelBreeding={handleCancelBreeding}
         />
         </div>
@@ -2842,7 +2876,7 @@ export default function Game() {
         <div className="menu-screen-enter">
         <TradeCenter
           team={gameState.player.team}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
           onImportCreature={handleImportCreature} onRemoveCreature={handleTradeRemoveCreature}
         />
         </div>
@@ -2853,7 +2887,7 @@ export default function Game() {
         <QuestLog
           questProgress={gameState.questProgress}
           player={gameState.player}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
         />
         </div>
       )}
@@ -2861,7 +2895,7 @@ export default function Game() {
       {gameState.screen === 'fishing' && (
         <FishingScreen
           biome={gameState.currentBiome}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
           onCatch={handleFishCatch}
           fishLog={fishLog}
         />
@@ -2871,7 +2905,7 @@ export default function Game() {
         <HabitatMap
           catalogSeen={gameState.player.catalog}
           catalogCaptured={gameState.player.captured}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
         />
       )}
 
@@ -2887,7 +2921,7 @@ export default function Game() {
         <AdoptionCenter
           team={gameState.player.team}
           reserves={gameState.player.reserves}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
           onRelease={handleReleaseFromTeam}
           onSwapFromReserve={handleSwapFromReserve}
           onAdoptFromReserve={handleAdoptFromReserve}
@@ -2903,7 +2937,7 @@ export default function Game() {
           speciesCaught={gameState.player.captured.length}
           totalSpecies={56}
           stats={playerStats}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
           onRename={handleRenamePlayer}
         />
         </div>
@@ -2917,7 +2951,7 @@ export default function Game() {
           cellBlockProgress={alcatrazCellProgress}
           onSetStage={setAlcatrazStage}
           onComplete={handleAlcatrazComplete}
-          onClose={() => { setAlcatrazEscapeActive(false); setGameState(prev => ({ ...prev, screen: 'world' })) }}
+          onClose={() => { setAlcatrazEscapeActive(false); openScreen('world') }}
           onStartBattle={handleAlcatrazBattle}
         />
       )}
@@ -2928,7 +2962,7 @@ export default function Game() {
           inventory={gameState.player.inventory}
           playerLevel={gameState.player.level}
           onCraft={handleCraft}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
         />
         </div>
       )}
@@ -2939,7 +2973,7 @@ export default function Game() {
           gameState={gameState}
           stats={playerStats}
           unlockedIds={unlockedAchievements}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
         />
         </div>
       )}
@@ -2948,14 +2982,14 @@ export default function Game() {
         <FusionLab
           team={gameState.player.team}
           onFuse={handleFusion}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
         />
       )}
 
       {gameState.screen === 'diving' && (
         <DivingMinigame
           playerLevel={gameState.player.level}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
           onEncounter={handleDiveEncounter}
           onCollect={handleDiveCollect}
           captured={gameState.player.captured}
@@ -2975,7 +3009,7 @@ export default function Game() {
               currentSubregion: destName,
             }))
           }}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
         />
       )}
 
@@ -3002,7 +3036,7 @@ export default function Game() {
               }
             })
           }}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
         />
       )}
 
@@ -3014,7 +3048,7 @@ export default function Game() {
           arenaWins={gameState.arenaWins as Record<ArenaTier, number>}
           onWin={handleArenaWin}
           onLose={handleArenaLose}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
         />
       )}
 
@@ -3024,7 +3058,7 @@ export default function Game() {
           coins={gameState.player.coins ?? 0}
           onTeachMove={handleTeachMove}
           onLearnAbility={handleLearnAbility}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
         />
       )}
 
@@ -3041,14 +3075,14 @@ export default function Game() {
               }))
             }
           }}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
         />
       )}
 
       {gameState.screen === 'surfing' && (
         <SurfingMinigame
           playerLevel={gameState.player.level}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
           onReward={(item) => {
             setGameState(prev => {
               const existing = prev.player.inventory.find(i => i.name === item.name)
@@ -3077,7 +3111,7 @@ export default function Game() {
           playerLevel={gameState.player.level}
           team={gameState.player.team}
           inventory={gameState.player.inventory}
-          onClose={() => setGameState(prev => ({ ...prev, screen: 'world' }))}
+          onClose={() => openScreen('world')}
           onWinPrize={(item) => {
             setGameState(prev => {
               const existing = prev.player.inventory.find(i => i.name === item.name)

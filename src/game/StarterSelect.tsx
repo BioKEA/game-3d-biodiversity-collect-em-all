@@ -7,7 +7,7 @@ interface StarterOption {
   strength: string
 }
 
-const STARTERS: StarterOption[] = [
+export const STARTERS: StarterOption[] = [
   {
     creature: {
       id: 'pacific-tree-frog',
