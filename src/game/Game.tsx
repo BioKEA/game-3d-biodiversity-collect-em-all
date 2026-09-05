@@ -20,14 +20,14 @@ function isEditableTarget(target: EventTarget | null): boolean {
   return target.isContentEditable
 }
 import { createInitialState, saveGame, loadGame, clearSave, saveStats, loadStats, saveExplored, loadExplored, loadPlayerName, savePlayerName, loadBayDexAck, saveBayDexAck } from './gameState'
-import { applyBackwardCompat } from './core/state'
+import { applyBackwardCompat, runtimeDeps } from './core/state'
+import { BOSS_IDS } from './features/bosses/logic'
+import { captureCreature } from './features/capture/logic'
 import { BiokeaLeaderboardPrompt } from '@/components/BiokeaLeaderboardPrompt'
 import { reportCreatureEncountered } from '@/lib/golden-sample'
 import type { SaveSlotIndex } from './gameState'
 import { generateMap, getBoatDockAt, getSignpostAt, type BoatDock } from './bayAreaMap'
-import { getRandomEncounter, ALL_CREATURES, isFullMoon, isNewMoon, getLunarBoss, getShadowBoss, LUNAR_BOSSES, SHADOW_BOSSES } from './creatures'
-
-const BOSS_IDS = new Set([...LUNAR_BOSSES.map(b => b.id), ...SHADOW_BOSSES.map(b => b.id)])
+import { getRandomEncounter, ALL_CREATURES, isFullMoon, isNewMoon, getLunarBoss, getShadowBoss, LUNAR_BOSSES } from './creatures'
 import { RANGERS, getNearbyRanger } from './rangers'
 import { getRangerActivity, getRangerPosition, type RangerActivity } from './npcSchedules'
 import { advanceTime, rollWeather } from './timeWeather'
@@ -82,7 +82,7 @@ import DailyChallenges from './DailyChallenges'
 import ArenaScreen from './ArenaScreen'
 import MoveTutorScreen from './MoveTutorScreen'
 import { HELD_ITEMS } from './heldItems'
-import { adjustHappiness, DEFAULT_HAPPINESS, LEVEL_UP_GAIN, BATTLE_WIN_LEAD_GAIN, BATTLE_WIN_BENCH_GAIN, PET_GAIN } from './happiness'
+import { adjustHappiness, LEVEL_UP_GAIN, BATTLE_WIN_LEAD_GAIN, BATTLE_WIN_BENCH_GAIN, PET_GAIN } from './happiness'
 import type { ArenaTier } from './arena'
 import { loadDailyState, updateChallengeProgress, claimChallengeReward, getClaimableCount, type DailyState } from './dailyChallengesData'
 import { checkHerdEncounter } from './migration'
@@ -1037,75 +1037,14 @@ export default function Game() {
       triggerTutorial('first_catch', 'Great catch! Check your team with T and open the WildDex with B to learn more.')
     }, 1500)
     setGameState(prev => {
-      const isNewSpecies = !prev.player.captured.includes(creature.id)
-      const teamFull = prev.player.team.length >= 6
-
-      const captured: CapturedCreature = {
-        ...creature,
-        level: Math.max(1, prev.player.level - 1 + Math.floor(Math.random() * 3)),
-        xp: 0,
-        capturedAt: new Date().toISOString(),
-        capturedBiome: prev.currentBiome,
-        happiness: DEFAULT_HAPPINESS,
-      }
-
-      const newTeam = !teamFull
-        ? [...prev.player.team, captured]
-        : prev.player.team
-      const newReserves = teamFull
-        ? [...prev.player.reserves, captured]
-        : prev.player.reserves
-
-      const journalWithCapture = { ...prev.player.journal }
-      const subregion = prev.currentSubregion
-      if (subregion && journalWithCapture[subregion]) {
-        const entry = journalWithCapture[subregion]
-        if (!entry.creaturesCaptured.includes(creature.id)) {
-          journalWithCapture[subregion] = {
-            ...entry,
-            creaturesCaptured: [...entry.creaturesCaptured, creature.id],
-          }
-        }
-      }
-
-      // Show post-capture notification on world screen
-      setCaptureNotif({ creature, isNewSpecies, teamFull })
+      const r = captureCreature(prev, creature, runtimeDeps)
+      setCaptureNotif({ creature, isNewSpecies: r.isNewSpecies, teamFull: r.teamFull })
       setTimeout(() => setCaptureNotif(null), 4000)
-
-      // Show nickname prompt after notification fades
-      if (!teamFull) {
-        const idx = newTeam.length - 1
-        setTimeout(() => {
-          setNicknamePrompt({ creature, teamIndex: idx })
-          setNicknameInput('')
-        }, 2000)
+      if (r.teamIndex !== null) {
+        const idx = r.teamIndex
+        setTimeout(() => { setNicknamePrompt({ creature, teamIndex: idx }); setNicknameInput('') }, 2000)
       }
-
-      // Track boss captures
-      const newBossDefeats = [...(prev.bossDefeats ?? [])]
-      if (BOSS_IDS.has(creature.id)) {
-        const isLunar = LUNAR_BOSSES.some(b => b.id === creature.id)
-        newBossDefeats.push({
-          bossId: creature.id,
-          bossName: creature.name,
-          bossSprite: creature.sprite,
-          bossType: isLunar ? 'lunar' : 'shadow',
-          gameDay: prev.gameDay ?? 0,
-          captured: true,
-        })
-      }
-
-      return {
-        ...prev, screen: 'world',
-        player: {
-          ...prev.player, team: newTeam, reserves: newReserves,
-          catalog: [...new Set([...prev.player.catalog, creature.id])],
-          captured: [...new Set([...prev.player.captured, creature.id])],
-          journal: journalWithCapture,
-        },
-        bossDefeats: newBossDefeats,
-        battle: { active: false, wildCreature: null, playerCreature: null, turn: 'player', log: [], captureChance: 0 },
-      }
+      return r.state
     })
   }, [triggerTutorial])
 
