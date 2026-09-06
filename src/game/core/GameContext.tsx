@@ -12,6 +12,7 @@
 //
 // See docs/ARCHITECTURE.md §3 (handler shape) and §8 (recipes).
 import { createContext, useContext } from 'react'
+import type { StarterCreature } from '@/game/StarterSelect'
 import type { Dispatch, SetStateAction } from 'react'
 import type { CapturedCreature, Creature, GameState, MapTile, BreedingSlot } from '@/types/game'
 import type { PlayerStats } from '../achievements'
@@ -106,7 +107,7 @@ export interface GameActions {
   handleNewGame: (slot: SaveSlotIndex) => void
   handleLoadSlot: (slot: SaveSlotIndex) => void
   handleDeleteSlot: (slot: SaveSlotIndex) => void
-  handleSelectStarter: (creature: CapturedCreature) => void
+  handleSelectStarter: (creature: StarterCreature) => void
   handleRenamePlayer: (name: string) => void
 
   // Encounters and battle

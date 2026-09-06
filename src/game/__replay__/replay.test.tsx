@@ -26,19 +26,7 @@ vi.mock('../TitleScreen', nullComponent)
 // Pulls in @biokea/leaderboard, whose dist/index.js has extensionless relative
 // imports that Node's ESM resolver rejects. Display-only screen.
 vi.mock('../Leaderboard', nullComponent)
-// StarterSelect bakes `capturedAt: new Date().toISOString()` into the
-// module-level STARTERS table, which is evaluated at *import* time — before
-// beforeEach can install the fake clock — so the raw table carries a real
-// wall-clock timestamp and would make the snapshot non-deterministic. Freeze it
-// here to the same instant the fake clock uses. Only the timestamp is changed.
-vi.mock('../StarterSelect', async (orig) => {
-  const mod = await orig<typeof import('../StarterSelect')>()
-  return {
-    ...mod,
-    STARTERS: mod.STARTERS.map(s => ({ ...s, creature: { ...s.creature, capturedAt: '2026-03-15T12:00:00.000Z' } })),
-    default: () => null,
-  }
-})
+vi.mock('../StarterSelect', async (orig) => ({ ...(await orig<typeof import('../StarterSelect')>()), default: () => null }))
 vi.mock('../sounds', () => {
   const noop = new Proxy({}, { get: () => () => {} })
   return { SFX: noop, Music: noop }

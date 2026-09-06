@@ -94,7 +94,7 @@ describe('travel', () => {
     expect(r.currentBiome).toBe('grassland'); expect(r.currentSubregion).toBe('Marin')
   })
   it('selectStarter seeds team/catalog/captured and biome from tile', () => {
-    const r = selectStarter(makeState({ screen: 'starter' }, { team: [], catalog: [], captured: [] }), tinyMap(), makeCaptured({ id: 'fox' }))
-    expect(r.screen).toBe('world'); expect(r.player.team[0].happiness).toBe(70); expect(r.player.captured).toEqual(['fox'])
+    const r = selectStarter(makeState({ screen: 'starter' }, { team: [], catalog: [], captured: [] }), tinyMap(), makeCaptured({ id: 'fox' }), FIXED_NOW)
+    expect(r.screen).toBe('world'); expect(r.player.team[0].happiness).toBe(70); expect(r.player.team[0].capturedAt).toBe(FIXED_NOW); expect(r.player.captured).toEqual(['fox'])
   })
 })

@@ -18,14 +18,7 @@ vi.mock('../NightAtmosphere', nullComponent)
 vi.mock('../BiomeTransition', nullComponent)
 vi.mock('../TitleScreen', nullComponent)
 vi.mock('../Leaderboard', nullComponent)
-vi.mock('../StarterSelect', async (orig) => {
-  const mod = await orig<typeof import('../StarterSelect')>()
-  return {
-    ...mod,
-    STARTERS: mod.STARTERS.map(s => ({ ...s, creature: { ...s.creature, capturedAt: '2026-03-15T12:00:00.000Z' } })),
-    default: () => null,
-  }
-})
+vi.mock('../StarterSelect', async (orig) => ({ ...(await orig<typeof import('../StarterSelect')>()), default: () => null }))
 vi.mock('../sounds', () => {
   const noop = new Proxy({}, { get: () => () => {} })
   return { SFX: noop, Music: noop }
