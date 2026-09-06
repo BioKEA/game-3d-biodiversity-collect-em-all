@@ -35,6 +35,7 @@ import { useWorldEvents } from './WorldEvents'
 import { SFX, Music } from './sounds'
 import { type RoamingTrainer } from './roamingTrainers'
 import ScreenRouter from './screens/ScreenRouter'
+import type { StarterCreature } from './StarterSelect'
 import WorldScreen from './screens/WorldScreen'
 import WorldPrompts from './screens/WorldPrompts'
 import WorldPanels from './screens/WorldPanels'
@@ -889,8 +890,8 @@ export default function Game({ children }: { children?: ReactNode }) {
     clearSave(slot)
   }, [])
 
-  const handleSelectStarter = useCallback((creature: CapturedCreature) => {
-    setGameState(prev => selectStarter(prev, map, creature))
+  const handleSelectStarter = useCallback((creature: StarterCreature) => {
+    setGameState(prev => selectStarter(prev, map, creature, runtimeDeps.now()))
   }, [map])
 
   // Conservation prompt dismissal — closes the prompt and bumps the

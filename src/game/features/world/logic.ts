@@ -286,12 +286,12 @@ export function fastTravel(state: GameState, map: MapTile[][], x: number, y: num
   return { ...state, player: { ...state.player, x, y }, currentSubregion: subregion, currentBiome: tile?.biome ?? state.currentBiome }
 }
 
-export function selectStarter(state: GameState, map: MapTile[][], creature: CapturedCreature): GameState {
+export function selectStarter(state: GameState, map: MapTile[][], creature: Omit<CapturedCreature, 'capturedAt'>, now: string): GameState {
   const tile = map[state.player.y]?.[state.player.x]
   return {
     ...state,
     screen: 'world',
-    player: { ...state.player, team: [{ ...creature, happiness: 70 }], catalog: [creature.id], captured: [creature.id] },
+    player: { ...state.player, team: [{ ...creature, capturedAt: now, happiness: 70 }], catalog: [creature.id], captured: [creature.id] },
     currentBiome: tile?.biome ?? 'grassland',
     currentSubregion: tile?.subregion ?? '',
   }

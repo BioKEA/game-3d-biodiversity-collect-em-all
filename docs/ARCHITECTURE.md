@@ -255,24 +255,19 @@ reveal the word.
    the very objects held by the module constant. Nothing mutates an inventory
    item in place any more, so the aliasing is harmless today — but any future
    in-place mutation of an inventory item would reintroduce the leak.
-2. **`StarterSelect.tsx` evaluates `new Date()` at module import time.** Its
-   `STARTERS` array bakes `capturedAt: new Date().toISOString()` in at import,
-   not at selection time. The oracle mocks the module to freeze that timestamp
-   so runs are reproducible; that is a test accommodation, not a production
-   fix.
-3. **`handleBossChallenge` / `handleShadowBossChallenge` read from `prev`.**
+2. **`handleBossChallenge` / `handleShadowBossChallenge` read from `prev`.**
    They now take the creature catalog from the `prev` argument of the
    `setGameState` updater rather than from the closed-over `gameState`.
    Identical unless the catalog changes in the same React batch, which the
    blocking boss popup prevents.
-4. **`handleClaimReward`'s reward popup setter moved inside the updater.**
+3. **`handleClaimReward`'s reward popup setter moved inside the updater.**
    `setQuestReward` now fires inside the `setGameState` updater rather than
    just before it. Same batch; nothing observable changes.
-5. **`deps.now()` is evaluated on every step.** `stepPlayer` calls
+4. **`deps.now()` is evaluated on every step.** `stepPlayer` calls
    `deps.now()` unconditionally rather than only when a journal entry is
    created. `now()` has no state effect (it neither advances the seeded RNG
    nor writes anything), so the produced state is unchanged.
-6. **Effect declaration order in `Game.tsx` changed.** When the ranger /
+5. **Effect declaration order in `Game.tsx` changed.** When the ranger /
    landmark / dock / signpost proximity effects moved into
    `hooks/useWorldProximity`, they moved above the keyboard effects, so they
    now run before them on every commit (previously they ran after). Verified

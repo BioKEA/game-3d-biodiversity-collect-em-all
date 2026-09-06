@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import type { CapturedCreature } from '@/types/game'
 
+/** A starter before it is stamped with `capturedAt` at selection time. */
+export type StarterCreature = Omit<CapturedCreature, 'capturedAt'>
+
 interface StarterOption {
-  creature: CapturedCreature
+  creature: StarterCreature
   tagline: string
   strength: string
 }
@@ -30,7 +33,6 @@ export const STARTERS: StarterOption[] = [
       ],
       level: 5,
       xp: 0,
-      capturedAt: new Date().toISOString(),
       capturedBiome: 'marsh',
     },
     tagline: 'The Classic Choice',
@@ -58,7 +60,6 @@ export const STARTERS: StarterOption[] = [
       ],
       level: 5,
       xp: 0,
-      capturedAt: new Date().toISOString(),
       capturedBiome: 'forest',
     },
     tagline: 'The Bold Hunter',
@@ -86,7 +87,6 @@ export const STARTERS: StarterOption[] = [
       ],
       level: 5,
       xp: 0,
-      capturedAt: new Date().toISOString(),
       capturedBiome: 'forest',
     },
     tagline: 'The Clever Scout',
@@ -114,7 +114,6 @@ export const STARTERS: StarterOption[] = [
       ],
       level: 5,
       xp: 0,
-      capturedAt: new Date().toISOString(),
       capturedBiome: 'forest',
     },
     tagline: 'The Swift Traveler',
@@ -142,7 +141,6 @@ export const STARTERS: StarterOption[] = [
       ],
       level: 5,
       xp: 0,
-      capturedAt: new Date().toISOString(),
       capturedBiome: 'beach',
     },
     tagline: 'The Sturdy Diver',
@@ -170,7 +168,6 @@ export const STARTERS: StarterOption[] = [
       ],
       level: 5,
       xp: 0,
-      capturedAt: new Date().toISOString(),
       capturedBiome: 'marsh',
     },
     tagline: 'The Wild Card',
@@ -179,7 +176,7 @@ export const STARTERS: StarterOption[] = [
 ]
 
 interface Props {
-  onSelect: (creature: CapturedCreature) => void
+  onSelect: (creature: StarterCreature) => void
 }
 
 export default function StarterSelect({ onSelect }: Props) {

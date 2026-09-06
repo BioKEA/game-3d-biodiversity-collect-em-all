@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx tsc -b
+      # The replay oracle (src/game/__replay__) runs here. A snapshot change must be
+      # an intentional, reviewed gameplay change; never regenerate it with -u to pass CI.
+      - run: npx vitest run
+      - run: npx vite build
